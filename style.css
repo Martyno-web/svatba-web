@@ -163,9 +163,11 @@ h1, h2 {
 
 @media (max-width: 999px) {
   /* Mobilní fotka je komponovaná pro tento formát (rozšířená dolů),
-     stačí ji vystředit na vás dva */
+     stačí ji vystředit na vás dva. Silnější ztlumení barev —
+     růžová košile spadne do pudrového tónu palety. */
   .hero-photo img {
     object-position: 42% 50%;
+    filter: brightness(1.05) saturate(0.7) sepia(0.1);
   }
 }
 
@@ -179,9 +181,9 @@ h1, h2 {
     linear-gradient(180deg, rgba(62, 54, 48, .25) 0, rgba(62, 54, 48, 0) 110px),
     linear-gradient(180deg,
       rgba(46, 38, 32, 0) 46%,
-      rgba(46, 38, 32, .30) 62%,
-      rgba(46, 38, 32, .48) 78%,
-      rgba(46, 38, 32, .62) 100%),
+      rgba(46, 38, 32, .38) 62%,
+      rgba(46, 38, 32, .52) 78%,
+      rgba(46, 38, 32, .64) 100%),
     linear-gradient(180deg,
       rgba(241, 233, 220, 0) calc(100% - 26px),
       var(--color-beige) 100%);
