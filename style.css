@@ -132,25 +132,6 @@ h1, h2 {
   border-bottom-color: var(--color-sand);
 }
 
-.nav-rsvp {
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: .15em;
-  text-transform: uppercase;
-  color: var(--color-caramel-dark);
-  text-decoration: none;
-  border: 1px solid var(--color-caramel);
-  padding: 8px 18px;
-  background: rgba(250, 247, 241, .72); /* čitelnost na fotce */
-  transition: background .2s, color .2s;
-}
-
-.nav-rsvp:hover,
-.nav-rsvp:focus-visible {
-  background: var(--color-caramel);
-  color: var(--color-on-caramel);
-}
-
 @media (min-width: 700px) {
   .nav-links {
     display: flex;
@@ -199,15 +180,6 @@ h1, h2 {
   padding: 0 var(--space-m) var(--space-section);
 }
 
-.eyebrow {
-  margin: 0 0 var(--space-xs);
-  text-transform: uppercase;
-  letter-spacing: .3em;
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--color-caramel);
-}
-
 h1 {
   font-size: clamp(40px, 9vw, 88px);
 }
@@ -228,12 +200,6 @@ h1 {
   color: var(--color-text-soft);
 }
 
-.hero-buttons {
-  display: flex;
-  gap: var(--space-s);
-  justify-content: center;
-  margin-top: var(--space-m);
-}
 
 @media (min-width: 1000px) {
   /* Desktop — fotografie je pozadím CELÉHO hero (od kraje ke kraji,
@@ -263,10 +229,6 @@ h1 {
 
   .hero-text .rule {
     margin-left: 0;
-  }
-
-  .hero-buttons {
-    justify-content: flex-start;
   }
 
   .hero-photo {
@@ -299,7 +261,6 @@ h1 {
   }
 
   .hero-text .amp,
-  .hero-text .eyebrow,
   .hero-text .place {
     color: var(--color-sand);
   }
@@ -758,9 +719,10 @@ h3.sub-label::after {
 .mezihra-quote p {
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(24px, 4.5vw, 44px);
-  line-height: 1.45;
-  margin: 0;
+  font-size: clamp(20px, 2.6vw, 28px);
+  line-height: 1.5;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .mezihra-note {
@@ -912,39 +874,12 @@ h3.sub-label::after {
 }
 
 .finale-title {
-  font-size: clamp(52px, 9vw, 112px);
+  font-size: clamp(40px, 7vw, 88px);
   color: var(--color-on-caramel);
-  margin: 0 0 var(--space-s);
-}
-
-.finale-note {
-  color: var(--color-beige);
-  font-size: 16px;
   margin: 0 0 var(--space-m);
 }
 
-.finale .button {
-  padding: 16px 44px;
-  font-size: 14px;
-}
-
-.finale-aside {
-  text-align: center;
-  color: var(--color-sand);
-  margin-top: var(--space-s);
-}
-
-/* --------------------------------------------------------------------------
-   17. Patička — mocca, monogram, podpis, kontakty
-   -------------------------------------------------------------------------- */
-footer {
-  background: var(--color-mocca);
-  color: var(--color-beige);
-  text-align: center;
-  padding: var(--space-section) var(--space-m);
-}
-
-.footer-amp {
+.finale-amp {
   font-family: var(--font-heading);
   font-style: italic;
   font-size: 56px;
@@ -953,27 +888,19 @@ footer {
   margin: 0 0 var(--space-s);
 }
 
-.footer-names {
+.finale-names {
   font-family: var(--font-heading);
   font-size: 26px;
   color: var(--color-on-caramel);
   margin: 0;
 }
 
-.footer-date {
+.finale-meta {
   font-size: 12px;
   letter-spacing: .25em;
   text-transform: uppercase;
   color: var(--color-sand);
-  margin: var(--space-xs) 0 var(--space-m);
-}
-
-.footer-note {
-  font-family: var(--font-heading);
-  font-style: italic;
-  font-size: 15px;
-  color: var(--color-sand);
-  margin: 0;
+  margin: var(--space-xs) 0 0;
 }
 
 /* --------------------------------------------------------------------------
