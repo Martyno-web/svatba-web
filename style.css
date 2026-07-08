@@ -548,6 +548,7 @@ h2.chapter-label::after {
   position: relative;
   height: 55vh;  /* fallback */
   height: 55svh;
+  overflow: hidden; /* ořízne zvětšenou fotku při parallaxu */
 }
 
 .predel img {
@@ -646,6 +647,7 @@ h2.chapter-label::after {
 
 /* Textový odkaz s podtržením — nahrazuje tlačítka uvnitř obsahu */
 .text-link {
+  position: relative;
   display: inline-block;
   margin-top: var(--space-m);
   color: var(--color-caramel-dark);
@@ -653,15 +655,31 @@ h2.chapter-label::after {
   font-size: 13px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--color-caramel);
+  border-bottom: 1px solid var(--color-sand);
   padding-bottom: 4px;
-  transition: color .2s, border-color .2s;
+  transition: color .2s;
+}
+
+/* Podtržení, které se při najetí vykreslí zleva */
+.text-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 0;
+  height: 1px;
+  background: var(--color-text);
+  transition: width .35s ease;
 }
 
 .text-link:hover,
 .text-link:focus-visible {
   color: var(--color-text);
-  border-bottom-color: var(--color-text);
+}
+
+.text-link:hover::after,
+.text-link:focus-visible::after {
+  width: 100%;
 }
 
 /* Podkapitola (Ubytování) */
@@ -724,7 +742,7 @@ h3.sub-label::after {
   font-style: italic;
   font-size: clamp(260px, 38vw, 520px);
   line-height: 1;
-  color: var(--color-beige); /* duch — jen o odstín tmavší než pozadí */
+  color: var(--color-sand); /* duch — o odstín tmavší než béžové pozadí sekce */
   pointer-events: none;
   user-select: none;
 }
@@ -857,6 +875,7 @@ h3.sub-label::after {
    -------------------------------------------------------------------------- */
 .finale {
   position: relative;
+  overflow: hidden; /* ořízne zvětšenou fotku při parallaxu */
   min-height: 88vh;  /* fallback */
   min-height: 88svh;
   display: flex;
@@ -947,27 +966,67 @@ footer {
   margin: var(--space-xs) 0 var(--space-m);
 }
 
-.footer-contacts {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 var(--space-s);
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-xs) var(--space-m);
-  font-size: 14px;
-}
-
-.footer-contacts span {
-  font-family: var(--font-heading);
-  font-size: 17px;
-  color: var(--color-on-caramel);
-}
-
 .footer-note {
   font-family: var(--font-heading);
   font-style: italic;
   font-size: 15px;
   color: var(--color-sand);
   margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   18. Animace — decentní, „neviditelné"
+   -------------------------------------------------------------------------- */
+/* Vstup obsahu hero po načtení (čisté CSS, postupné zpoždění řádků) */
+@keyframes vstup {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-text > * {
+  animation: vstup .8s ease-out both;
+}
+
+.hero-text > *:nth-child(2) { animation-delay: .08s; }
+.hero-text > *:nth-child(3) { animation-delay: .16s; }
+.hero-text > *:nth-child(4) { animation-delay: .24s; }
+.hero-text > *:nth-child(5) { animation-delay: .32s; }
+.hero-text > *:nth-child(6) { animation-delay: .40s; }
+
+/* Odhalování při scrollu — třídu .reveal přiděluje script.js.
+   Bez JavaScriptu třída neexistuje, obsah je normálně viditelný. */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .7s ease-out, transform .7s ease-out;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Parallax fotek řídí script.js — prohlížeči předem hlásíme změny */
+.predel img,
+.finale-photo {
+  will-change: transform;
+}
+
+/* Respekt k systémovému omezení pohybu */
+@media (prefers-reduced-motion: reduce) {
+  .hero-text > * {
+    animation: none;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
