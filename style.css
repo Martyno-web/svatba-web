@@ -135,19 +135,19 @@ h1, h2 {
 }
 
 /* --------------------------------------------------------------------------
-   4. Hero — varianta B
-   Mobil: fotka nahoře, rozpouští se dolů do krémové, text pod ní.
-   Desktop: text vlevo (42 %), fotka vpravo, rozpouští se doleva.
+   4. Hero — fotografie přes celou obrazovku, text položený na ní
+   Mobil: portrétní fotka (hero-mobile.jpg), text v dolní třetině.
+   Desktop: široká fotka, text vlevo uprostřed.
    -------------------------------------------------------------------------- */
 .hero {
-  display: flex;
-  flex-direction: column-reverse; /* v HTML je text první, na mobilu je fotka nahoře */
+  position: relative;
+  height: 100vh;  /* fallback */
+  height: 100svh;
 }
 
 .hero-photo {
-  position: relative;
-  height: 62vh;  /* fallback pro starší prohlížeče */
-  height: 62svh; /* fotka od horního okraje (pod navigací) až pod ramena */
+  position: absolute;
+  inset: 0;
   overflow: hidden; /* ořízne zvětšenou fotku při parallaxu */
 }
 
@@ -155,50 +155,71 @@ h1, h2 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 62% 50%; /* mobil: výřez centrovaný na nás dva */
+  object-position: 45% 50%; /* portrét: vy dva mírně vlevo od středu */
   display: block;
-  /* Jemná tonace — nová fotka už je upravená, tady jen doladění k paletě */
+  /* Jemná tonace k paletě webu */
   filter: brightness(1.05) saturate(0.85) sepia(0.08);
 }
 
-/* Nahoře jemný tmavý pruh pod navigací; dole se fotka rozpouští do
-   krémové, protože na mobilu pod ní následuje textový blok hero
-   (do pískové přechází až desktop, kde po fotce jde rovnou prolog) */
+/* Mobil: nahoře tenký pruh pod navigací, dole teplý mocca gradient
+   pro čitelnost textu a úplně na hraně rozpuštění do béžové prologu */
 .hero-photo::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(62, 54, 48, .30) 0, rgba(62, 54, 48, 0) 110px),
+    linear-gradient(180deg, rgba(62, 54, 48, .25) 0, rgba(62, 54, 48, 0) 110px),
     linear-gradient(180deg,
-      rgba(250, 247, 241, 0) calc(100% - 130px),
-      rgba(250, 247, 241, .3) calc(100% - 50px),
-      var(--color-cream) 100%);
+      rgba(46, 38, 32, 0) 42%,
+      rgba(46, 38, 32, .30) 68%,
+      rgba(46, 38, 32, .55) 100%),
+    linear-gradient(180deg,
+      rgba(241, 233, 220, 0) calc(100% - 26px),
+      var(--color-beige) 100%);
 }
 
 .hero-text {
-  text-align: center;
-  padding: 0 var(--space-m) var(--space-section);
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* mobil: text kotvený dole nad gradientem */
+  align-items: flex-start;
+  text-align: left;
+  padding: 0 var(--space-m) 12vh;
+}
+
+/* Text na fotce — teplá slonová kost a písková (mobil i desktop) */
+.hero-text h1,
+.hero-text .date {
+  color: #F7F2EA;
+}
+
+.hero-text .amp,
+.hero-text .place {
+  color: var(--color-sand);
 }
 
 h1 {
-  font-size: clamp(42px, 9.5vw, 93px); /* +~6 % — jemné zvětšení jmen */
-}
-
-.hero-text .rule {
-  margin-left: auto;
-  margin-right: auto;
+  /* Mobil: jména výrazná (~15 % šířky displeje), desktop strop 93 px */
+  font-size: clamp(48px, 15vw, 93px);
 }
 
 .date {
-  font-size: clamp(17px, 2.5vw, 22px);
+  /* Mobil: datum jako caps popisek systému (na fotce) */
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: .18em;
+  text-transform: uppercase;
   margin: 0;
 }
 
 .place {
-  font-size: clamp(14px, 2vw, 17px);
-  margin: 4px 0 0;
-  color: var(--color-text-soft);
+  font-size: 14px;
+  font-weight: 300;
+  margin: 6px 0 0;
 }
 
 
@@ -208,10 +229,8 @@ h1 {
      Text není vedlejší sloupec, ale vrstva položená přes fotku vlevo;
      čitelnost zajišťuje krémový overlay, který fotku překrývá. */
   .hero {
-    position: relative;
-    flex-direction: row;
     height: 92vh;  /* fallback */
-    height: 92svh; /* pod hero vykoukne rozcestník */
+    height: 92svh; /* pod hero vykoukne prolog */
   }
 
   .hero-text {
@@ -264,16 +283,17 @@ h1 {
         var(--color-beige) 100%);
   }
 
-  /* Text na fotce: teplá slonová kost místo čisté bílé —
-     zapadne do fotografie, kontrast zůstává */
-  .hero-text h1,
+  /* Desktop: datum a místo zpět v klidném řezu
+     (caps popisek je jen mobilní úprava) */
   .hero-text .date {
-    color: #F7F2EA;
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
-  .hero-text .amp,
   .hero-text .place {
-    color: var(--color-sand);
+    font-size: 17px;
   }
 
   .hero .button.outline {
