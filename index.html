@@ -81,53 +81,93 @@
       </ul>
     </section>
 
-    <section id="misto" class="band">
-      <div class="section">
-        <h2>Místo konání</h2>
-        <p>Obřad i hostina proběhnou na jednom místě — Jitkovský mlýn u Chotěboře.</p>
-        <!-- TODO: doplnit adresu, popis příjezdu a fotku mlýna (pak přepneme na layout foto + text) -->
-        <a class="button outline" href="https://www.google.com/maps/search/Jitkovsk%C3%BD+ml%C3%BDn" target="_blank" rel="noopener">Otevřít mapu</a>
+    <div class="predel">
+      <img src="images/misto-siroka.jpg" alt="Jitkovský mlýn u rybníka ve zlatém podvečerním světle" loading="lazy">
+      <p class="predel-label">02 — Místo</p>
+    </div>
+
+    <section id="misto" class="chapter-misto">
+      <div class="misto-media">
+        <img src="images/misto-detail.png" alt="Ovečky na pastvině u mlýna" loading="lazy">
+      </div>
+      <div class="misto-body">
+        <h2 class="misto-title">Jitkovský mlýn</h2>
+        <p class="misto-atmo">Starý mlýn u rybníka kousek za Chotěboří — louky, stromy a klid Vysočiny. Obřad bude venku, hostina uvnitř. Všechno na jednom místě.</p>
+        <ul class="misto-list">
+          <li>
+            <span class="k">Adresa</span>
+            <span>doplníme</span> <!-- TODO: přesná adresa -->
+          </li>
+          <li>
+            <span class="k">Příjezd</span>
+            <div>
+              autem, pár minut z Chotěboře
+              <p class="aside">pošleme mapku, neztratíte se</p>
+            </div>
+          </li>
+          <li>
+            <span class="k">Parkování</span>
+            <span>doplníme</span> <!-- TODO: kde se parkuje -->
+          </li>
+        </ul>
+        <a class="text-link" href="https://www.google.com/maps/search/Jitkovsk%C3%BD+ml%C3%BDn" target="_blank" rel="noopener">Otevřít mapu →</a>
+
+        <h3 class="sub-label">Ubytování</h3>
+        <ul class="misto-list">
+          <li>
+            <span class="k">Na mlýně</span>
+            <div>
+              kapacitu a rezervace upřesníme <!-- TODO -->
+              <p class="aside">nikdo nemusí v noci nikam jet</p>
+            </div>
+          </li>
+          <li>
+            <span class="k">V okolí</span>
+            <span>penziony doporučíme v pozvánce</span> <!-- TODO -->
+          </li>
+        </ul>
       </div>
     </section>
 
-    <section id="ubytovani" class="section">
-      <h2>Ubytování</h2>
-      <p>Informace o možnostech ubytování pro hosty zde brzy doplníme.</p>
-      <!-- TODO: kapacita na mlýně? okolní penziony? -->
+    <section id="dary" class="mezihra">
+      <span class="mezihra-amp" aria-hidden="true">&amp;</span>
+      <blockquote class="mezihra-quote">
+        <p>„Jó, vždyť víš, štěstí je krásná věc, vždyť víš, štěstí je krásná věc, štěstí je tak krásná a přepychová věc, ale prachy si za něj nekoupíš."</p>
+      </blockquote>
+      <p class="mezihra-note">…proto nás místo darů potěší příspěvek na společný začátek.</p>
     </section>
 
-    <section id="dary" class="section quote">
-      <p class="quote-text">„Jó, vždyť víš, štěstí je krásná věc, vždyť víš, štěstí je krásná věc, štěstí je tak krásná a přepychová věc, ale prachy si za něj nekoupíš."</p>
-      <div class="rule centered"></div>
-    </section>
-
-    <section id="dresscode" class="section">
-      <h2>Dress code</h2>
-      <p>Prosíme o společenský oděv v přírodních tónech. Část dne strávíme venku, myslete proto na pohodlnou obuv.</p>
-      <ul class="swatches" aria-label="Doporučené barvy">
-        <li style="--swatch:#FAF7F1"></li>
-        <li style="--swatch:#E3D5BE"></li>
-        <li style="--swatch:#B08D5F"></li>
-        <li style="--swatch:#8A7A6A"></li>
-        <li style="--swatch:#3E3630"></li>
+    <section id="dresscode" class="dresscode">
+      <div class="section">
+        <h2 class="chapter-label">03 — Co na sebe</h2>
+        <p class="dresscode-line">Společenský oděv v přírodních tónech — tak, aby ladil s místem. Část dne strávíme venku, myslete i na pohodlné boty.</p>
+      </div>
+      <ul class="palette" aria-label="Doporučené barvy">
+        <li style="--c:#FAF7F1; --t:#8A7A6A"><span>krémová</span></li>
+        <li style="--c:#E3D5BE; --t:#6D5C48"><span>písková</span></li>
+        <li style="--c:#B08D5F; --t:#FFFDF8"><span>karamel</span></li>
+        <li style="--c:#8A7A6A; --t:#FAF7F1"><span>mocca</span></li>
+        <li style="--c:#3E3630; --t:#E3D5BE"><span>hnědá</span></li>
       </ul>
     </section>
 
     <section id="faq" class="band">
-      <div class="section narrow">
-        <h2>Časté otázky</h2>
-        <details class="faq-item">
-          <summary>Můžu vzít s sebou děti?</summary>
-          <p>Doplníme.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Kde zaparkuji?</summary>
-          <p>Doplníme.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Do kdy mám potvrdit účast?</summary>
-          <p>Doplníme.</p>
-        </details>
+      <div class="section dobre-vedet">
+        <h2 class="chapter-label">04 — Dobré vědět</h2>
+        <div class="qa-grid">
+          <details class="faq-item" open>
+            <summary>Můžeme vzít děti?</summary>
+            <p>Doplníme.</p> <!-- TODO -->
+          </details>
+          <details class="faq-item" open>
+            <summary>Kde zaparkujeme?</summary>
+            <p>Doplníme.</p> <!-- TODO -->
+          </details>
+          <details class="faq-item" open>
+            <summary>Do kdy máme potvrdit účast?</summary>
+            <p>Doplníme.</p> <!-- TODO -->
+          </details>
+        </div>
       </div>
     </section>
 
