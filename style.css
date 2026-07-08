@@ -76,11 +76,6 @@ h1, h2 {
   margin: var(--space-s) 0;
 }
 
-.rule.centered {
-  margin-left: auto;
-  margin-right: auto;
-}
-
 /* --------------------------------------------------------------------------
    3. Navigace
    -------------------------------------------------------------------------- */
@@ -120,7 +115,7 @@ h1, h2 {
   text-decoration: none;
   font-size: 13px;
   font-weight: 400;
-  letter-spacing: .15em;
+  letter-spacing: .18em;
   text-transform: uppercase;
   padding: 4px 2px;
   border-bottom: 1px solid transparent;
@@ -165,14 +160,19 @@ h1, h2 {
   filter: brightness(1.05) saturate(0.85) sepia(0.08);
 }
 
-/* Nahoře jemný tmavý pruh pod navigací, dole rozpuštění do krémové */
+/* Nahoře jemný tmavý pruh pod navigací; dole se fotka rozpouští do
+   krémové, protože na mobilu pod ní následuje textový blok hero
+   (do pískové přechází až desktop, kde po fotce jde rovnou prolog) */
 .hero-photo::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
     linear-gradient(180deg, rgba(62, 54, 48, .30) 0, rgba(62, 54, 48, 0) 110px),
-    linear-gradient(180deg, rgba(250, 247, 241, 0) 78%, var(--color-cream) 100%);
+    linear-gradient(180deg,
+      rgba(250, 247, 241, 0) calc(100% - 130px),
+      rgba(250, 247, 241, .3) calc(100% - 50px),
+      var(--color-cream) 100%);
 }
 
 .hero-text {
@@ -181,7 +181,7 @@ h1, h2 {
 }
 
 h1 {
-  font-size: clamp(40px, 9vw, 88px);
+  font-size: clamp(42px, 9.5vw, 93px); /* +~6 % — jemné zvětšení jmen */
 }
 
 .hero-text .rule {
@@ -243,21 +243,31 @@ h1 {
     object-position: 50% 40%;
   }
 
-  /* Overlay PŘES fotku: jemné teplé ztmavení vlevo kvůli čitelnosti
-     (levá zeď je už sama tmavá), doprava mizí — fotku nevybíluje */
+  /* Tři vrstvy overlaye:
+     1. tenký tmavý pruh nahoře pod navigací (zůstává),
+     2. velmi jemný teplý „stín" vlevo — hnědo-béžový, ~20 % → 0 %
+        s dlouhým přechodem do středu; jen sjednocuje zeď pod textem,
+     3. spodních ~180 px se rozpouští do krémové další sekce. */
   .hero-photo::after {
     background:
       linear-gradient(180deg, rgba(62, 54, 48, .30) 0, rgba(62, 54, 48, 0) 140px),
       linear-gradient(90deg,
-        rgba(62, 54, 48, .45) 0%,
-        rgba(62, 54, 48, .22) 35%,
-        rgba(62, 54, 48, 0) 60%);
+        rgba(110, 91, 69, .20) 0%,
+        rgba(110, 91, 69, .12) 22%,
+        rgba(110, 91, 69, .05) 38%,
+        rgba(110, 91, 69, 0) 52%),
+      linear-gradient(180deg,
+        rgba(241, 233, 220, 0) calc(100% - 150px),
+        rgba(241, 233, 220, .25) calc(100% - 60px),
+        rgba(241, 233, 220, .78) calc(100% - 12px),
+        var(--color-beige) 100%);
   }
 
-  /* Text leží na ztmavené zdi — světlé tóny palety */
+  /* Text na fotce: teplá slonová kost místo čisté bílé —
+     zapadne do fotografie, kontrast zůstává */
   .hero-text h1,
   .hero-text .date {
-    color: var(--color-on-caramel);
+    color: #F7F2EA;
   }
 
   .hero-text .amp,
@@ -335,24 +345,6 @@ h1 {
   max-width: 600px;
 }
 
-.section h2 {
-  font-size: clamp(28px, 5vw, 40px);
-  text-align: center;
-}
-
-.section h2::after {
-  content: "";
-  display: block;
-  width: 40px;
-  height: 1px;
-  background: var(--color-caramel);
-  margin: var(--space-s) auto var(--space-m);
-}
-
-.section h2.big {
-  font-size: clamp(34px, 6vw, 48px);
-}
-
 .section p {
   text-align: center;
   color: var(--color-text-soft);
@@ -367,6 +359,11 @@ h1 {
 /* Tmavší pásy přes celou šířku — rytmus stránky */
 .band {
   background: var(--color-beige);
+}
+
+/* Pískový akcent — emoční vrchol světlé části (Dary) */
+.band-sand {
+  background: var(--color-sand);
 }
 
 
@@ -386,7 +383,7 @@ h1 {
   text-decoration: none;
   color: var(--color-on-caramel);
   font-size: 11px;
-  letter-spacing: .3em;
+  letter-spacing: .22em;
   text-transform: uppercase;
 }
 
@@ -407,18 +404,21 @@ h1 {
    8. Prolog — osobní věta pod hero
    -------------------------------------------------------------------------- */
 .prolog {
-  max-width: 620px;
-  margin: 0 auto;
+  /* Nejsvětlejší písková ze stávající palety — fotka hero se rozpouští
+     přímo do ní, žádná bílá */
+  background: var(--color-beige);
   padding: var(--space-section-l) var(--space-m);
   text-align: center;
 }
 
 .prolog-line {
+  /* Hlas L — stejná velikost jako citát v Darech (jeden rukopis) */
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(24px, 4vw, 34px);
+  font-size: clamp(24px, 3.2vw, 32px);
   line-height: 1.5;
-  margin: 0 0 var(--space-m);
+  max-width: 620px;
+  margin: 0 auto var(--space-m);
 }
 
 .prolog-meta {
@@ -439,7 +439,7 @@ h2.chapter-label {
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 400;
-  letter-spacing: .25em;
+  letter-spacing: .22em; /* Popisek L — jednotný proklad kapitol */
   text-transform: uppercase;
   color: var(--color-caramel-dark);
   text-align: left;
@@ -451,7 +451,12 @@ h2.chapter-label::after {
   flex: 1;
   height: 1px;
   background: var(--color-sand);
-  margin: 0; /* přebíjí dekorativní linku běžných h2 */
+  margin: 0;
+}
+
+/* Na pískovém pozadí by písková linka zanikla */
+.band-sand h2.chapter-label::after {
+  background: rgba(138, 106, 66, .28);
 }
 
 /* --------------------------------------------------------------------------
@@ -488,7 +493,7 @@ h2.chapter-label::after {
   display: block;
   font-size: 14px;
   font-weight: 400;
-  letter-spacing: .2em;
+  letter-spacing: .18em;
   text-transform: uppercase;
 }
 
@@ -539,7 +544,7 @@ h2.chapter-label::after {
   margin: 0;
   color: var(--color-on-caramel);
   font-size: 13px;
-  letter-spacing: .25em;
+  letter-spacing: .22em; /* Popisek L */
   text-transform: uppercase;
 }
 
@@ -602,7 +607,7 @@ h2.chapter-label::after {
 
 .misto-list .k {
   font-size: 12px;
-  letter-spacing: .2em;
+  letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--color-text-soft);
   padding-top: 3px;
@@ -654,9 +659,9 @@ h3.sub-label {
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 400;
-  letter-spacing: .25em;
+  letter-spacing: .22em; /* Popisek S — o stupeň tišší než kapitola */
   text-transform: uppercase;
-  color: var(--color-caramel-dark);
+  color: var(--color-text-soft);
 }
 
 h3.sub-label::after {
@@ -705,7 +710,7 @@ h3.sub-label::after {
   font-style: italic;
   font-size: clamp(260px, 38vw, 520px);
   line-height: 1;
-  color: var(--color-sand); /* duch — o odstín tmavší než béžové pozadí sekce */
+  color: var(--color-beige); /* duch — o odstín světlejší než pískové pozadí */
   pointer-events: none;
   user-select: none;
 }
@@ -717,19 +722,23 @@ h3.sub-label::after {
 }
 
 .mezihra-quote p {
+  /* Hlas L — shodný s prologem */
   font-family: var(--font-heading);
   font-style: italic;
-  font-size: clamp(20px, 2.6vw, 28px);
+  font-size: clamp(24px, 3.2vw, 32px);
   line-height: 1.5;
   max-width: 640px;
   margin: 0 auto;
 }
 
 .mezihra-note {
+  /* Hlas S — věcná řádka mluví stejným rukopisem jako vsuvky */
   position: relative;
   z-index: 1;
   margin: var(--space-m) 0 0;
-  font-size: 15px;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: 17px;
   color: var(--color-text-soft);
 }
 
@@ -874,6 +883,8 @@ h3.sub-label::after {
 }
 
 .finale-title {
+  /* Emocionální podpis webu — kurzíva uzavírá hlas z prologu a Darů */
+  font-style: italic;
   font-size: clamp(40px, 7vw, 88px);
   color: var(--color-on-caramel);
   margin: 0 0 var(--space-m);
@@ -897,7 +908,7 @@ h3.sub-label::after {
 
 .finale-meta {
   font-size: 12px;
-  letter-spacing: .25em;
+  letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--color-sand);
   margin: var(--space-xs) 0 0;
