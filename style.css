@@ -178,8 +178,9 @@ h1, h2 {
   background:
     linear-gradient(180deg, rgba(62, 54, 48, .25) 0, rgba(62, 54, 48, 0) 110px),
     linear-gradient(180deg,
-      rgba(46, 38, 32, 0) 50%,
-      rgba(46, 38, 32, .32) 74%,
+      rgba(46, 38, 32, 0) 46%,
+      rgba(46, 38, 32, .30) 62%,
+      rgba(46, 38, 32, .48) 78%,
       rgba(46, 38, 32, .62) 100%),
     linear-gradient(180deg,
       rgba(241, 233, 220, 0) calc(100% - 26px),
