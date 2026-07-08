@@ -148,6 +148,7 @@ h1, h2 {
   position: relative;
   height: 62vh;  /* fallback pro starší prohlížeče */
   height: 62svh; /* fotka od horního okraje (pod navigací) až pod ramena */
+  overflow: hidden; /* ořízne zvětšenou fotku při parallaxu */
 }
 
 .hero-photo img {
@@ -953,6 +954,7 @@ h3.sub-label::after {
 }
 
 /* Parallax fotek řídí script.js — prohlížeči předem hlásíme změny */
+.hero-photo img,
 .predel img,
 .finale-photo {
   will-change: transform;

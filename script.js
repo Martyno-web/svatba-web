@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
   //    Fotka je zvětšená na 110 % a posouvá se o ±4 % výšky.
   // ------------------------------------------------------------
   if (!bezPohybu) {
-    const fotky = document.querySelectorAll(".predel img, .finale-photo");
+    const fotky = document.querySelectorAll(".hero-photo img, .predel img, .finale-photo");
     if (fotky.length) {
       let cekam = false;
 
