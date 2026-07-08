@@ -1,18 +1,83 @@
-// Odpočet do svatby — doplní „za X dní · " před místo konání v prologu.
-// Když JavaScript neběží, prolog zobrazí jen „Jitkovský mlýn" (nic se nerozbije).
+// ============================================================
+// Svatební web — JavaScript
+// Vše je "progressive enhancement": bez JS web plně funguje,
+// jen chybí odpočet a animace.
+// ============================================================
+
+const bezPohybu = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 document.addEventListener("DOMContentLoaded", () => {
-  const el = document.getElementById("odpocet");
-  if (!el) return;
 
-  const svatba = new Date(2027, 3, 24); // měsíce se počítají od 0 → 3 = duben
-  const dnes = new Date();
-  svatba.setHours(0, 0, 0, 0);
-  dnes.setHours(0, 0, 0, 0);
+  // ------------------------------------------------------------
+  // 1. Odpočet do svatby (prolog)
+  // ------------------------------------------------------------
+  const odpocet = document.getElementById("odpocet");
+  if (odpocet) {
+    const svatba = new Date(2027, 3, 24); // měsíce od 0 → 3 = duben
+    const dnes = new Date();
+    svatba.setHours(0, 0, 0, 0);
+    dnes.setHours(0, 0, 0, 0);
+    const dni = Math.round((svatba - dnes) / 86400000);
+    if (dni >= 0) {
+      // České skloňování: 1 den, 2–4 dny, 5+ dní
+      const tvar = dni === 1 ? "den" : dni >= 2 && dni <= 4 ? "dny" : "dní";
+      odpocet.textContent = dni === 0 ? "je to dnes! · " : `za ${dni} ${tvar} · `;
+    }
+  }
 
-  const dni = Math.round((svatba - dnes) / 86400000);
-  if (dni < 0) return; // po svatbě odpočet nezobrazujeme
+  // ------------------------------------------------------------
+  // 2. Jemné odhalení obsahu při scrollu (fade-up)
+  //    Třída .reveal se přidává až tady — bez JS nic neskrýváme.
+  // ------------------------------------------------------------
+  if (!bezPohybu && "IntersectionObserver" in window) {
+    const bloky = document.querySelectorAll(
+      ".prolog, .section, .misto-media, .misto-body, .mezihra, .palette, .finale-content"
+    );
 
-  // České skloňování: 1 den, 2–4 dny, 5+ dní
-  const tvar = dni === 1 ? "den" : dni >= 2 && dni <= 4 ? "dny" : "dní";
-  el.textContent = dni === 0 ? "je to dnes! · " : `za ${dni} ${tvar} · `;
+    const io = new IntersectionObserver((zaznamy) => {
+      for (const z of zaznamy) {
+        if (z.isIntersecting) {
+          z.target.classList.add("visible");
+          io.unobserve(z.target); // každý blok se odhalí jen jednou
+        }
+      }
+    }, { rootMargin: "0px 0px -12% 0px" });
+
+    bloky.forEach((blok) => {
+      blok.classList.add("reveal");
+      io.observe(blok);
+    });
+  }
+
+  // ------------------------------------------------------------
+  // 3. Jemný parallax velkých fotografií (předěl, finále)
+  //    Fotka je zvětšená na 110 % a posouvá se o ±4 % výšky.
+  // ------------------------------------------------------------
+  if (!bezPohybu) {
+    const fotky = document.querySelectorAll(".predel img, .finale-photo");
+    if (fotky.length) {
+      let cekam = false;
+
+      const posun = () => {
+        cekam = false;
+        const vyskaOkna = window.innerHeight;
+        fotky.forEach((img) => {
+          const r = img.parentElement.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > vyskaOkna) return; // mimo obrazovku
+          // -1 až 1 podle toho, kde je střed fotky vůči středu okna
+          const pozice = (r.top + r.height / 2 - vyskaOkna / 2) / vyskaOkna;
+          img.style.transform = `scale(1.1) translateY(${(-pozice * 4).toFixed(2)}%)`;
+        });
+      };
+
+      window.addEventListener("scroll", () => {
+        if (!cekam) {
+          cekam = true;
+          requestAnimationFrame(posun); // max. jednou za snímek
+        }
+      }, { passive: true });
+
+      posun();
+    }
+  }
 });
