@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Martin &amp; Michaela — 24. 4. 2027</title>
+  <meta name="description" content="Svatba Martina a Michaely — 24. dubna 2027, Jitkovský mlýn, Chotěboř.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header class="header">
+    <nav class="nav">
+      <a class="nav-logo" href="#uvod">M&nbsp;&amp;&nbsp;M</a>
+      <div class="nav-links">
+        <a href="#program">Program</a>
+        <a href="#misto">Místo</a>
+        <a href="#faq">FAQ</a>
+        <a href="#kontakty">Kontakty</a>
+      </div>
+      <a class="nav-rsvp" href="#rsvp">RSVP</a>
+    </nav>
+
+    <section id="uvod" class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">Den, kdy si řekneme ano</p>
+        <h1>Martin <span class="amp">&amp;</span> Michaela</h1>
+        <div class="rule"></div>
+        <p class="date">Sobota 24. dubna 2027</p>
+        <p class="place">Jitkovský mlýn, Chotěboř</p>
+        <div class="hero-buttons">
+          <a class="button" href="#program">Informace</a>
+          <a class="button outline" href="#rsvp">RSVP</a>
+        </div>
+      </div>
+      <div class="hero-photo">
+        <img src="images/hero-original.png" alt="Martin a Michaela v uličce italského městečka">
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section class="section rozcestnik" aria-label="Rychlá navigace">
+      <ul class="tiles">
+        <li>
+          <a href="#program">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="1"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>
+            <span class="tile-title">Program</span>
+            <span class="tile-desc">Přehled celého dne</span>
+          </a>
+        </li>
+        <li>
+          <a href="#misto">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 21s-6-5.2-6-10a6 6 0 0 1 12 0c0 4.8-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>
+            <span class="tile-title">Místo</span>
+            <span class="tile-desc">Vše o mlýně a příjezdu</span>
+          </a>
+        </li>
+        <li>
+          <a href="#faq">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4z"/></svg>
+            <span class="tile-title">FAQ</span>
+            <span class="tile-desc">Odpovědi na otázky</span>
+          </a>
+        </li>
+        <li>
+          <a href="#kontakty">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="m3 7 9 6 9-6"/></svg>
+            <span class="tile-title">Kontakty</span>
+            <span class="tile-desc">Jsme tu pro vás</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section id="program" class="section roomy">
+      <h2>Program dne</h2>
+      <ul class="timeline">
+        <li><span class="time">13:00</span> Obřad</li>
+        <li><span class="time">14:00</span> Společné focení a gratulace</li>
+        <li><span class="time">15:00</span> Hostina</li>
+        <li><span class="time">20:00</span> Večerní zábava</li>
+      </ul>
+    </section>
+
+    <section id="misto" class="band">
+      <div class="section">
+        <h2>Místo konání</h2>
+        <p>Obřad i hostina proběhnou na jednom místě — Jitkovský mlýn u Chotěboře.</p>
+        <!-- TODO: doplnit adresu, popis příjezdu a fotku mlýna (pak přepneme na layout foto + text) -->
+        <a class="button outline" href="https://www.google.com/maps/search/Jitkovsk%C3%BD+ml%C3%BDn" target="_blank" rel="noopener">Otevřít mapu</a>
+      </div>
+    </section>
+
+    <section id="ubytovani" class="section">
+      <h2>Ubytování</h2>
+      <p>Informace o možnostech ubytování pro hosty zde brzy doplníme.</p>
+      <!-- TODO: kapacita na mlýně? okolní penziony? -->
+    </section>
+
+    <section id="dary" class="section quote">
+      <p class="quote-text">„Jó, vždyť víš, štěstí je krásná věc, vždyť víš, štěstí je krásná věc, štěstí je tak krásná a přepychová věc, ale prachy si za něj nekoupíš."</p>
+      <div class="rule centered"></div>
+    </section>
+
+    <section id="dresscode" class="section">
+      <h2>Dress code</h2>
+      <p>Prosíme o společenský oděv v přírodních tónech. Část dne strávíme venku, myslete proto na pohodlnou obuv.</p>
+      <ul class="swatches" aria-label="Doporučené barvy">
+        <li style="--swatch:#FAF7F1"></li>
+        <li style="--swatch:#E3D5BE"></li>
+        <li style="--swatch:#B08D5F"></li>
+        <li style="--swatch:#8A7A6A"></li>
+        <li style="--swatch:#3E3630"></li>
+      </ul>
+    </section>
+
+    <section id="faq" class="band">
+      <div class="section narrow">
+        <h2>Časté otázky</h2>
+        <details class="faq-item">
+          <summary>Můžu vzít s sebou děti?</summary>
+          <p>Doplníme.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Kde zaparkuji?</summary>
+          <p>Doplníme.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do kdy mám potvrdit účast?</summary>
+          <p>Doplníme.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="rsvp" class="band sand">
+      <div class="section roomy">
+        <h2 class="big">Přijdete?</h2>
+        <p>Prosíme o potvrzení účasti přes krátký formulář. Odkaz zde brzy doplníme.</p>
+        <!-- TODO: vložit odkaz na Google Formulář a termín potvrzení -->
+        <span class="button disabled" aria-disabled="true">Formulář již brzy</span>
+      </div>
+    </section>
+
+    <section id="kontakty" class="section">
+      <h2>Kontakty</h2>
+      <ul class="contact-list">
+        <li>
+          <span class="contact-name">Martin</span>
+          <span class="contact-detail">doplníme</span> <!-- TODO: telefon / e-mail -->
+        </li>
+        <li>
+          <span class="contact-name">Michaela</span>
+          <span class="contact-detail">doplníme</span> <!-- TODO: telefon / e-mail -->
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p class="footer-names">Martin <span class="amp">&amp;</span> Michaela · 24. 4. 2027</p>
+    <p class="footer-note">Těšíme se na vás</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
