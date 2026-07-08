@@ -155,10 +155,24 @@ h1, h2 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 45% 50%; /* portrét: vy dva mírně vlevo od středu */
+  object-position: 45% 50%;
   display: block;
   /* Jemná tonace k paletě webu */
   filter: brightness(1.05) saturate(0.85) sepia(0.08);
+}
+
+@media (max-width: 999px) {
+  /* Kompozice výřezu (mobil): zahodíme horní ~28 % fotky — ulička
+     zůstane jen jako úzký pás nad hlavami, vy dva se posunete do
+     horní poloviny obrazovky a celá dolní (ztmavená) polovina
+     patří typografii. Kompozice jako obálka magazínu. */
+  .hero-photo img {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 138%; /* plátno vyšší než obrazovka, ukotvené dole */
+    object-position: 50% 100%;
+  }
 }
 
 /* Mobil: nahoře tenký pruh pod navigací, dole teplý mocca gradient
@@ -170,9 +184,9 @@ h1, h2 {
   background:
     linear-gradient(180deg, rgba(62, 54, 48, .25) 0, rgba(62, 54, 48, 0) 110px),
     linear-gradient(180deg,
-      rgba(46, 38, 32, 0) 42%,
-      rgba(46, 38, 32, .30) 68%,
-      rgba(46, 38, 32, .55) 100%),
+      rgba(46, 38, 32, 0) 50%,
+      rgba(46, 38, 32, .32) 74%,
+      rgba(46, 38, 32, .62) 100%),
     linear-gradient(180deg,
       rgba(241, 233, 220, 0) calc(100% - 26px),
       var(--color-beige) 100%);
