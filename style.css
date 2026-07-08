@@ -162,10 +162,16 @@ h1, h2 {
 }
 
 @media (max-width: 999px) {
-  /* Mobilní fotka je už komponovaná pro tento formát (rozšířená dolů),
-     stačí ji vystředit na vás dva */
+  /* Záměrně přiblížený výřez (podle reference):
+     plátno fotky je vyšší než obrazovka a posunuté nahoru,
+     takže viditelné okno = pás ~28–85 % výšky fotky.
+     Hlavy končí ve ~42 % obrazovky, text začíná v ~57 %. */
   .hero-photo img {
-    object-position: 42% 50%;
+    position: absolute;
+    top: -49%;    /* posun okna (28 % ze 175% plátna) */
+    left: 0;
+    height: 175%; /* zoom — vidíme 57 % výšky fotky */
+    object-position: 47% 50%;
   }
 }
 
@@ -196,7 +202,7 @@ h1, h2 {
   justify-content: flex-end; /* mobil: text kotvený dole nad gradientem */
   align-items: flex-start;
   text-align: left;
-  padding: 0 var(--space-m) 12vh;
+  padding: 0 var(--space-m) 18vh;
 }
 
 /* Text na fotce — teplá slonová kost a písková (mobil i desktop) */
