@@ -171,8 +171,9 @@ h1, h2 {
   }
 }
 
-/* Mobil: nahoře tenký pruh pod navigací, dole teplý mocca gradient
-   pro čitelnost textu a úplně na hraně rozpuštění do béžové prologu */
+/* Mobil: nahoře tenký pruh pod navigací; dolní polovina se plynule
+   rozpouští do béžové — text je tmavý na světlém a hero přeteče
+   přímo do béžového prologu (jeden souvislý tón, žádná černá) */
 .hero-photo::after {
   content: "";
   position: absolute;
@@ -180,12 +181,9 @@ h1, h2 {
   background:
     linear-gradient(180deg, rgba(62, 54, 48, .25) 0, rgba(62, 54, 48, 0) 110px),
     linear-gradient(180deg,
-      rgba(46, 38, 32, 0) 46%,
-      rgba(46, 38, 32, .38) 62%,
-      rgba(46, 38, 32, .52) 78%,
-      rgba(46, 38, 32, .64) 100%),
-    linear-gradient(180deg,
-      rgba(241, 233, 220, 0) calc(100% - 26px),
+      rgba(241, 233, 220, 0) 44%,
+      rgba(241, 233, 220, .55) 62%,
+      rgba(241, 233, 220, .88) 80%,
       var(--color-beige) 100%);
 }
 
@@ -202,15 +200,18 @@ h1, h2 {
   padding: 0 var(--space-m) 12vh;
 }
 
-/* Text na fotce — teplá slonová kost a písková (mobil i desktop) */
+/* Mobil: text tmavý na světlém rozpuštění do béžové */
 .hero-text h1,
 .hero-text .date {
-  color: #F7F2EA;
+  color: var(--color-text);
 }
 
-.hero-text .amp,
+.hero-text .amp {
+  color: var(--color-caramel);
+}
+
 .hero-text .place {
-  color: var(--color-sand);
+  color: var(--color-text-soft);
 }
 
 h1 {
@@ -305,6 +306,17 @@ h1 {
 
   .hero-text .place {
     font-size: 17px;
+  }
+
+  /* Desktop: text leží na ztmavené zdi — světlé tóny */
+  .hero-text h1,
+  .hero-text .date {
+    color: #F7F2EA;
+  }
+
+  .hero-text .amp,
+  .hero-text .place {
+    color: var(--color-sand);
   }
 
   .hero .button.outline {
