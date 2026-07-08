@@ -16,6 +16,7 @@
   --color-text: #3E3630;        /* hlavní text */
   --color-text-soft: #8A7A6A;   /* vedlejší text */
   --color-on-caramel: #FFFDF8;  /* text na karamelové */
+  --color-mocca: #2E2620;       /* nejtmavší tón — patička, overlay finále */
 
   /* Typografie */
   --font-heading: "Cormorant Garamond", Georgia, serif;
@@ -407,13 +408,6 @@ h1 {
   background: var(--color-beige);
 }
 
-.band.sand {
-  background: var(--color-sand);
-}
-
-.band.sand p {
-  color: var(--color-text);
-}
 
 /* --------------------------------------------------------------------------
    7. Scroll-cue v hero (jen desktop — na mobilu je text hned pod fotkou)
@@ -859,53 +853,121 @@ h3.sub-label::after {
 }
 
 /* --------------------------------------------------------------------------
-   12. Kontakty a patička
+   16. Finále — „Přijdete?" přes celoobrazovkovou fotografii
    -------------------------------------------------------------------------- */
-.contact-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 auto;
-  max-width: 420px;
-  display: grid;
-  gap: var(--space-m);
+.finale {
+  position: relative;
+  min-height: 88vh;  /* fallback */
+  min-height: 88svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  padding: var(--space-section) var(--space-m);
+  box-sizing: border-box;
 }
 
-.contact-name {
-  display: block;
-  font-family: var(--font-heading);
-  font-size: 22px;
+.finale-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.contact-detail {
-  color: var(--color-text-soft);
-  font-size: 15px;
+/* Teplé ztmavení — dole silnější, plynule naváže na mocca patičku */
+.finale::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+              rgba(46, 38, 32, .42) 0%,
+              rgba(46, 38, 32, .62) 100%);
 }
 
-@media (min-width: 700px) {
-  .contact-list {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .contact-list li + li {
-    border-left: 1px solid var(--color-sand);
-  }
+.finale-content {
+  position: relative;
+  z-index: 1;
 }
 
+.finale-title {
+  font-size: clamp(52px, 9vw, 112px);
+  color: var(--color-on-caramel);
+  margin: 0 0 var(--space-s);
+}
+
+.finale-note {
+  color: var(--color-beige);
+  font-size: 16px;
+  margin: 0 0 var(--space-m);
+}
+
+.finale .button {
+  padding: 16px 44px;
+  font-size: 14px;
+}
+
+.finale-aside {
+  text-align: center;
+  color: var(--color-sand);
+  margin-top: var(--space-s);
+}
+
+/* --------------------------------------------------------------------------
+   17. Patička — mocca, monogram, podpis, kontakty
+   -------------------------------------------------------------------------- */
 footer {
+  background: var(--color-mocca);
+  color: var(--color-beige);
   text-align: center;
-  padding: var(--space-m) var(--space-m) var(--space-section);
-  border-top: 1px solid var(--color-sand);
+  padding: var(--space-section) var(--space-m);
+}
+
+.footer-amp {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--color-caramel);
+  margin: 0 0 var(--space-s);
 }
 
 .footer-names {
   font-family: var(--font-heading);
-  font-size: 20px;
-  margin: var(--space-m) 0 0;
+  font-size: 26px;
+  color: var(--color-on-caramel);
+  margin: 0;
+}
+
+.footer-date {
+  font-size: 12px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: var(--color-sand);
+  margin: var(--space-xs) 0 var(--space-m);
+}
+
+.footer-contacts {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-s);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs) var(--space-m);
+  font-size: 14px;
+}
+
+.footer-contacts span {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  color: var(--color-on-caramel);
 }
 
 .footer-note {
-  color: var(--color-text-soft);
-  font-size: 14px;
-  margin: 4px 0 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--color-sand);
+  margin: 0;
 }
