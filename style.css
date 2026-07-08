@@ -162,16 +162,10 @@ h1, h2 {
 }
 
 @media (max-width: 999px) {
-  /* Kompozice výřezu (mobil): zahodíme horní ~28 % fotky — ulička
-     zůstane jen jako úzký pás nad hlavami, vy dva se posunete do
-     horní poloviny obrazovky a celá dolní (ztmavená) polovina
-     patří typografii. Kompozice jako obálka magazínu. */
+  /* Mobilní fotka je už komponovaná pro tento formát (rozšířená dolů),
+     stačí ji vystředit na vás dva */
   .hero-photo img {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 138%; /* plátno vyšší než obrazovka, ukotvené dole */
-    object-position: 50% 100%;
+    object-position: 42% 50%;
   }
 }
 
