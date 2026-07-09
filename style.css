@@ -632,6 +632,9 @@ h2.chapter-label::after {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: var(--space-s);
+  /* Plynulé rozbalení/sbalení — výšku animuje script.js */
+  overflow: hidden;
+  transition: max-height .6s ease, opacity .6s ease;
 }
 
 .galerie-grid img {
@@ -640,11 +643,6 @@ h2.chapter-label::after {
   display: block;
   aspect-ratio: 1 / 1; /* jednotné čtverce bez ohledu na formát fotek */
   object-fit: cover;
-}
-
-/* Jemné objevení fotek při rozbalení */
-.galerie[open] .galerie-grid {
-  animation: vstup .45s ease-out;
 }
 
 /* Decentní focus místo modrého rámečku prohlížeče */

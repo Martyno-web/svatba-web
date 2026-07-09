@@ -82,4 +82,53 @@ document.addEventListener("DOMContentLoaded", () => {
       posun();
     }
   }
+
+  // ------------------------------------------------------------
+  // 4. Plynulé otevírání a zavírání fotogalerií (details.galerie)
+  //    Prohlížeč umí <details> zavřít jen skokově, proto výšku
+  //    animujeme sami. Při prefers-reduced-motion necháme výchozí
+  //    okamžité chování.
+  // ------------------------------------------------------------
+  if (!bezPohybu) {
+    document.querySelectorAll("details.galerie").forEach((galerie) => {
+      const spoustec = galerie.querySelector("summary");
+      const obsah = galerie.querySelector(".galerie-grid");
+      if (!spoustec || !obsah) return;
+
+      spoustec.addEventListener("click", (udalost) => {
+        udalost.preventDefault();
+        if (galerie.dataset.animuje) return; // ignoruj klik během animace
+        galerie.dataset.animuje = "1";
+
+        if (galerie.open) {
+          // Zavírání: nejdřív plynule složit, teprve potom zavřít
+          obsah.style.maxHeight = obsah.scrollHeight + "px";
+          requestAnimationFrame(() => {
+            obsah.style.maxHeight = "0px";
+            obsah.style.opacity = "0";
+          });
+          setTimeout(() => {
+            galerie.open = false;
+            obsah.style.maxHeight = "";
+            obsah.style.opacity = "";
+            delete galerie.dataset.animuje;
+          }, 620);
+        } else {
+          // Otevírání: otevřít složené a plynule rozvinout
+          galerie.open = true;
+          obsah.style.maxHeight = "0px";
+          obsah.style.opacity = "0";
+          requestAnimationFrame(() => {
+            obsah.style.maxHeight = obsah.scrollHeight + "px";
+            obsah.style.opacity = "1";
+          });
+          setTimeout(() => {
+            obsah.style.maxHeight = ""; // uvolnit pro responzivní změny
+            obsah.style.opacity = "";
+            delete galerie.dataset.animuje;
+          }, 620);
+        }
+      });
+    });
+  }
 });
