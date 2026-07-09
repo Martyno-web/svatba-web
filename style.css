@@ -627,14 +627,30 @@ h2.chapter-label::after {
 
 .galerie-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, …) — sloupce se smí zmenšit pod přirozenou šířku fotek;
+     bez toho velké fotky roztáhnou celý layout */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: var(--space-s);
 }
 
 .galerie-grid img {
+  width: 100%;
+  height: auto;
+  display: block;
   aspect-ratio: 1 / 1; /* jednotné čtverce bez ohledu na formát fotek */
   object-fit: cover;
+}
+
+/* Jemné objevení fotek při rozbalení */
+.galerie[open] .galerie-grid {
+  animation: vstup .45s ease-out;
+}
+
+/* Decentní focus místo modrého rámečku prohlížeče */
+.galerie summary:focus-visible {
+  outline: 1px solid var(--color-caramel);
+  outline-offset: 4px;
 }
 
 /* Tichá varianta galerie v řádcích seznamu (ubytování) —
@@ -653,6 +669,7 @@ h2.chapter-label::after {
 }
 
 .galerie-radek .galerie-grid {
+  max-width: 560px; /* fotky ubytování nemají zabrat celý sloupec */
   margin-top: var(--space-xs);
   margin-bottom: var(--space-xs);
 }
@@ -761,7 +778,8 @@ h3.sub-label::after {
 @media (min-width: 1000px) {
   .chapter-misto {
     display: grid;
-    grid-template-columns: 5fr 6fr;
+    /* minmax(0, …) chrání sloupce před roztažením velkými fotkami */
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
     gap: 7%;
     align-items: start;
     padding-top: var(--space-section-l);
