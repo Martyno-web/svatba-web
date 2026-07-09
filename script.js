@@ -31,7 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------------------------
   if (!bezPohybu && "IntersectionObserver" in window) {
     const bloky = document.querySelectorAll(
-      ".prolog, .section, .misto-media, .misto-body, .mezihra, .palette, .finale-content"
+      // Pozor: nikdy neanimovat celé sekce s vlastním pozadím (např. .prolog) —
+      // reveal by skryl i barvu pozadí a stránka by "probleskovala"
+      ".prolog-line, .prolog-meta, .section, .misto-media, .misto-body, .mezihra, .palette, .finale-content"
     );
 
     const io = new IntersectionObserver((zaznamy) => {
