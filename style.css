@@ -56,7 +56,7 @@ body {
   background: var(--color-cream);
 }
 
-h1, h2 {
+h1, h2, h3 {
   font-family: var(--font-heading);
   font-weight: 400;
   line-height: 1.15;
@@ -569,27 +569,6 @@ h2.chapter-label::after {
   display: block;
 }
 
-/* Jemný tmavý nádech dole kvůli čitelnosti štítku kapitoly */
-.predel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg,
-              rgba(46, 38, 32, 0) 70%,
-              rgba(46, 38, 32, .35) 100%);
-}
-
-.predel-label {
-  position: absolute;
-  left: var(--space-m);
-  bottom: var(--space-s);
-  z-index: 1;
-  margin: 0;
-  color: var(--color-on-caramel);
-  font-size: 13px;
-  letter-spacing: .22em; /* Popisek L */
-  text-transform: uppercase;
-}
 
 /* --------------------------------------------------------------------------
    12. Kapitola Místo — sticky foto vlevo, obsah vpravo (desktop)
@@ -611,6 +590,51 @@ h2.chapter-label::after {
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* Rozklikávací galerie místa — stejný princip jako otázky (details) */
+.galerie summary {
+  cursor: pointer;
+  list-style: none; /* schová výchozí šipku */
+}
+
+.galerie summary::-webkit-details-marker {
+  display: none;
+}
+
+.galerie-hint {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 2px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--color-caramel-dark);
+  border-bottom: 1px solid var(--color-sand);
+}
+
+.galerie-plus {
+  font-size: 20px;
+  color: var(--color-caramel);
+  transition: transform .2s;
+}
+
+.galerie[open] .galerie-plus {
+  transform: rotate(45deg); /* z + se stane × */
+}
+
+.galerie-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: var(--space-s);
+}
+
+.galerie-grid img {
+  aspect-ratio: 1 / 1; /* jednotné čtverce bez ohledu na formát fotek */
+  object-fit: cover;
 }
 
 .misto-title {
