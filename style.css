@@ -637,6 +637,26 @@ h2.chapter-label::after {
   object-fit: cover;
 }
 
+/* Tichá varianta galerie v řádcích seznamu (ubytování) —
+   jen drobný textový spouštěč, žádná linka ani velký akcent */
+.galerie-radek .galerie-hint {
+  justify-content: flex-start;
+  gap: var(--space-xs);
+  padding: 6px 0 0;
+  font-size: 11px;
+  color: var(--color-text-soft);
+  border-bottom: none;
+}
+
+.galerie-radek .galerie-plus {
+  font-size: 16px;
+}
+
+.galerie-radek .galerie-grid {
+  margin-top: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+
 .misto-title {
   font-size: clamp(32px, 5vw, 52px);
   margin: 0 0 var(--space-s);
