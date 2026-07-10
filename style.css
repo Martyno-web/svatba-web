@@ -250,49 +250,6 @@ body.menu-otevrene .nav-logo {
   opacity: 1;
 }
 
-/* --------------------------------------------------------------------------
-   3c. Vlaštovky menu — jednotažné siluety v pravém horním rohu
-   -------------------------------------------------------------------------- */
-.menu-ptaci {
-  display: none; /* zapíná se v MQ výše (mobil + povolený pohyb) */
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 300px;
-  height: 170px;
-  z-index: 65; /* nad kartou menu, pod tlačítkem */
-  pointer-events: none;
-  color: var(--color-on-caramel); /* linky na fotce */
-  transition: color .4s ease;
-}
-
-/* Na otevřené krémové kartě linky ztmavnou */
-body.menu-otevrene .menu-ptaci {
-  color: var(--color-text);
-}
-
-.mp-ptak {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* Zapnutí vlaštovčí verze (mobil + povolený pohyb): vizuál čárek
-   i křížku přebírá SVG, spany zůstávají jen jako fallback.
-   POZOR: tento blok musí být v souboru AŽ ZA základním
-   `.menu-ptaci { display: none }`, jinak ho přepíše. */
-@media (max-width: 999px) and (prefers-reduced-motion: no-preference) {
-  .menu-ptaci {
-    display: block;
-  }
-
-  .nav-burger span {
-    display: none;
-  }
-}
-
 @media (max-width: 999px) {
   .nav-burger {
     display: flex;
