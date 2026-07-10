@@ -162,11 +162,12 @@ h1, h2, h3 {
 }
 
 @media (max-width: 999px) {
-  /* Mobilní fotka je komponovaná pro tento formát (rozšířená dolů),
-     stačí ji vystředit na vás dva. Tonace = stejná jako desktop
-     (dědí se ze základního pravidla) — jednotná barevnost fotek. */
+  /* Mobilní fotka nemá (na rozdíl od desktopové) barevný grading
+     ve zdroji — silnější filtr ho napodobuje, aby obě fotky ladily.
+     Až bude mobilní fotka přegradovaná v editoru, vrátit na základ. */
   .hero-photo img {
     object-position: 42% 50%;
+    filter: brightness(1.04) contrast(0.97) saturate(0.65) sepia(0.15);
   }
 }
 
