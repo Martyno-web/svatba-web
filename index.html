@@ -16,11 +16,27 @@
     <nav class="nav">
       <a class="nav-logo" href="#uvod">M&nbsp;&amp;&nbsp;M</a>
       <div class="nav-links">
-        <a href="#program">Program</a>
+        <a href="#program">Den</a>
         <a href="#misto">Místo</a>
-        <a href="#faq">FAQ</a>
+        <a href="#faq">Dobré vědět</a>
       </div>
+      <button class="nav-burger" aria-label="Otevřít menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+      </button>
     </nav>
+
+    <!-- Celoobrazovkové menu pro mobil — kapitoly webu -->
+    <div class="menu" id="menu">
+      <nav class="menu-links" aria-label="Kapitoly">
+        <a href="#program">Den</a>
+        <a href="#misto">Místo</a>
+        <a href="#dary">Dary</a>
+        <a href="#dresscode">Co na sebe</a>
+        <a href="#faq">Dobré vědět</a>
+      </nav>
+      <p class="menu-meta">24 / 04 / 27 · Jitkovský mlýn</p>
+    </div>
 
     <section id="uvod" class="hero">
       <div class="hero-text">
@@ -143,7 +159,7 @@
             <span class="k">V okolí</span>
             <div>
               10 minut autem od mlýna vám zařídíme ubytování včetně dopravy do/z mlýna
-            </nav> v https://www.racin.cz/cs/pokoje/
+              <a class="text-link text-link-maly" href="https://www.racin.cz/cs/pokoje/" target="_blank" rel="noopener">Penzion Račín →</a>
               <details class="galerie galerie-radek">
                 <summary>
                   <span class="galerie-hint">Fotky <span class="galerie-plus" aria-hidden="true">+</span></span>
@@ -200,15 +216,11 @@
             <summary>Kde zaparkujeme?</summary>
             <p>Doplníme.</p> <!-- TODO -->
           </details>
-          <details class="faq-item" open>
-            <summary>Do kdy máme potvrdit účast?</summary>
-            <p>Doplníme.</p> <!-- TODO -->
-          </details>
         </div>
       </div>
     </section>
 
-    <section id="rsvp" class="finale">
+    <section id="zaver" class="finale">
       <img class="finale-photo" src="images/finale.png" alt="Jitkovský mlýn v podvečerním světle" loading="lazy">
       <div class="finale-content">
         <h2 class="finale-title">Těšíme se na vás</h2>

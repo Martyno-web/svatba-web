@@ -123,8 +123,101 @@ h1, h2, h3 {
 }
 
 .nav-links a:hover,
-.nav-links a:focus-visible {
-  border-bottom-color: var(--color-sand);
+.nav-links a:focus-visible,
+.nav-links a.active {
+  border-bottom-color: var(--color-sand); /* .active = kapitola na obrazovce */
+}
+
+/* --------------------------------------------------------------------------
+   3b. Mobilní menu — hamburger + celoobrazovkové kapitoly
+   -------------------------------------------------------------------------- */
+.nav-burger {
+  display: none; /* zobrazuje se jen na mobilu */
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 60; /* nad otevřeným menu, aby šlo zavřít */
+}
+
+.nav-burger span {
+  display: block;
+  width: 24px;
+  height: 1.5px;
+  background: var(--color-on-caramel);
+  transition: transform .3s ease, background .3s ease;
+}
+
+/* Otevřeno: čárky se zkříží a ztmavnou (leží na krémovém menu) */
+.nav-burger.open span {
+  background: var(--color-text);
+}
+
+.nav-burger.open span:first-child {
+  transform: translateY(4.25px) rotate(45deg);
+}
+
+.nav-burger.open span:last-child {
+  transform: translateY(-4.25px) rotate(-45deg);
+}
+
+.menu {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-m);
+  background: var(--color-cream);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s ease;
+}
+
+.menu.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-s);
+}
+
+.menu-links a {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.menu-links a:hover,
+.menu-links a:focus-visible {
+  color: var(--color-caramel-dark);
+}
+
+.menu-meta {
+  margin: var(--space-m) 0 0;
+  font-size: 12px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+}
+
+@media (max-width: 999px) {
+  .nav-burger {
+    display: flex;
+  }
 }
 
 @media (min-width: 700px) {
@@ -293,17 +386,14 @@ h1 {
         var(--color-beige) 100%);
   }
 
-  /* Desktop: datum a místo zpět v klidném řezu
-     (caps popisek je jen mobilní úprava) */
+  /* Desktop: stejný caps popisek jako mobil, jen o chlup větší —
+     jeden obsah, jeden styl */
   .hero-text .date {
-    font-size: 22px;
-    font-weight: 300;
-    letter-spacing: 0;
-    text-transform: none;
+    font-size: 15px;
   }
 
   .hero-text .place {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   /* Desktop: text leží na ztmavené zdi — světlé tóny */
@@ -317,56 +407,6 @@ h1 {
     color: var(--color-sand);
   }
 
-  .hero .button.outline {
-    border-color: var(--color-sand);
-    color: var(--color-on-caramel);
-  }
-
-  .hero .button.outline:hover,
-  .hero .button.outline:focus-visible {
-    background: var(--color-caramel);
-    border-color: var(--color-caramel);
-  }
-}
-
-/* --------------------------------------------------------------------------
-   5. Tlačítka
-   -------------------------------------------------------------------------- */
-.button {
-  display: inline-block;
-  padding: 13px 28px;
-  background: var(--color-caramel);
-  color: var(--color-on-caramel);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: .15em;
-  text-transform: uppercase;
-  transition: background .2s, color .2s;
-}
-
-.button:hover,
-.button:focus-visible {
-  background: var(--color-caramel-dark);
-}
-
-.button.outline {
-  background: transparent;
-  color: var(--color-caramel-dark);
-  border: 1px solid var(--color-caramel);
-  padding: 12px 27px; /* kompenzace rámečku, stejná výška jako plné tlačítko */
-}
-
-.button.outline:hover,
-.button.outline:focus-visible {
-  background: var(--color-caramel);
-  color: var(--color-on-caramel);
-}
-
-.button.disabled {
-  background: var(--color-sand);
-  color: var(--color-text-soft);
-  cursor: not-allowed;
 }
 
 /* --------------------------------------------------------------------------
@@ -390,12 +430,6 @@ h1 {
 .section p {
   text-align: center;
   color: var(--color-text-soft);
-}
-
-.section .button {
-  display: block;
-  width: fit-content;
-  margin: var(--space-m) auto 0;
 }
 
 /* Tmavší pásy přes celou šířku — rytmus stránky */
@@ -434,6 +468,16 @@ h1 {
   width: 1px;
   height: 44px;
   background: rgba(255, 253, 248, .7);
+}
+
+/* Pomalý „dech" — jediný pohyblivý prvek klidného hero */
+@keyframes dych {
+  0%, 100% { opacity: .55; }
+  50%      { opacity: 1; }
+}
+
+.scroll-cue {
+  animation: dych 2.6s ease-in-out infinite;
 }
 
 @media (min-width: 1000px) {
@@ -644,9 +688,12 @@ h2.chapter-label::after {
      ořezává minimálně a dvojice vedle sebe působí klidně */
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  /* Jednotná atmosféra: monochrom zabarvený do zlatavé medové
-     tóniny hero fotky — saturate za sepií zesiluje teplý nádech */
-  filter: grayscale(1) sepia(.48) saturate(1.2) brightness(1.05) contrast(.95);
+  transition: transform .6s ease;
+}
+
+/* Jemné přiblížení fotky pod kurzorem */
+.galerie-grid img:hover {
+  transform: scale(1.02);
 }
 
 /* Decentní focus místo modrého rámečku prohlížeče */
@@ -756,6 +803,12 @@ h2.chapter-label::after {
   width: 100%;
 }
 
+/* Menší varianta odkazu uvnitř řádků seznamu */
+.text-link-maly {
+  margin-top: var(--space-xs);
+  font-size: 11px;
+}
+
 /* Podkapitola (Ubytování) */
 h3.sub-label {
   display: flex;
@@ -858,7 +911,7 @@ h3.sub-label::after {
 
 .palette li {
   flex: 1;
-  height: 140px;
+  height: 100px; /* vzorník, ne banner — nesmí soupeřit s akcentem Darů */
   background: var(--c);
   position: relative;
 }
@@ -877,7 +930,7 @@ h3.sub-label::after {
 
 @media (min-width: 700px) {
   .palette li {
-    height: 200px;
+    height: 140px;
   }
 }
 
@@ -1060,6 +1113,14 @@ h3.sub-label::after {
 @media (prefers-reduced-motion: reduce) {
   .hero-text > * {
     animation: none;
+  }
+
+  .scroll-cue {
+    animation: none;
+  }
+
+  .galerie-grid img:hover {
+    transform: none;
   }
 
   .reveal {

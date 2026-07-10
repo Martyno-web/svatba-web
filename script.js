@@ -131,4 +131,50 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
+
+  // ------------------------------------------------------------
+  // 5. Mobilní menu (hamburger)
+  // ------------------------------------------------------------
+  const burger = document.querySelector(".nav-burger");
+  const menu = document.querySelector(".menu");
+  if (burger && menu) {
+    const prepniMenu = (otevrit) => {
+      menu.classList.toggle("open", otevrit);
+      burger.classList.toggle("open", otevrit);
+      burger.setAttribute("aria-expanded", String(otevrit));
+      burger.setAttribute("aria-label", otevrit ? "Zavřít menu" : "Otevřít menu");
+      document.body.style.overflow = otevrit ? "hidden" : ""; // zámek scrollu
+    };
+
+    burger.addEventListener("click", () => {
+      prepniMenu(!menu.classList.contains("open"));
+    });
+
+    // Klik na kapitolu menu zavře a nechá prohlížeč doscrollovat
+    menu.querySelectorAll("a").forEach((odkaz) => {
+      odkaz.addEventListener("click", () => prepniMenu(false));
+    });
+  }
+
+  // ------------------------------------------------------------
+  // 6. Zvýraznění aktivní kapitoly v desktopové navigaci
+  // ------------------------------------------------------------
+  if ("IntersectionObserver" in window) {
+    const odkazy = document.querySelectorAll(".nav-links a[href^='#']");
+    if (odkazy.length) {
+      const spy = new IntersectionObserver((zaznamy) => {
+        zaznamy.forEach((z) => {
+          const odkaz = document.querySelector(
+            `.nav-links a[href="#${z.target.id}"]`
+          );
+          if (odkaz) odkaz.classList.toggle("active", z.isIntersecting);
+        });
+      }, { rootMargin: "-40% 0px -55% 0px" }); // aktivní = kapitola u středu okna
+
+      odkazy.forEach((odkaz) => {
+        const cil = document.querySelector(odkaz.getAttribute("href"));
+        if (cil) spy.observe(cil);
+      });
+    }
+  }
 });
