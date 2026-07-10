@@ -83,13 +83,15 @@ h1, h2, h3 {
   position: relative;
 }
 
-/* Navigace leží PŘES fotku (průhledná), ne nad ní */
+/* Navigace leží PŘES fotku (průhledná), ne nad ní.
+   z-index musí být NAD otevřeným menu (50), jinak by křížek
+   hamburgeru nešel zmáčknout — nav tvoří vlastní stacking context */
 .nav {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 3;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -104,6 +106,12 @@ h1, h2, h3 {
   color: var(--color-on-caramel); /* leží na fotce s tmavým pruhem */
   text-decoration: none;
   letter-spacing: .08em;
+  transition: color .3s;
+}
+
+/* Při otevřeném menu je logo na krémové — ztmavne */
+body.menu-otevrene .nav-logo {
+  color: var(--color-text);
 }
 
 .nav-links {

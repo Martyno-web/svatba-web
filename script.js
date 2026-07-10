@@ -143,6 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
       burger.classList.toggle("open", otevrit);
       burger.setAttribute("aria-expanded", String(otevrit));
       burger.setAttribute("aria-label", otevrit ? "Zavřít menu" : "Otevřít menu");
+      document.body.classList.toggle("menu-otevrene", otevrit);
       document.body.style.overflow = otevrit ? "hidden" : ""; // zámek scrollu
     };
 
