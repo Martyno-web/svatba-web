@@ -644,6 +644,9 @@ h2.chapter-label::after {
      ořezává minimálně a dvojice vedle sebe působí klidně */
   aspect-ratio: 4 / 3;
   object-fit: cover;
+  /* Jednotná atmosféra podle hero: ztlumené barvy, teplý nádech,
+     měkčí kontrast — sjednotí fotky z různých zdrojů */
+  filter: saturate(.72) sepia(.16) contrast(.95) brightness(1.03);
 }
 
 /* Decentní focus místo modrého rámečku prohlížeče */
