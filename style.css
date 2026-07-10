@@ -161,17 +161,6 @@ body.menu-otevrene .nav-logo {
   transition: transform .5s ease, background .3s ease, opacity .4s ease;
 }
 
-/* Když běží vlaštovčí verze (mobil + povolený pohyb), vizuál čárek
-   i křížku přebírá SVG — spany slouží jen jako fallback */
-@media (max-width: 999px) and (prefers-reduced-motion: no-preference) {
-  .nav-burger span {
-    display: none;
-  }
-
-  .menu-ptaci {
-    display: block;
-  }
-}
 
 /* Otevřeno: čárky se zkříží a ztmavnou (leží na krémovém menu) */
 .nav-burger.open span {
@@ -289,6 +278,20 @@ body.menu-otevrene .menu-ptaci {
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Zapnutí vlaštovčí verze (mobil + povolený pohyb): vizuál čárek
+   i křížku přebírá SVG, spany zůstávají jen jako fallback.
+   POZOR: tento blok musí být v souboru AŽ ZA základním
+   `.menu-ptaci { display: none }`, jinak ho přepíše. */
+@media (max-width: 999px) and (prefers-reduced-motion: no-preference) {
+  .menu-ptaci {
+    display: block;
+  }
+
+  .nav-burger span {
+    display: none;
+  }
 }
 
 @media (max-width: 999px) {
