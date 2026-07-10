@@ -161,10 +161,16 @@ body.menu-otevrene .nav-logo {
   transition: transform .5s ease, background .3s ease, opacity .4s ease;
 }
 
-/* Během letu vlaštovek čárky „nejsou" — proměnily se v ptáčky */
-.nav-burger.bez-car span {
-  opacity: 0;
-  transition: opacity .15s ease;
+/* Když běží vlaštovčí verze (mobil + povolený pohyb), vizuál čárek
+   i křížku přebírá SVG — spany slouží jen jako fallback */
+@media (max-width: 999px) and (prefers-reduced-motion: no-preference) {
+  .nav-burger span {
+    display: none;
+  }
+
+  .menu-ptaci {
+    display: block;
+  }
 }
 
 /* Otevřeno: čárky se zkříží a ztmavnou (leží na krémovém menu) */
@@ -257,48 +263,32 @@ body.menu-otevrene .nav-logo {
 }
 
 /* --------------------------------------------------------------------------
-   3c. Vlaštovky — let při otevírání menu
+   3c. Vlaštovky menu — jednotažné siluety v pravém horním rohu
    -------------------------------------------------------------------------- */
-.ptaci {
+.menu-ptaci {
+  display: none; /* zapíná se v MQ výše (mobil + povolený pohyb) */
   position: fixed;
-  inset: 0;
-  z-index: 70; /* nad menu i navigací — přeletí přes kartu */
-  pointer-events: none;
-}
-
-.ptak {
-  position: absolute;
-  left: 0;
   top: 0;
-  width: 26px;
-  color: var(--color-caramel-dark);
-  opacity: 0;
-  transition: opacity .25s ease;
-  offset-rotate: auto; /* ptáček se natáčí po směru letu */
+  right: 0;
+  width: 300px;
+  height: 170px;
+  z-index: 65; /* nad kartou menu, pod tlačítkem */
+  pointer-events: none;
+  color: var(--color-on-caramel); /* linky na fotce */
+  transition: color .4s ease;
 }
 
-.ptak:last-child {
-  width: 21px; /* druhý menší — pár, ne klony */
+/* Na otevřené krémové kartě linky ztmavnou */
+body.menu-otevrene .menu-ptaci {
+  color: var(--color-text);
 }
 
-.ptak.leti {
-  opacity: 1;
-}
-
-/* Mávání křídel: obě křídla kmitají kolem těla, zadní se zpožděním */
-@keyframes mach {
-  from { transform: rotate(16deg); }
-  to   { transform: rotate(-30deg); }
-}
-
-.ptak .kridlo {
-  transform-origin: 16px 11px;
-  animation: mach .22s ease-in-out infinite alternate;
-}
-
-.ptak .kridlo-zadni {
-  animation-delay: .07s;
-  opacity: .6;
+.mp-ptak {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 @media (max-width: 999px) {
