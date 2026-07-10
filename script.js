@@ -133,18 +133,78 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------------------------------------
-  // 5. Mobilní menu (hamburger)
+  // 5. Mobilní menu (hamburger) + let vlaštovek
+  //    Otevření: čárky hamburgeru se promění ve dva ptáčky, ti
+  //    obletí otevírající se kartu a v rohu se pomalu složí do ×.
   // ------------------------------------------------------------
   const burger = document.querySelector(".nav-burger");
   const menu = document.querySelector(".menu");
+  const ptaci = document.querySelectorAll(".ptak");
+
+  const umimLetet = () =>
+    !bezPohybu &&
+    ptaci.length === 2 &&
+    typeof ptaci[0].animate === "function" &&
+    CSS.supports("offset-path", "path('M 0 0 L 1 1')");
+
+  const letVlastovek = (hotovo) => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const sx = w - 44; // start i cíl: pozice hamburgeru vpravo nahoře
+    const sy = 32;
+
+    // Dvě mírně odlišné smyčky přes kartu menu a zpět do rohu
+    const drahy = [
+      `M ${sx} ${sy}
+       C ${w * 0.5} ${h * 0.08}, ${w * 0.08} ${h * 0.28}, ${w * 0.16} ${h * 0.55}
+       C ${w * 0.24} ${h * 0.82}, ${w * 0.72} ${h * 0.72}, ${sx} ${sy}`,
+      `M ${sx} ${sy}
+       C ${w * 0.62} ${h * 0.18}, ${w * 0.2} ${h * 0.42}, ${w * 0.3} ${h * 0.66}
+       C ${w * 0.42} ${h * 0.9}, ${w * 0.85} ${h * 0.6}, ${sx} ${sy}`,
+    ];
+
+    let dolatelo = 0;
+    ptaci.forEach((ptak, i) => {
+      ptak.style.offsetPath = `path("${drahy[i].replace(/\s+/g, " ")}")`;
+      ptak.classList.add("leti");
+      const let_ = ptak.animate(
+        [{ offsetDistance: "0%" }, { offsetDistance: "100%" }],
+        {
+          duration: 1400 + i * 200,
+          delay: i * 110,
+          easing: "cubic-bezier(.45,.05,.35,1)",
+        }
+      );
+      let_.onfinish = () => {
+        ptak.classList.remove("leti"); // ptáček se v rohu „rozplyne"…
+        dolatelo += 1;
+        if (dolatelo === ptaci.length) hotovo(); // …a čárky se složí do ×
+      };
+    });
+  };
+
   if (burger && menu) {
+    let animujeMenu = false;
+
     const prepniMenu = (otevrit) => {
+      if (animujeMenu) return;
       menu.classList.toggle("open", otevrit);
-      burger.classList.toggle("open", otevrit);
       burger.setAttribute("aria-expanded", String(otevrit));
       burger.setAttribute("aria-label", otevrit ? "Zavřít menu" : "Otevřít menu");
       document.body.classList.toggle("menu-otevrene", otevrit);
       document.body.style.overflow = otevrit ? "hidden" : ""; // zámek scrollu
+
+      if (otevrit && umimLetet()) {
+        animujeMenu = true;
+        burger.classList.add("bez-car"); // čárky zmizí — staly se ptáčky
+        letVlastovek(() => {
+          burger.classList.remove("bez-car");
+          burger.classList.add("open"); // pomalé složení do křížku
+          animujeMenu = false;
+        });
+      } else {
+        burger.classList.toggle("open", otevrit);
+      }
     };
 
     burger.addEventListener("click", () => {

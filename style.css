@@ -158,7 +158,13 @@ body.menu-otevrene .nav-logo {
   width: 24px;
   height: 1.5px;
   background: var(--color-on-caramel);
-  transition: transform .3s ease, background .3s ease;
+  transition: transform .5s ease, background .3s ease, opacity .4s ease;
+}
+
+/* Během letu vlaštovek čárky „nejsou" — proměnily se v ptáčky */
+.nav-burger.bez-car span {
+  opacity: 0;
+  transition: opacity .15s ease;
 }
 
 /* Otevřeno: čárky se zkříží a ztmavnou (leží na krémovém menu) */
@@ -248,6 +254,51 @@ body.menu-otevrene .nav-logo {
 
 .menu.open .menu-meta {
   opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   3c. Vlaštovky — let při otevírání menu
+   -------------------------------------------------------------------------- */
+.ptaci {
+  position: fixed;
+  inset: 0;
+  z-index: 70; /* nad menu i navigací — přeletí přes kartu */
+  pointer-events: none;
+}
+
+.ptak {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 26px;
+  color: var(--color-caramel-dark);
+  opacity: 0;
+  transition: opacity .25s ease;
+  offset-rotate: auto; /* ptáček se natáčí po směru letu */
+}
+
+.ptak:last-child {
+  width: 21px; /* druhý menší — pár, ne klony */
+}
+
+.ptak.leti {
+  opacity: 1;
+}
+
+/* Mávání křídel: obě křídla kmitají kolem těla, zadní se zpožděním */
+@keyframes mach {
+  from { transform: rotate(16deg); }
+  to   { transform: rotate(-30deg); }
+}
+
+.ptak .kridlo {
+  transform-origin: 16px 11px;
+  animation: mach .22s ease-in-out infinite alternate;
+}
+
+.ptak .kridlo-zadni {
+  animation-delay: .07s;
+  opacity: .6;
 }
 
 @media (max-width: 999px) {
@@ -1164,6 +1215,10 @@ h3.sub-label::after {
   .menu-meta {
     transition: none;
     transform: none;
+  }
+
+  .ptaci {
+    display: none;
   }
 
   .reveal {
