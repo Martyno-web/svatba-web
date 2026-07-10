@@ -470,7 +470,7 @@ h1 {
 }
 
 /* --------------------------------------------------------------------------
-   6. Sekce — společné
+   5. Sekce — společné
    -------------------------------------------------------------------------- */
 .section {
   max-width: var(--content-width);
@@ -481,10 +481,6 @@ h1 {
 .section.roomy {
   padding-top: var(--space-section-l);
   padding-bottom: var(--space-section-l);
-}
-
-.section.narrow {
-  max-width: 600px;
 }
 
 .section p {
@@ -502,9 +498,8 @@ h1 {
   background: var(--color-sand);
 }
 
-
 /* --------------------------------------------------------------------------
-   7. Scroll-cue v hero (jen desktop — na mobilu je text hned pod fotkou)
+   6. Scroll-cue v hero (jen desktop — na mobilu je text hned pod fotkou)
    -------------------------------------------------------------------------- */
 .scroll-cue {
   position: absolute;
@@ -547,7 +542,7 @@ h1 {
 }
 
 /* --------------------------------------------------------------------------
-   8. Prolog — osobní věta pod hero
+   7. Prolog — osobní věta pod hero
    -------------------------------------------------------------------------- */
 .prolog {
   /* Nejsvětlejší písková ze stávající palety — fotka hero se rozpouští
@@ -576,7 +571,7 @@ h1 {
 }
 
 /* --------------------------------------------------------------------------
-   9. Kapitoly — číslovaný štítek s vláskovou linkou
+   8. Kapitoly — štítek s vláskovou linkou
    -------------------------------------------------------------------------- */
 h2.chapter-label {
   display: flex;
@@ -606,7 +601,7 @@ h2.chapter-label::after {
 }
 
 /* --------------------------------------------------------------------------
-   10. Program — „menu dne" s osobními vsuvkami
+   9. Program — „menu dne"
    -------------------------------------------------------------------------- */
 .menu-dne {
   list-style: none;
@@ -643,18 +638,8 @@ h2.chapter-label::after {
   text-transform: uppercase;
 }
 
-/* Osobní vsuvka („váš hlas") — používá se v programu, u místa i jinde */
-.aside {
-  margin: 4px 0 0;
-  font-family: var(--font-heading);
-  font-style: italic;
-  font-size: 17px;
-  color: var(--color-text-soft);
-  text-align: left;
-}
-
 /* --------------------------------------------------------------------------
-   11. Předěl — fotografie přes celou šířku s označením kapitoly
+   10. Předěl — fotografie přes celou šířku
    -------------------------------------------------------------------------- */
 .predel {
   position: relative;
@@ -674,7 +659,7 @@ h2.chapter-label::after {
 
 
 /* --------------------------------------------------------------------------
-   12. Kapitola Místo — sticky foto vlevo, obsah vpravo (desktop)
+   11. Kapitola Místo — sticky foto vlevo, obsah vpravo (desktop)
    -------------------------------------------------------------------------- */
 .chapter-misto {
   display: flex;
@@ -910,7 +895,7 @@ h3.sub-label::after {
 }
 
 /* --------------------------------------------------------------------------
-   13. Mezihra — obří citát s duchem monogramu &
+   12. Mezihra — obří citát s duchem monogramu & (Dary)
    -------------------------------------------------------------------------- */
 .mezihra {
   position: relative;
@@ -951,9 +936,8 @@ h3.sub-label::after {
   margin: 0 auto;
 }
 
-
 /* --------------------------------------------------------------------------
-   14. Co na sebe — paleta jako pás pruhů přes celou šířku
+   13. Co na sebe — paleta jako pás pruhů přes celou šířku
    -------------------------------------------------------------------------- */
 .dresscode-line {
   text-align: left;
@@ -995,7 +979,7 @@ h3.sub-label::after {
 }
 
 /* --------------------------------------------------------------------------
-   15. Dobré vědět — otevřené otázky, na desktopu dva sloupce
+   14. Dobré vědět — otevřené otázky, na desktopu dva sloupce
    -------------------------------------------------------------------------- */
 .dobre-vedet {
   max-width: 900px;
@@ -1054,7 +1038,7 @@ h3.sub-label::after {
 }
 
 /* --------------------------------------------------------------------------
-   16. Finále — „Přijdete?" přes celoobrazovkovou fotografii
+   15. Finále — „Těšíme se na vás" přes celoobrazovkovou fotografii
    -------------------------------------------------------------------------- */
 .finale {
   position: relative;
@@ -1125,7 +1109,7 @@ h3.sub-label::after {
 }
 
 /* --------------------------------------------------------------------------
-   18. Animace — decentní, „neviditelné"
+   16. Animace — decentní, „neviditelné"
    -------------------------------------------------------------------------- */
 /* Vstup obsahu hero po načtení (čisté CSS, postupné zpoždění řádků) */
 @keyframes vstup {
@@ -1188,10 +1172,6 @@ h3.sub-label::after {
   .menu-meta {
     transition: none;
     transform: none;
-  }
-
-  .ptaci {
-    display: none;
   }
 
   .reveal {
