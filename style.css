@@ -174,23 +174,31 @@ body.menu-otevrene .nav-logo {
   transform: translateY(-4.25px) rotate(-45deg);
 }
 
+/* Levitující karta: odsazená od krajů, zaoblená, poloprůsvitná
+   s rozmazáním pozadí (frosted glass) — stránka za ní jemně prosvítá */
 .menu {
   position: fixed;
-  inset: 0;
+  inset: 12px;
   z-index: 50;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: var(--space-m);
-  background: var(--color-cream);
+  border-radius: 20px;
+  background: rgba(250, 247, 241, .8);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(227, 213, 190, .7);
   opacity: 0;
+  transform: translateY(10px) scale(.985);
   pointer-events: none;
-  transition: opacity .35s ease;
+  transition: opacity .4s ease, transform .4s cubic-bezier(.22, .8, .3, 1);
 }
 
 .menu.open {
   opacity: 1;
+  transform: none;
   pointer-events: auto;
 }
 
@@ -206,7 +214,9 @@ body.menu-otevrene .nav-logo {
   font-size: 32px;
   color: var(--color-text);
   text-decoration: none;
-  transition: color .2s;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .45s ease, transform .45s ease, color .2s;
 }
 
 .menu-links a:hover,
@@ -214,12 +224,30 @@ body.menu-otevrene .nav-logo {
   color: var(--color-caramel-dark);
 }
 
+/* Kapitoly se vynoří postupně — stejný rukopis jako reveal při scrollu.
+   Zpoždění platí jen při otevírání; zavření proběhne naráz. */
+.menu.open .menu-links a {
+  opacity: 1;
+  transform: none;
+}
+
+.menu.open .menu-links a:nth-child(2) { transition-delay: .05s; }
+.menu.open .menu-links a:nth-child(3) { transition-delay: .10s; }
+.menu.open .menu-links a:nth-child(4) { transition-delay: .15s; }
+.menu.open .menu-links a:nth-child(5) { transition-delay: .20s; }
+
 .menu-meta {
   margin: var(--space-m) 0 0;
   font-size: 12px;
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--color-text-soft);
+  opacity: 0;
+  transition: opacity .45s ease .28s;
+}
+
+.menu.open .menu-meta {
+  opacity: 1;
 }
 
 @media (max-width: 999px) {
@@ -1128,6 +1156,13 @@ h3.sub-label::after {
   }
 
   .galerie-grid img:hover {
+    transform: none;
+  }
+
+  .menu,
+  .menu-links a,
+  .menu-meta {
+    transition: none;
     transform: none;
   }
 
