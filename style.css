@@ -640,7 +640,9 @@ h2.chapter-label::after {
   width: 100%;
   height: auto;
   display: block;
-  aspect-ratio: 1 / 1; /* jednotné čtverce bez ohledu na formát fotek */
+  /* 4:3 na šířku — blízko přirozenému formátu fotek z telefonu,
+     ořezává minimálně a dvojice vedle sebe působí klidně */
+  aspect-ratio: 4 / 3;
   object-fit: cover;
 }
 
