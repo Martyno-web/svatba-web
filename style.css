@@ -77,6 +77,65 @@ h1, h2, h3 {
 }
 
 /* --------------------------------------------------------------------------
+   2b. Úvodní přechod — levitující karta s monogramem M & M
+   Zobrazuje se při každém příchodu na web. Stejný vizuální jazyk jako
+   karta mobilního menu (odsazení od krajů, zaoblení, jemný rámeček) —
+   monogram tak funguje jako opakující se motiv webu.
+   -------------------------------------------------------------------------- */
+.intro {
+  position: fixed;
+  inset: 12px;
+  z-index: 100; /* nad navigací (60) i mobilním menu (50) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  background: var(--color-cream);
+  border: 1px solid rgba(227, 213, 190, .7);
+  overflow: hidden;
+  /* Karta se rozplyne až poté, co jí monogram "prolétne" */
+  animation: intro-karta 700ms 520ms ease-out forwards;
+}
+
+.intro-mark {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(40px, 9vw, 88px);
+  color: var(--color-text);
+  /* Prudké přiblížení + mizení = dojem průletu skrz písmena */
+  animation: intro-pruvlet 900ms 320ms cubic-bezier(.6, 0, .85, .35) forwards;
+}
+
+@keyframes intro-pruvlet {
+  to {
+    transform: scale(15);
+    opacity: 0;
+  }
+}
+
+@keyframes intro-karta {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Dokud intro běží, stránka pod ním nescrolluje */
+body.intro-aktivni {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro,
+  .intro-mark {
+    animation: none;
+  }
+
+  .intro {
+    display: none; /* rovnou na obsah, bez zábleskového skoku */
+  }
+}
+
+/* --------------------------------------------------------------------------
    3. Navigace
    -------------------------------------------------------------------------- */
 .header {

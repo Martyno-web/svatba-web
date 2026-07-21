@@ -9,6 +9,24 @@ const bezPohybu = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 document.addEventListener("DOMContentLoaded", () => {
 
   // ------------------------------------------------------------
+  // 0. Úvodní přechod (M & M)
+  //    Animaci celou odehraje čisté CSS (funguje i bez JS).
+  //    Script jen: (a) po dohrání kartu odstraní z DOM, aby
+  //    nezůstala neviditelně blokovat klik/scroll, (b) po dobu
+  //    přehrávání zamkne scroll stránky, (c) při omezení pohybu
+  //    kartu smaže rovnou, beze zbytečné prodlevy.
+  // ------------------------------------------------------------
+  const intro = document.getElementById("intro");
+  if (intro) {
+    document.body.classList.add("intro-aktivni");
+    const trvani = bezPohybu ? 0 : 1250; // ms — sedí s CSS animací (1220 ms)
+    setTimeout(() => {
+      intro.remove();
+      document.body.classList.remove("intro-aktivni");
+    }, trvani);
+  }
+
+  // ------------------------------------------------------------
   // 1. Odpočet do svatby (prolog)
   // ------------------------------------------------------------
   const odpocet = document.getElementById("odpocet");
