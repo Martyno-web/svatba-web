@@ -77,61 +77,159 @@ h1, h2, h3 {
 }
 
 /* --------------------------------------------------------------------------
-   2b. Úvodní přechod — levitující karta s monogramem M & M
-   Zobrazuje se při každém příchodu na web. Stejný vizuální jazyk jako
-   karta mobilního menu (odsazení od krajů, zaoblení, jemný rámeček) —
-   monogram tak funguje jako opakující se motiv webu.
+   2b. Úvodní přechod — litery "M & M" jako rostoucí díra do stránky
+   Zobrazuje se při každém příchodu na web. JEDNA implementace, jeden
+   princip — žádné další vrstvy nebo alternativní varianty vedle sebe.
+
+   PRINCIP (skutečná průhlednost, žádná duplikovaná fotka):
+   Maska je živý INLINE SVG element (<mask id="introMask"> v HTML),
+   ne externí obrázek — to je klíčové, protože jen tak lze mít:
+   - bílý obdélník (-5000…5000), který trvale kryje celou plochu,
+     nikdy se needituje, nikdy nemizí = panel je neprůhledný VŠUDE
+     mimo písmena, po celou dobu animace,
+   - #introMaskText jako NEZÁVISLE animovaný živý DOM prvek — jen ON
+     roste (scale), takže roste výhradně velikost DÍRY, nikdy se
+     nezmenšuje krytí kolem ní,
+   - #introMaskFinal — pojistný kruh, který se v posledních ~20 %
+     animace zvětší a "domete" i drobné neprůhledné zbytky uvnitř
+     tvaru písmen (např. vnitřní oko "&"), aby konec byl 100% čistý.
+
+   `.intro-mark` je viditelná plná litera NAD panelem — stejná velikost,
+   pozice i rychlost růstu jako díra pod ní (obě řídí táž `intro-rust`).
+   Na začátku díru přesně zakrývá; přibližně v polovině animace zmizí
+   (opacity), čímž díru "odkryje" — vzniká dojem, že litera zevnitř
+   zprůhledněla.
+
+   ČASOVÁNÍ (viz JS, sekce 0, které animaci teprve SPOUŠTÍ):
+   0 %                — klidná karta s malým tmavým "M & M"
+   0–300 ms            — čekání na web font (mimo tuto časovou osu)
+   300 ms (0 % zde)     — start růstu
+   300–1136 ms (0–38 %) — plné tmavé "M & M" roste
+   1136–1444 ms (38–52 %) — litera mizí, díra pod ní se odkrývá
+   1444–2016 ms (52–78 %) — díra dál roste, odhaluje víc hero
+   2016–2500 ms (78–100 %) — pojistný kruh dočistí zbytek plochy
    -------------------------------------------------------------------------- */
-.intro {
+.intro-panel {
   position: fixed;
-  inset: 12px;
+  inset: 0;
   z-index: 100; /* nad navigací (60) i mobilním menu (50) */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 20px;
   background: var(--color-cream);
-  border: 1px solid rgba(227, 213, 190, .7);
-  overflow: hidden;
-  /* Karta se rozplyne až poté, co jí monogram "prolétne" */
-  animation: intro-karta 700ms 520ms ease-out forwards;
+  -webkit-mask-image: url(#introMask);
+  mask-image: url(#introMask);
+}
+
+#introMaskText,
+#introMaskFinal {
+  fill: #000;
+}
+
+#introMaskText,
+.intro-mark {
+  font-family: var(--font-heading);
+  font-size: clamp(44px, 10vw, 100px);
+}
+
+#introMaskText {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: intro-rust 2200ms 300ms cubic-bezier(.45, 0, .15, 1) forwards;
+  animation-play-state: paused; /* JS spustí až po načtení fontu */
+}
+
+#introMaskFinal {
+  animation: intro-final 2200ms 300ms cubic-bezier(.3, 0, .2, 1) forwards;
+  animation-play-state: paused;
 }
 
 .intro-mark {
+  position: fixed;
+  inset: 0;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
-  font-family: var(--font-heading);
-  font-size: clamp(40px, 9vw, 88px);
-  color: var(--color-text);
-  /* Prudké přiblížení + mizení = dojem průletu skrz písmena */
-  animation: intro-pruvlet 900ms 320ms cubic-bezier(.6, 0, .85, .35) forwards;
+  color: var(--color-text); /* jednobarevné, žádný karamelový akcent */
+  pointer-events: none;
+  animation:
+    intro-rust 2200ms 300ms cubic-bezier(.45, 0, .15, 1) forwards,
+    intro-mizi 2200ms 300ms forwards;
+  animation-play-state: paused, paused;
 }
 
-@keyframes intro-pruvlet {
+/* JS přidá až po potvrzení web fontu (nebo bezpečném timeoutu) */
+#intro.intro-go #introMaskText,
+#intro.intro-go #introMaskFinal,
+#intro.intro-go .intro-mark {
+  animation-play-state: running;
+}
+
+@keyframes intro-rust {
   to {
-    transform: scale(15);
-    opacity: 0;
+    transform: scale(42); /* velké — poslední zbytky dočistí #introMaskFinal */
   }
 }
 
-@keyframes intro-karta {
-  to {
-    opacity: 0;
-  }
+@keyframes intro-mizi {
+  0%, 38% { opacity: 1; }
+  52%     { opacity: 0; }
+  100%    { opacity: 0; }
 }
 
-/* Dokud intro běží, stránka pod ním nescrolluje */
-body.intro-aktivni {
+@keyframes intro-final {
+  0%, 78% { r: 0; }
+  100%    { r: 4000; }
+}
+
+/* Dokud intro běží: stránka nescrolluje a navigace/hero text/scroll-cue
+   jsou schované — jinak by je rostoucí díra prozradila dřív, než má. */
+body.intro-running {
   overflow: hidden;
 }
 
+body.intro-running .nav,
+body.intro-running .hero-text,
+body.intro-running .scroll-cue {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.nav,
+.hero-text,
+.scroll-cue {
+  transition: opacity .45s ease;
+}
+
+/* Bezpečný fallback: chybí-li podpora CSS masky nebo je-li povoleno
+   omezení pohybu, žádný velký zoom — jen krátké jemné prolnutí. */
+#intro.intro-simple {
+  transition: opacity .4s ease;
+}
+
+#intro.intro-simple.intro-go {
+  opacity: 0;
+}
+
+#intro.intro-simple #introMaskText,
+#intro.intro-simple #introMaskFinal,
+#intro.intro-simple .intro-mark {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .intro,
-  .intro-mark {
-    animation: none;
+  #intro {
+    transition: opacity .4s ease;
   }
 
-  .intro {
-    display: none; /* rovnou na obsah, bez zábleskového skoku */
+  #intro.intro-go {
+    opacity: 0;
+  }
+
+  #introMaskText,
+  #introMaskFinal,
+  .intro-mark {
+    animation: none;
   }
 }
 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 100">
+  <!-- Maska pro úvodní přechod: bílá = neprůhledný panel, černá = díra.
+       Fallback font (Georgia) odpovídá skutečné patičce --font-heading —
+       vlastní web font se do izolovaného obrázku masky nenačítá. -->
+  <rect width="240" height="100" fill="#fff"/>
+  <text x="120" y="72" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="72" fill="#000">M &amp; M</text>
+</svg>

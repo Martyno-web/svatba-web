@@ -26,11 +26,42 @@
 </head>
 
 <body>
-  <!-- Úvodní přechod: levitující karta s monogramem, kterým divák
-       jakoby "projede" — mizí sama, i beze scriptu (viz CSS a JS). -->
+  <!-- Úvodní přechod: neprůhledný panel má v sobě skutečnou DÍRU
+       (živá SVG maska ve tvaru "M & M"), která postupně roste — pod
+       panelem je vidět reálná, nezvětšená stránka. Nad panelem leží
+       ještě viditelná plná litera, která na začátku díru zakrývá
+       a postupně se ztrácí, čímž díru "odkryje".
+
+       Princip masky (viz komentář v style.css, sekce 2b):
+       - bílý obdélník = trvale neprůhledná plocha, nikdy se needituje,
+       - #introMaskText = jediná skutečná díra, roste jako samostatný
+         živý DOM prvek,
+       - #introMaskFinal = pojistný kruh, který se zapne až v posledních
+         ~20 % animace a spolehlivě "zametá" zbytkové neprůhledné plochy
+         uvnitř písmen (např. oko "&"), aby konec byl čistý.
+
+       Po dobu intra jsou navigace, hero text a scroll-cue schované
+       přes body.intro-running (viz style.css) — díra tak NIKDY
+       neodkrývá nic jiného než .hero-photo. -->
   <div id="intro" class="intro" aria-hidden="true">
-    <p class="intro-mark">M&nbsp;<span class="amp">&amp;</span>&nbsp;M</p>
+    <svg width="0" height="0" style="position:absolute" focusable="false">
+      <defs>
+        <mask id="introMask" mask-type="luminance" maskUnits="userSpaceOnUse" x="-5000" y="-5000" width="10000" height="10000">
+          <rect x="-5000" y="-5000" width="10000" height="10000" fill="#fff"/>
+          <text id="introMaskText" x="50%" y="50%" text-anchor="middle" dominant-baseline="central">M &amp; M</text>
+          <circle id="introMaskFinal" cx="50%" cy="50%" r="0"/>
+        </mask>
+      </defs>
+    </svg>
+    <div class="intro-panel"></div>
+    <p class="intro-mark">M&nbsp;&amp;&nbsp;M</p>
   </div>
+  <!-- Bez JS by se #intro nikdy nespustil ani neodstranil (JS řídí
+       start i úklid) a navždy by zablokoval stránku — tato pojistka
+       ho v takovém případě rovnou schová, web zůstane plně funkční. -->
+  <noscript>
+    <style>#intro { display: none; }</style>
+  </noscript>
 
   <header class="header">
     <nav class="nav">

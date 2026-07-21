@@ -9,21 +9,53 @@ const bezPohybu = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 document.addEventListener("DOMContentLoaded", () => {
 
   // ------------------------------------------------------------
-  // 0. Úvodní přechod (M & M)
-  //    Animaci celou odehraje čisté CSS (funguje i bez JS).
-  //    Script jen: (a) po dohrání kartu odstraní z DOM, aby
-  //    nezůstala neviditelně blokovat klik/scroll, (b) po dobu
-  //    přehrávání zamkne scroll stránky, (c) při omezení pohybu
-  //    kartu smaže rovnou, beze zbytečné prodlevy.
+  // 0. Úvodní přechod (M & M jako rostoucí díra do hero)
+  //    Samotnou animaci celou odehraje CSS (viz style.css, 2b) —
+  //    JS jen rozhoduje KDY má začít a uklízí po sobě:
+  //    (a) počká na web font (jinak by se tvar díry uprostřed
+  //        animace přepočítal na jiné písmo — viditelný "skok"),
+  //    (b) po dobu běhu zamkne scroll a schová navigaci/hero text/
+  //        scroll-cue (jinak by je rostoucí díra odkryla předčasně),
+  //    (c) po dohrání intro odstraní z DOM a vše odemkne,
+  //    (d) při omezení pohybu nebo chybějící podpoře CSS masky
+  //        přepne na jednoduché krátké prolnutí bez zoomu.
   // ------------------------------------------------------------
   const intro = document.getElementById("intro");
   if (intro) {
-    document.body.classList.add("intro-aktivni");
-    const trvani = bezPohybu ? 0 : 1250; // ms — sedí s CSS animací (1220 ms)
-    setTimeout(() => {
+    // CSS: delay 300 ms + trvání 2200 ms = 2500 ms; +150 ms rezerva
+    const CELKOVA_DELKA = 2500;
+    const REZERVA = 150;
+    const CEKANI_NA_FONT = 400; // bezpečný strop, ať intro nečeká donekonečna
+
+    const maskySwPodporovane =
+      typeof CSS !== "undefined" &&
+      CSS.supports &&
+      (CSS.supports("mask-image", "url(#x)") ||
+        CSS.supports("-webkit-mask-image", "url(#x)"));
+
+    const zjednodusit = bezPohybu || !maskySwPodporovane;
+    if (zjednodusit) intro.classList.add("intro-simple");
+
+    document.body.classList.add("intro-running");
+
+    const uklidit = () => {
       intro.remove();
-      document.body.classList.remove("intro-aktivni");
-    }, trvani);
+      document.body.classList.remove("intro-running");
+    };
+
+    const spustit = () => {
+      intro.classList.add("intro-go");
+      setTimeout(uklidit, zjednodusit ? 450 : CELKOVA_DELKA + REZERVA);
+    };
+
+    if (document.fonts && document.fonts.ready) {
+      Promise.race([
+        document.fonts.ready,
+        new Promise((vyres) => setTimeout(vyres, CEKANI_NA_FONT)),
+      ]).then(spustit);
+    } else {
+      spustit(); // starší prohlížeče bez Font Loading API
+    }
   }
 
   // ------------------------------------------------------------
