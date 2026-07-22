@@ -100,16 +100,11 @@ h1, h2, h3 {
    PANEL A DÍRA:
    #introPanelRect (bílý = neprůhledný, s SVG atributem mask="…")
    trvale kryje celou plochu masky (rect 0,0,100%,100%) — nikdy se
-   needituje. #introMaskUse je HLAVNÍ skutečná díra (plná černá).
-   Dokončení revealu se neděje přechodem na jinou geometrii ani přes
-   SVG filtr (feMorphology/feGaussianBlur se ukázaly na mobilu příliš
-   pomalé) — je to čistě VEKTOROVÉ: 4 další <use> stejné geometrie
-   (.intro-feather uvnitř #introMaskGroup), každá s jinou stroke-width
-   a jinou opacity, vrstvené od nejširší/nejsvětlejší po nejužší. Díky
-   normálnímu SVG paint-order skládání (černá s nízkou opacity nad už
-   neprůhlednou plochou = skutečná světle šedá barva) vzniká plynulý
-   jasový přechod, který luminance maska čte hladce — bez rastrového
-   filtru, tedy levně na výkon.
+   needituje. #introMaskUse je JEDINÁ skutečná díra — jen fill, žádný
+   stroke, žádná dilatace, žádný filtr. Prvních ~80–85 % animace
+   odkrývá čistě rostoucí scale. Zbylé procenty vyřeší jediná opacity
+   změna na celém #intro (viz script.js, sekce 0) — nejlevnější možná
+   operace pro prohlížeč, žádné další maskovací výpočty.
 
    CROSSFADE:
    Opacity fade viditelné litery (#introVisibleUse) řídí JS přímo
@@ -127,7 +122,7 @@ h1, h2, h3 {
   display: block;
   width: 100%;
   height: 100%;
-  fill: var(--color-text); /* dědí viditelná <use>; maskovací vrstvy mají vlastní fill */
+  fill: var(--color-text); /* dědí viditelná <use>; maskovací má vlastní fill */
 }
 
 #introPanelRect {
@@ -139,15 +134,8 @@ h1, h2, h3 {
   font-size: clamp(44px, 10vw, 100px);
 }
 
-/* Sdílený vzhled všech vrstev uvnitř masky (hlavní díra + 4 feather
-   vrstvy) — JS mění za běhu jen stroke-width, nic jiného. */
-.intro-feather,
 #introMaskUse {
-  fill: #000;
-  stroke: #000;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  stroke-width: 0;
+  fill: #000; /* v masce = díra, bez ohledu na to, co dědí .intro-svg */
 }
 
 /* Dokud intro běží: stránka nescrolluje a navigace/hero text/scroll-cue

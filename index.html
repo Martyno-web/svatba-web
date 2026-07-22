@@ -42,20 +42,15 @@
        tedy deterministická SVG transformace, ne odhad přes CSS
        transform-origin.
 
-       Dokončení revealu NENÍ samostatný tvar, tvrdý stroke ani SVG
-       filtr (feMorphology/feGaussianBlur se ukázaly na mobilu příliš
-       výpočetně náročné — přepočet rastrového filtru na každém snímku
-       animaci sekal). Měkký přechod vzniká výhradně LEVNOU vektorovou
-       cestou: 4 další <use> instance TÉŽE geometrie (#introMaskGroup,
-       třída .intro-feather), každá s jinou stroke-width a jinou
-       opacity, vrstvené od nejširší/nejsvětlejší po nejužší (hlavní
-       #introMaskUse, plná černá = jádro díry).
-       Funguje to díky normálnímu SVG "paint order" skládání: každá
-       vrstva se vykresluje NAD tou předchozí, takže černá s nízkou
-       opacity nad už neprůhlednou plochou dá skutečnou světle šedou
-       barvu (ne jen průhlednou hranu) — a právě barva (jas), ne alfa,
-       je to, co luminance maska čte jako plynulý přechod. Žádný
-       raster filtr, jen obyčejné vektorové obrysy — levné na výkon.
+       Dokončení revealu není žádná geometrie navíc (ani tvrdý stroke,
+       ani SVG filtr, ani vrstvené obrysy — všechny tři přístupy se
+       ukázaly buď výpočetně náročné na mobilu, nebo vizuálně pořád
+       skokové v posledních procentech). Místo toho: prvních ~80–85 %
+       animace běží čistě scale + crossfade (viz níže), a úplně na
+       konci script.js jednou jedinou opacity změnou na TOMTO <div>
+       (#intro) plynule "rozpustí" zbývající krémové zbytky — nejlevnější
+       možná operace pro prohlížeč (jedna kompozitorová vlastnost na
+       jednom prvku, žádné přepočítávání SVG geometrie).
 
        Po dobu intra jsou navigace, hero text a scroll-cue schované
        přes body.intro-running (viz style.css) — díra tak nikdy
@@ -66,15 +61,7 @@
         <text id="introLogoShape" x="50%" y="50%" text-anchor="middle" dominant-baseline="central">M &amp; M</text>
         <mask id="introMask" mask-type="luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
           <rect x="0" y="0" width="100%" height="100%" fill="#fff"/>
-          <!-- Transformace (scale) se nastavuje JEDNOU na celou skupinu,
-               ne na každý <use> zvlášť — méně zápisů do DOM za snímek. -->
-          <g id="introMaskGroup">
-            <use class="intro-feather" href="#introLogoShape" style="opacity:.15"/>
-            <use class="intro-feather" href="#introLogoShape" style="opacity:.35"/>
-            <use class="intro-feather" href="#introLogoShape" style="opacity:.55"/>
-            <use class="intro-feather" href="#introLogoShape" style="opacity:.75"/>
-            <use id="introMaskUse" href="#introLogoShape"/>
-          </g>
+          <use id="introMaskUse" href="#introLogoShape"/>
         </mask>
       </defs>
       <rect id="introPanelRect" x="0" y="0" width="100%" height="100%" mask="url(#introMask)"/>

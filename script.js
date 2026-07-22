@@ -11,26 +11,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------------------------
   // 0. Úvodní přechod (M & M jako rostoucí díra do hero)
   //
-  //    Jedna hodnota "progress" na animační snímek řídí VŠE — žádné
-  //    dvě nezávislé CSS animace, žádné spoléhání na to, že CSS
-  //    animace na sdíleném zdroji uvnitř <defs> se spolehlivě
-  //    propíše do <use> instancí (v praxi se to neukázalo
-  //    spolehlivé), a žádný rastrový SVG filtr (feMorphology +
-  //    feGaussianBlur se ukázaly na mobilu příliš pomalé — přepočet
-  //    filtru na každém snímku animaci sekal). Místo toho na
-  //    každém snímku:
-  //    1) spočítáme JEDEN řetězec SVG transformace (translate → scale
-  //       → translate zpět, střed z getBoundingClientRect zjištěného
-  //       JEDNOU před startem) a nastavíme ho na introVisibleUse a na
-  //       #introMaskGroup (obaluje všechny maskovací vrstvy) —
-  //       identicky, žádný odhad,
-  //    2) podle SKUTEČNÉHO uplynulého času (ne podle "eased" scale
-  //       hodnoty) plynule prolneme viditelnou literu do průhledné,
-  //    3) v závěrečné fázi ZÁROVEŇ s pokračujícím scale necháme růst
-  //       stroke-width na 5 vektorových vrstvách téže geometrie
-  //       (#introMaskUse + 4× .intro-feather, každá s jinou opacity)
-  //       — čistě obrysy, žádný filtr, levné na výkon. Díra se tak
-  //       měkce rozpíná ven z obrysů TÉHOŽ tvaru.
+  //    Jedna hodnota "progress" na animační snímek řídí VŠE. Tři
+  //    dřívější přístupy k DOKONČENÍ revealu (tvrdý stroke, SVG
+  //    filtr feMorphology+feGaussianBlur, 5 vrstvených obrysů) se
+  //    postupně ukázaly buď výpočetně náročné na mobilu, nebo pořád
+  //    vizuálně skokové v posledních procentech — princip "geometricky
+  //    zaplnit úplně všechny mezery mezi tahy písmen" byl špatný cíl.
+  //
+  //    Aktuální, zjednodušené řešení:
+  //    1) Prvních ~82 % animace běží čistě SCALE (jeden řetězec SVG
+  //       transformace nastavený na introVisibleUse i introMaskUse)
+  //       + CROSSFADE viditelné litery do skutečné díry — žádná
+  //       dilatace, žádné vrstvy navíc, maska je jen fill.
+  //    2) V posledních ~18 % scale dál pokračuje (nikdy se nezastaví)
+  //       a SOUČASNĚ se jednou jedinou opacity změnou na celém #intro
+  //       plynule "rozpustí" zbývající krémové zbytky. Kompozitorová
+  //       vlastnost na jednom prvku — nejlevnější možná operace,
+  //       žádné přepočítávání SVG geometrie za běhu.
   //
   //    JS jen navíc: (a) počká na web font, ať se tvar uprostřed
   //    neplete, (b) po dobu běhu zamkne scroll a schová navigaci/
@@ -45,15 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const CEKANI_NA_FONT = 400; // bezpečný strop, ať intro nečeká donekonečna
 
     const introVisibleUse = document.getElementById("introVisibleUse");
-    const introMaskGroup = document.getElementById("introMaskGroup");
     const introMaskUse = document.getElementById("introMaskUse");
-    // Vrstvy v DOM pořadí = nejširší/nejsvětlejší (opacity .15) první,
-    // nejužší/nejtmavší (opacity .75) poslední — vykreslují se přesně
-    // v tomto pořadí, takže každá další vrstva leží nad tou předchozí.
-    const featherVrstvy = Array.from(document.querySelectorAll(".intro-feather"));
-    // Násobky vzdálenosti featheru pro jednotlivé vrstvy (od nejširší
-    // po nejužší) — odpovídá pořadí featherVrstvy výše.
-    const featherNasobky = [4, 3, 2, 1];
 
     const maskySwPodporovane =
       typeof CSS !== "undefined" &&
@@ -65,9 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
       bezPohybu ||
       !maskySwPodporovane ||
       !introVisibleUse ||
-      !introMaskGroup ||
-      !introMaskUse ||
-      featherVrstvy.length !== 4;
+      !introMaskUse;
 
     document.body.classList.add("intro-running");
 
@@ -83,40 +70,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const easeAkceleruj = (t) => Math.pow(t, 2.2);
 
     const animovat = () => {
-      // Rozměry a odvozené konstanty se čtou JEDNOU, před startem
-      // smyčky — v samotném requestAnimationFrame se getBoundingClientRect
-      // ani jiný vynucený layout nikdy nevolá (kvůli výkonu).
+      // Rozměry se čtou JEDNOU, před startem smyčky — v samotném
+      // requestAnimationFrame se getBoundingClientRect ani jiný
+      // vynucený layout nikdy nevolá (kvůli výkonu).
       const rect = intro.getBoundingClientRect();
       const cx = rect.width / 2;
       const cy = rect.height / 2;
 
       // SCALE_MAX odvozený od skutečné velikosti obrazovky: cílem je,
-      // aby ve chvíli, kdy se rozjede feather (t≈0,6), už jednotlivé
-      // tahy "M & M" byly výrazně větší než viewport. Odhad šířky
-      // nápisu při scale 1 = font-size × ~2,4 (poměr "M & M" v
-      // použitém řezu). Výsledek omezen na 18–25.
+      // aby ve chvíli, kdy se rozjede závěrečný fade (t≈0,82), už
+      // jednotlivé tahy "M & M" byly výrazně větší než viewport.
+      // Odhad šířky nápisu při scale 1 = font-size × ~2,4 (poměr
+      // "M & M" v použitém řezu). Výsledek omezen na 18–25.
       const fontSizePx =
         parseFloat(getComputedStyle(introMaskUse).fontSize) || 70;
       const logoSirka = fontSizePx * 2.4;
       const potrebnyScale =
         (Math.max(rect.width, rect.height) * 1.6) / logoSirka;
       const SCALE_MAX = Math.min(25, Math.max(18, potrebnyScale));
-
-      // CELKOVÝ_DOSAH — v REÁLNÝCH OBRAZOVKOVÝCH PIXELECH, ne v
-      // lokálních SVG jednotkách. Dosah od (cx, cy) do nejvzdálenějšího
-      // rohu viewportu (polovina úhlopříčky) × rezerva 1.3. Nezávislé
-      // na SCALE_MAX — dělením aktuálním scale (viz níže) se ruší
-      // multiplikativní efekt transformace, který dřív způsoboval
-      // skokovou "explozi" masky.
-      //
-      // Rozdělení: hlavní díra (#introMaskUse) doroste do CORE_PODIL
-      // (40 %) tohoto dosahu, zbylých 60 % se rozloží rovnoměrně do
-      // 4 feather vrstev — každá vrstva navíc přidává jeden FEATHER_KROK.
-      const uhloprickaPanelu = Math.hypot(rect.width, rect.height);
-      const CELKOVY_DOSAH = (uhloprickaPanelu / 2) * 1.3;
-      const CORE_PODIL = 0.4;
-      const E_MAX = CELKOVY_DOSAH * CORE_PODIL;
-      const FEATHER_KROK_MAX = (CELKOVY_DOSAH - E_MAX) / 4;
 
       const zacatek = performance.now();
 
@@ -129,19 +100,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // t = reálný, lineární postup v čase (0–1) — na něm stavíme
-        // časování crossfade i růstu feather vrstev, aby seděly na
+        // časování crossfade i závěrečného fade, aby seděly na
         // skutečné sekundy, ne na zakřivenou "eased" škálu.
         const t = Math.min(1, (uplynulo - HOLD) / DELKA_RUSTU);
         const scale = 1 + (SCALE_MAX - 1) * easeAkceleruj(t);
 
-        // 1) Jedna transformace, nastavená JEDNOU na skupinu masky
-        //    (ne na každý <use> zvlášť — méně zápisů do DOM za snímek)
-        //    a na viditelnou literu — scale pokračuje plynule až do
-        //    úplného konce (t=1), nikdy se nezastaví dřív.
+        // 1) Jedna transformace, nastavená na OBĚ <use> zároveň —
+        //    scale pokračuje plynule až do úplného konce (t=1),
+        //    nikdy se nezastaví dřív, ani během závěrečného fade.
         const transform =
           `translate(${cx} ${cy}) scale(${scale}) translate(${-cx} ${-cy})`;
         introVisibleUse.setAttribute("transform", transform);
-        introMaskGroup.setAttribute("transform", transform);
+        introMaskUse.setAttribute("transform", transform);
 
         // 2) Crossfade viditelné litery — plynule mezi cca 0,9 s a 1,4 s
         //    reálného času (t≈0,27–0,50 uvnitř okna růstu)
@@ -151,38 +121,24 @@ document.addEventListener("DOMContentLoaded", () => {
         else opacity = 1 - (t - 0.27) / (0.5 - 0.27);
         introVisibleUse.style.opacity = opacity;
 
-        // 3) Dokončení revealu = 5 vektorových vrstev TÉHOŽ tvaru, ne
-        //    filtr. Start kolem t≈0,6 (M&M je už velmi velké).
-        //    Screen-space princip jako dřív: požadovaný dosah (E,
-        //    featherKrok) spočítáme v OBRAZOVKOVÝCH pixelech po
-        //    hladké smoothstep křivce, pak vydělíme aktuálním scale —
-        //    tím se ruší multiplikativní efekt transformace, který
-        //    dřív způsoboval skokové "vybuchnutí" masky. Žádný
-        //    getBoundingClientRect ani nový DOM prvek v této smyčce —
-        //    jen 5 lehkých setAttribute volání na existující vrstvy.
-        const FEATHER_START = 0.6;
-        const u = Math.max(0, Math.min(1, (t - FEATHER_START) / (1 - FEATHER_START)));
-        const smooth = u * u * (3 - 2 * u); // smoothstep — plynulý start i konec
-        const E = smooth * E_MAX;
-        const featherKrok = smooth * FEATHER_KROK_MAX;
-
-        introMaskUse.setAttribute("stroke-width", Math.max(0, E / scale));
-        for (let i = 0; i < featherVrstvy.length; i++) {
-          const dosahVrstvy = E + featherKrok * featherNasobky[i];
-          featherVrstvy[i].setAttribute("stroke-width", Math.max(0, dosahVrstvy / scale));
-        }
+        // 3) Dokončení revealu = JEDNA opacity změna na celém #intro,
+        //    ne geometrie navíc. Fade začíná až ve chvíli, kdy je M&M
+        //    už velmi velké (t≈0,82) a podstatná část hero odkrytá —
+        //    do té doby zůstává #intro plně neprůhledné (opacity 1).
+        //    Smoothstep zajišťuje plynulý, ne lineární, náběh.
+        const FADE_START = 0.82;
+        const uf = Math.max(0, Math.min(1, (t - FADE_START) / (1 - FADE_START)));
+        const smoothFade = uf * uf * (3 - 2 * uf);
+        intro.style.opacity = 1 - smoothFade;
 
         if (t < 1) {
           requestAnimationFrame(krok);
         } else {
-          // t=1 → nejširší feather vrstva dosáhla přesně CELKOVY_DOSAH,
-          // matematicky zaručeně dost na pokrytí celého panelu (viz
-          // výpočet výše) — a protože se řídí v obrazovkových pixelech,
-          // poslední snímky k tomu doputují plynule, ne skokem.
+          // t=1 → intro.style.opacity je přesně 0 (viz výpočet výše).
           // Než #intro smažeme, počkáme na DVA požadavky
-          // requestAnimationFrame — to je standardní záruka, že
-          // prohlížeč tento snímek se stoprocentním pokrytím skutečně
-          // vykreslil. Teprve pak je odstranění vizuálně neznatelné.
+          // requestAnimationFrame — standardní záruka, že prohlížeč
+          // tento zcela průhledný snímek skutečně vykreslil. Teprve
+          // pak je odstranění vizuálně neznatelné.
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               setTimeout(uklidit, 60);
