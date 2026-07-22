@@ -26,31 +26,29 @@
 </head>
 
 <body>
-  <!-- Úvodní přechod — JEDNA sdílená SVG geometrie "M & M":
-       #introLogoShape je jediná definice tvaru (v <defs>, nevykreslená
-       sama o sobě). Použita je DVAKRÁT přes <use>, ve stejném SVG,
-       BEZ viewBoxu (=1 jednotka je vždy přesně 1 CSS pixel):
-       - #introVisibleUse — viditelné tmavé "M & M" nad panelem,
-       - #introMaskUse — tentýž tvar uvnitř masky = skutečná díra.
+  <!-- Úvodní přechod — JEDNA SVG geometrie "M & M" (#introLogoShape,
+       v <defs>, nevykreslená sama o sobě), použitá přes JEDEN <use>
+       (#introMaskUse) jako skutečná díra v masce. Žádná viditelná
+       "tmavá" kopie — M&M je transparentní otvor už od prvního snímku.
 
        DŮLEŽITÉ: transformace (scale) se NEANIMUJE na sdíleném zdroji
        ani přes CSS — script.js počítá JEDNU hodnotu progress na
        požadavek animačního snímku a z ní sestaví JEDEN řetězec SVG
-       transformace, který nastaví na OBĚ <use> instance zároveň
-       (setAttribute "transform", stejná hodnota). Střed (cx, cy) se
-       počítá z getBoundingClientRect() skutečné intro karty — je to
+       transformace, který nastaví na #introMaskUse (setAttribute
+       "transform"). Střed (cx, cy) se počítá z getBoundingClientRect()
+       skutečné intro karty, zjištěného JEDNOU před startem — je to
        tedy deterministická SVG transformace, ne odhad přes CSS
        transform-origin.
 
        Dokončení revealu není žádná geometrie navíc (ani tvrdý stroke,
        ani SVG filtr, ani vrstvené obrysy — všechny tři přístupy se
        ukázaly buď výpočetně náročné na mobilu, nebo vizuálně pořád
-       skokové v posledních procentech). Místo toho: prvních ~80–85 %
-       animace běží čistě scale + crossfade (viz níže), a úplně na
-       konci script.js jednou jedinou opacity změnou na TOMTO <div>
-       (#intro) plynule "rozpustí" zbývající krémové zbytky — nejlevnější
-       možná operace pro prohlížeč (jedna kompozitorová vlastnost na
-       jednom prvku, žádné přepočítávání SVG geometrie).
+       skokové v posledních procentech). Místo toho: naprostou většinu
+       animace běží čistě rostoucí scale, a úplně na konci script.js
+       jednou jedinou opacity změnou na TOMTO <div> (#intro) plynule
+       "rozpustí" zbývající krémové zbytky — nejlevnější možná operace
+       pro prohlížeč (jedna kompozitorová vlastnost na jednom prvku,
+       žádné přepočítávání SVG geometrie).
 
        Po dobu intra jsou navigace, hero text a scroll-cue schované
        přes body.intro-running (viz style.css) — díra tak nikdy
@@ -65,7 +63,6 @@
         </mask>
       </defs>
       <rect id="introPanelRect" x="0" y="0" width="100%" height="100%" mask="url(#introMask)"/>
-      <use id="introVisibleUse" href="#introLogoShape"/>
     </svg>
   </div>
   <!-- Bez JS by se #intro nikdy nespustil ani neodstranil (JS řídí

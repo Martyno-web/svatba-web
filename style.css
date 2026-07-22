@@ -85,31 +85,26 @@ h1, h2, h3 {
    Celé intro je JEDNO SVG bez viewBoxu (.intro-svg), takže 1 SVG
    jednotka = vždy přesně 1 CSS pixel. Tvar "M & M" existuje v
    dokumentu JEDNOU (#introLogoShape, v <defs>, nevykreslený sám
-   o sobě) a je použit dvakrát přes <use>:
-   - #introVisibleUse — viditelná tmavá litera nad panelem,
-   - #introMaskUse — tentýž tvar jako skutečná díra uvnitř masky.
+   o sobě) a je použit JEDNÍM <use> (#introMaskUse) jako skutečná díra
+   uvnitř masky — žádná viditelná "tmavá" kopie. M&M je transparentní
+   otvor už od úplně prvního snímku.
 
    DŮLEŽITÉ: transformace (scale) se ZDE NEANIMUJE přes CSS a neběží
    na sdíleném #introLogoShape — script.js na každém animačním snímku
    spočítá JEDNU hodnotu progress a z ní sestaví JEDEN řetězec SVG
    transformace (translate → scale → translate zpět, střed spočtený
-   z getBoundingClientRect()), který nastaví na OBĚ <use> instance
-   zároveň. Je to tedy deterministická SVG transformace, ne odhad
-   přes dvě nezávislé CSS animace nebo CSS transform-origin.
+   z getBoundingClientRect() JEDNOU před startem), který nastaví na
+   #introMaskUse. Je to tedy deterministická SVG transformace, ne
+   odhad přes CSS transform-origin.
 
    PANEL A DÍRA:
    #introPanelRect (bílý = neprůhledný, s SVG atributem mask="…")
    trvale kryje celou plochu masky (rect 0,0,100%,100%) — nikdy se
    needituje. #introMaskUse je JEDINÁ skutečná díra — jen fill, žádný
-   stroke, žádná dilatace, žádný filtr. Prvních ~80–85 % animace
+   stroke, žádná dilatace, žádný filtr. Naprostou většinu animace
    odkrývá čistě rostoucí scale. Zbylé procenty vyřeší jediná opacity
    změna na celém #intro (viz script.js, sekce 0) — nejlevnější možná
    operace pro prohlížeč, žádné další maskovací výpočty.
-
-   CROSSFADE:
-   Opacity fade viditelné litery (#introVisibleUse) řídí JS přímo
-   (style.opacity), na konkrétní <use> instanci — díra v masce tak
-   zůstává plně neprůhledná bez ohledu na mizení litery nad ní.
 
    Přesné časování viz komentáře v script.js, sekce 0. -------------------------------------------------------------------------- */
 .intro {
@@ -122,7 +117,6 @@ h1, h2, h3 {
   display: block;
   width: 100%;
   height: 100%;
-  fill: var(--color-text); /* dědí viditelná <use>; maskovací má vlastní fill */
 }
 
 #introPanelRect {

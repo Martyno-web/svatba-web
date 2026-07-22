@@ -11,23 +11,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------------------------
   // 0. Úvodní přechod (M & M jako rostoucí díra do hero)
   //
-  //    Jedna hodnota "progress" na animační snímek řídí VŠE. Tři
-  //    dřívější přístupy k DOKONČENÍ revealu (tvrdý stroke, SVG
-  //    filtr feMorphology+feGaussianBlur, 5 vrstvených obrysů) se
-  //    postupně ukázaly buď výpočetně náročné na mobilu, nebo pořád
-  //    vizuálně skokové v posledních procentech — princip "geometricky
-  //    zaplnit úplně všechny mezery mezi tahy písmen" byl špatný cíl.
+  //    Jedna hodnota "progress" na animační snímek řídí VŠE. M&M je
+  //    transparentní otvor už od prvního snímku — žádná viditelná
+  //    "tmavá" kopie ani crossfade barvy (ta dřívější vrstva/logika
+  //    už není potřeba a byla odstraněna).
   //
-  //    Aktuální, zjednodušené řešení:
-  //    1) Prvních ~82 % animace běží čistě SCALE (jeden řetězec SVG
-  //       transformace nastavený na introVisibleUse i introMaskUse)
-  //       + CROSSFADE viditelné litery do skutečné díry — žádná
-  //       dilatace, žádné vrstvy navíc, maska je jen fill.
-  //    2) V posledních ~18 % scale dál pokračuje (nikdy se nezastaví)
-  //       a SOUČASNĚ se jednou jedinou opacity změnou na celém #intro
-  //       plynule "rozpustí" zbývající krémové zbytky. Kompozitorová
-  //       vlastnost na jednom prvku — nejlevnější možná operace,
-  //       žádné přepočítávání SVG geometrie za běhu.
+  //    Zjednodušené řešení, ~1,4 s celkem:
+  //    1) Naprostou většinu animace běží čistě SCALE (jeden řetězec
+  //       SVG transformace na #introMaskUse) — žádná dilatace, žádné
+  //       vrstvy navíc, maska je jen fill.
+  //    2) V posledních ~300 ms reálného času scale dál pokračuje
+  //       (nikdy se nezastaví) a SOUČASNĚ se jednou jedinou opacity
+  //       změnou na celém #intro plynule "rozpustí" zbývající krémové
+  //       zbytky. Kompozitorová vlastnost na jednom prvku — nejlevnější
+  //       možná operace, žádné přepočítávání SVG geometrie za běhu.
   //
   //    JS jen navíc: (a) počká na web font, ať se tvar uprostřed
   //    neplete, (b) po dobu běhu zamkne scroll a schová navigaci/
@@ -37,11 +34,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------------------------
   const intro = document.getElementById("intro");
   if (intro) {
-    const HOLD = 300;          // ms klidu na začátku (malé M&M v klidu)
-    const DELKA_RUSTU = 2200;  // ms — samotný plynulý růst
+    const HOLD = 100;          // ms téměř nepostřehnutelného klidu na startu
+    const DELKA_RUSTU = 1300;  // ms — samotný plynulý růst (celkem ≈ 1,4 s)
     const CEKANI_NA_FONT = 400; // bezpečný strop, ať intro nečeká donekonečna
 
-    const introVisibleUse = document.getElementById("introVisibleUse");
     const introMaskUse = document.getElementById("introMaskUse");
 
     const maskySwPodporovane =
@@ -50,11 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
       (CSS.supports("mask-image", "url(#x)") ||
         CSS.supports("-webkit-mask-image", "url(#x)"));
 
-    const zjednodusit =
-      bezPohybu ||
-      !maskySwPodporovane ||
-      !introVisibleUse ||
-      !introMaskUse;
+    const zjednodusit = bezPohybu || !maskySwPodporovane || !introMaskUse;
 
     document.body.classList.add("intro-running");
 
@@ -64,10 +56,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Akcelerující křivka BEZ zpomalení na konci (na rozdíl od
-    // ease-in-out, který k t=1 stahuje rychlost k nule — přesně to
-    // způsobovalo dojem "zamrznutí" těsně před koncem). Start je
-    // jemný (sklon 0 v t=0), rychlost od začátku do konce jen roste.
-    const easeAkceleruj = (t) => Math.pow(t, 2.2);
+    // ease-in-out, který k t=1 stahuje rychlost k nule). Exponent
+    // 1.6 — mírnější než dřívější 2.2, aby i kratší (~1,4 s) animace
+    // působila klidně, ne agresivně. Start je jemný (sklon 0 v t=0),
+    // rychlost od začátku do konce jen roste.
+    const easeAkceleruj = (t) => Math.pow(t, 1.6);
 
     const animovat = () => {
       // Rozměry se čtou JEDNOU, před startem smyčky — v samotném
@@ -78,10 +71,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const cy = rect.height / 2;
 
       // SCALE_MAX odvozený od skutečné velikosti obrazovky: cílem je,
-      // aby ve chvíli, kdy se rozjede závěrečný fade (t≈0,82), už
-      // jednotlivé tahy "M & M" byly výrazně větší než viewport.
-      // Odhad šířky nápisu při scale 1 = font-size × ~2,4 (poměr
-      // "M & M" v použitém řezu). Výsledek omezen na 18–25.
+      // aby ve chvíli, kdy se rozjede závěrečný fade, už jednotlivé
+      // tahy "M & M" byly výrazně větší než viewport. Odhad šířky
+      // nápisu při scale 1 = font-size × ~2,4 (poměr "M & M" v
+      // použitém řezu). Výsledek omezen na 18–25.
       const fontSizePx =
         parseFloat(getComputedStyle(introMaskUse).fontSize) || 70;
       const logoSirka = fontSizePx * 2.4;
@@ -100,33 +93,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // t = reálný, lineární postup v čase (0–1) — na něm stavíme
-        // časování crossfade i závěrečného fade, aby seděly na
-        // skutečné sekundy, ne na zakřivenou "eased" škálu.
+        // časování závěrečného fade, aby sedělo na skutečné sekundy,
+        // ne na zakřivenou "eased" škálu.
         const t = Math.min(1, (uplynulo - HOLD) / DELKA_RUSTU);
         const scale = 1 + (SCALE_MAX - 1) * easeAkceleruj(t);
 
-        // 1) Jedna transformace, nastavená na OBĚ <use> zároveň —
-        //    scale pokračuje plynule až do úplného konce (t=1),
-        //    nikdy se nezastaví dřív, ani během závěrečného fade.
-        const transform =
-          `translate(${cx} ${cy}) scale(${scale}) translate(${-cx} ${-cy})`;
-        introVisibleUse.setAttribute("transform", transform);
-        introMaskUse.setAttribute("transform", transform);
+        // 1) Jedna transformace na #introMaskUse — scale pokračuje
+        //    plynule až do úplného konce (t=1), nikdy se nezastaví
+        //    dřív, ani během závěrečného fade.
+        introMaskUse.setAttribute(
+          "transform",
+          `translate(${cx} ${cy}) scale(${scale}) translate(${-cx} ${-cy})`
+        );
 
-        // 2) Crossfade viditelné litery — plynule mezi cca 0,9 s a 1,4 s
-        //    reálného času (t≈0,27–0,50 uvnitř okna růstu)
-        let opacity;
-        if (t <= 0.27) opacity = 1;
-        else if (t >= 0.5) opacity = 0;
-        else opacity = 1 - (t - 0.27) / (0.5 - 0.27);
-        introVisibleUse.style.opacity = opacity;
-
-        // 3) Dokončení revealu = JEDNA opacity změna na celém #intro,
-        //    ne geometrie navíc. Fade začíná až ve chvíli, kdy je M&M
-        //    už velmi velké (t≈0,82) a podstatná část hero odkrytá —
+        // 2) Dokončení revealu = JEDNA opacity změna na celém #intro,
+        //    ne geometrie navíc. Fade dostává ~300 ms reálného času
+        //    (FADE_START odvozený z DELKA_RUSTU, ne fixní procento) —
         //    do té doby zůstává #intro plně neprůhledné (opacity 1).
         //    Smoothstep zajišťuje plynulý, ne lineární, náběh.
-        const FADE_START = 0.82;
+        const FADE_START = (DELKA_RUSTU - 300) / DELKA_RUSTU; // ≈ 0.77
         const uf = Math.max(0, Math.min(1, (t - FADE_START) / (1 - FADE_START)));
         const smoothFade = uf * uf * (3 - 2 * uf);
         intro.style.opacity = 1 - smoothFade;
