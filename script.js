@@ -60,10 +60,11 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.classList.remove("intro-running");
     };
 
-    // Plynulá S-křivka — konstantní "cit" v pohybu, bez tvrdého
-    // startu i konce (na rozdíl od lineárního růstu).
-    const easeInOut = (t) =>
-      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    // Akcelerující křivka BEZ zpomalení na konci (na rozdíl od
+    // ease-in-out, který k t=1 stahuje rychlost k nule — přesně to
+    // způsobovalo dojem "zamrznutí" těsně před koncem). Start je
+    // jemný (sklon 0 v t=0), rychlost od začátku do konce jen roste.
+    const easeAkceleruj = (t) => Math.pow(t, 2.2);
 
     const animovat = () => {
       const rect = intro.getBoundingClientRect();
@@ -71,8 +72,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const cy = rect.height / 2;
 
       // SCALE_MAX odvozený od skutečné velikosti obrazovky: cílem je,
-      // aby ve chvíli, kdy se výrazněji rozjede stroke-width (t≈0,68),
-      // už jednotlivé tahy "M & M" odcházely za hranice viewportu.
+      // aby ve chvíli, kdy se rozjede stroke-width (t≈0,55), už
+      // jednotlivé tahy "M & M" byly výrazně větší než viewport.
       // Odhad šířky nápisu při scale 1 = font-size × ~2,4 (poměr
       // "M & M" v použitém řezu). Výsledek omezen na 18–25.
       const fontSizePx =
@@ -82,10 +83,19 @@ document.addEventListener("DOMContentLoaded", () => {
         (Math.max(rect.width, rect.height) * 1.6) / logoSirka;
       const SCALE_MAX = Math.min(25, Math.max(18, potrebnyScale));
 
-      // Maximální stroke-width v LOKÁLNÍCH jednotkách (před transformací)
-      // — po vynásobení aktuálním scale dá na konci efektivně tisíce
-      // pixelů, dost na spojení všech mezer a přesah přes celou obrazovku.
-      const STROKE_MAX = fontSizePx * 0.9;
+      // STROKE_MAX — MATEMATICKY odvozený, ne odhad. Stroke se aplikuje
+      // v LOKÁLNÍCH souřadnicích (před transformací), takže jeho
+      // efektivní dosah na obrazovce v t=1 je (STROKE_MAX/2) × SCALE_MAX
+      // (stroke lemuje obrys na obě strany od linie). Chceme, aby tento
+      // dosah — počítaný od středu (cx, cy) — bezpečně přesáhl
+      // vzdálenost do NEJVZDÁLENĚJŠÍHO rohu viewportu (polovina
+      // úhlopříčky), s rezervou ×1.3. Odtud:
+      //   (STROKE_MAX / 2) × SCALE_MAX ≥ (úhlopříčka / 2) × 1.3
+      // Platí bez ohledu na to, kde přesně uvnitř zvětšeného loga leží
+      // inkoust — je to záruka založená na geometrii viewportu, ne na
+      // odhadu tvaru písmen.
+      const uhloprickaPanelu = Math.hypot(rect.width, rect.height);
+      const STROKE_MAX = (uhloprickaPanelu * 1.3) / SCALE_MAX;
 
       const zacatek = performance.now();
 
@@ -101,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // časování crossfade i růstu stroke-width, aby seděly na
         // skutečné sekundy, ne na zakřivenou "eased" škálu.
         const t = Math.min(1, (uplynulo - HOLD) / DELKA_RUSTU);
-        const scale = 1 + (SCALE_MAX - 1) * easeInOut(t);
+        const scale = 1 + (SCALE_MAX - 1) * easeAkceleruj(t);
 
         // 1) Jedna transformace, nastavená na OBĚ <use> zároveň —
         //    scale pokračuje plynule až do úplného konce (t=1),
@@ -120,19 +130,31 @@ document.addEventListener("DOMContentLoaded", () => {
         introVisibleUse.style.opacity = opacity;
 
         // 3) Dokončení revealu = růst stroke-width TÉHOŽ #introMaskUse,
-        //    ne nový tvar. Start kolem t≈0,68 (~1,8 s), mocnina 3 drží
-        //    náběh dlouho prakticky neznatelný, než se v posledních
-        //    procentech rozeběhne — souběžně s pokračujícím scale, ne
-        //    až po jeho skončení. Obrys se tak rozpíná ven z písmen,
-        //    dokud transparentní plochy mezi nimi nesplynou.
-        const prah = 0.68;
-        const rozpinani = t <= prah ? 0 : Math.pow((t - prah) / (1 - prah), 3);
+        //    ne nový tvar. Start kolem t≈0,55 (M&M je už velmi velké),
+        //    mocnina 2 (místo dřívější 3) dá delší reálný čas viditelně
+        //    postupujícímu rozpínání — mocnina 3 stlačovala většinu
+        //    růstu do posledních desítek ms, takže reveal nestíhal
+        //    doběhnout. Křivka i tak zrychluje až do t=1 (nikdy
+        //    nezpomaluje), takže poslední krémové zbytky mizí čím dál
+        //    rychleji, ne že by se pohyb zastavoval.
+        const prah = 0.55;
+        const rozpinani = t <= prah ? 0 : Math.pow((t - prah) / (1 - prah), 2);
         introMaskUse.setAttribute("stroke-width", STROKE_MAX * rozpinani);
 
         if (t < 1) {
           requestAnimationFrame(krok);
         } else {
-          setTimeout(uklidit, 150);
+          // t=1 → stroke-width je přesně STROKE_MAX, matematicky
+          // zaručeně dost na pokrytí celého panelu (viz výpočet výše).
+          // Než #intro smažeme, počkáme na DVA požadavky
+          // requestAnimationFrame — to je standardní záruka, že
+          // prohlížeč tento snímek se stoprocentním pokrytím skutečně
+          // vykreslil. Teprve pak je odstranění vizuálně neznatelné.
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              setTimeout(uklidit, 60);
+            });
+          });
         }
       };
 
