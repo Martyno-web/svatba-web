@@ -13,8 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   //
   //    Jedna hodnota "progress" na animační snímek řídí VŠE. M&M je
   //    transparentní otvor už od prvního snímku — žádná viditelná
-  //    "tmavá" kopie ani crossfade barvy (ta dřívější vrstva/logika
-  //    už není potřeba a byla odstraněna).
+  //    "tmavá" kopie ani crossfade barvy.
   //
   //    Zjednodušené řešení, ~1,4 s celkem:
   //    1) Naprostou většinu animace běží čistě SCALE (jeden řetězec
@@ -25,18 +24,25 @@ document.addEventListener("DOMContentLoaded", () => {
   //       změnou na celém #intro plynule "rozpustí" zbývající krémové
   //       zbytky. Kompozitorová vlastnost na jednom prvku — nejlevnější
   //       možná operace, žádné přepočítávání SVG geometrie za běhu.
+  //    3) Souběžně (čistě přes CSS transition, viz .intro v CSS) se
+  //       levitující zaoblená karta v prvních ~300 ms roztáhne na celou
+  //       obrazovku — spouští ji stejná třída "intro-go", žádná další
+  //       JS logika navíc.
   //
-  //    JS jen navíc: (a) počká na web font, ať se tvar uprostřed
-  //    neplete, (b) po dobu běhu zamkne scroll a schová navigaci/
-  //    hero text/scroll-cue, (c) po dohrání intro odstraní z DOM,
-  //    (d) při omezení pohybu nebo chybějící podpoře CSS masky
-  //    přepne na jednoduché krátké prolnutí bez zoomu.
+  //    JS jen navíc: (a) počká na konkrétní web font použitý v M&M
+  //    (ne na všechny fonty stránky), ať se tvar uprostřed neplete,
+  //    (b) po dobu běhu zamkne scroll BEZ layout shiftu a schová
+  //    navigaci/hero text/scroll-cue, (c) po dohrání intro odstraní
+  //    z DOM a teprve POTÉ spustí původní vstupní animaci hero textu
+  //    (viz sekce 16 v CSS, "vstup"), (d) při omezení pohybu nebo
+  //    chybějící podpoře CSS masky přepne na jednoduché krátké
+  //    prolnutí bez zoomu.
   // ------------------------------------------------------------
   const intro = document.getElementById("intro");
   if (intro) {
     const HOLD = 100;          // ms téměř nepostřehnutelného klidu na startu
     const DELKA_RUSTU = 1300;  // ms — samotný plynulý růst (celkem ≈ 1,4 s)
-    const CEKANI_NA_FONT = 400; // bezpečný strop, ať intro nečeká donekonečna
+    const CEKANI_NA_FONT = 150; // bezpečný strop pro JEDEN konkrétní font řez
 
     const introMaskUse = document.getElementById("introMaskUse");
 
@@ -48,19 +54,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const zjednodusit = bezPohybu || !maskySwPodporovane || !introMaskUse;
 
+    // Kompenzace scrollbaru: `scrollbar-gutter: stable` (viz CSS) řeší
+    // moderní prohlížeče samo; tady jen zjišťujeme, jestli je potřeba
+    // JS fallback (starší Safari apod.) — měřeno JEDNOU, před zamčením
+    // scrollu, aby hodnota odpovídala běžnému (nezamčenému) stavu.
+    const scrollbarGutterOk =
+      typeof CSS !== "undefined" &&
+      CSS.supports &&
+      CSS.supports("scrollbar-gutter", "stable");
+    const sirkaScrollbaru = scrollbarGutterOk
+      ? 0
+      : window.innerWidth - document.documentElement.clientWidth;
+
     document.body.classList.add("intro-running");
+    if (!scrollbarGutterOk && sirkaScrollbaru > 0) {
+      document.body.style.paddingRight = sirkaScrollbaru + "px";
+    }
 
     const uklidit = () => {
       intro.remove();
       document.body.classList.remove("intro-running");
+      document.body.style.paddingRight = "";
+      // Původní vstupní animace hero textu (CSS "vstup", viz sekce 16)
+      // je gatovaná za touto třídou — spustí se tak čerstvě až TEĎ,
+      // ne neviditelně během běhu intra.
+      document.body.classList.add("hero-enter");
     };
 
-    // Akcelerující křivka BEZ zpomalení na konci (na rozdíl od
-    // ease-in-out, který k t=1 stahuje rychlost k nule). Exponent
-    // 1.6 — mírnější než dřívější 2.2, aby i kratší (~1,4 s) animace
-    // působila klidně, ne agresivně. Start je jemný (sklon 0 v t=0),
-    // rychlost od začátku do konce jen roste.
-    const easeAkceleruj = (t) => Math.pow(t, 1.6);
+    // Akcelerující křivka s NENULOVOU počáteční rychlostí (na rozdíl
+    // od dřívějšího t^1.6, které mělo v t=0 nulový sklon — v kombinaci
+    // s HOLD to působilo jako "zaseknutí" na startu). Lineárně-kvadratická
+    // kombinace: p = a·t + (1-a)·t², a≈0.25 — pohyb začne OKAMŽITĚ
+    // znatelnou rychlostí, plynule dál akceleruje, nikde nezpomaluje.
+    const easeAkceleruj = (t) => 0.25 * t + 0.75 * t * t;
 
     const animovat = () => {
       // Rozměry se čtou JEDNOU, před startem smyčky — v samotném
@@ -81,6 +107,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const potrebnyScale =
         (Math.max(rect.width, rect.height) * 1.6) / logoSirka;
       const SCALE_MAX = Math.min(25, Math.max(18, potrebnyScale));
+
+      // Spustí CSS transition levitující karty (viz .intro/.intro-go
+      // v CSS) — čistě deklarativně, žádná další JS logika za běhu.
+      intro.classList.add("intro-go");
 
       const zacatek = performance.now();
 
@@ -144,9 +174,14 @@ document.addEventListener("DOMContentLoaded", () => {
       animovat();
     };
 
-    if (document.fonts && document.fonts.ready) {
+    // Čekáme JEN na konkrétní font/řez použitý v M&M (Cormorant
+    // Garamond, běžný řez), ne na všechny fonty stránky — waiting na
+    // document.fonts.ready by čekalo i na Jost apod., což je zbytečně
+    // dlouhé a přispívalo k pocitu "zaseknutí" na startu. Krátký
+    // 150ms strop pro jistotu, ať intro nikdy nečeká donekonečna.
+    if (document.fonts && document.fonts.load) {
       Promise.race([
-        document.fonts.ready,
+        document.fonts.load('400 100px "Cormorant Garamond"').catch(() => {}),
         new Promise((vyres) => setTimeout(vyres, CEKANI_NA_FONT)),
       ]).then(spustit);
     } else {

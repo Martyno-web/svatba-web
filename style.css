@@ -44,6 +44,12 @@
    -------------------------------------------------------------------------- */
 html {
   scroll-behavior: smooth;
+  /* Rezervuje místo pro scrollbar i ve chvíli, kdy je overflow:hidden
+     (scroll-lock během intra) — bez toho scrollbar při odemčení
+     zmenší dostupnou šířku a hero se viditelně posune (layout shift).
+     Fallback pro prohlížeče bez podpory řeší script.js (padding-right
+     na body, jen pokud tato vlastnost není podporovaná). */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -111,6 +117,15 @@ h1, h2, h3 {
   position: fixed;
   inset: 0;
   z-index: 100; /* nad navigací (60) i mobilním menu (50) */
+  /* Na startu levitující zaoblená karta (12 px odstup, 20 px rohy);
+     jakmile animace začne, plynule se roztáhne na celou obrazovku.
+     Čistě vnější ořez — nemění souřadnicový systém SVG masky uvnitř. */
+  clip-path: inset(12px round 20px);
+  transition: clip-path .3s cubic-bezier(.25, .1, .25, 1);
+}
+
+#intro.intro-go {
+  clip-path: inset(0px round 0px);
 }
 
 .intro-svg {
@@ -165,6 +180,8 @@ body.intro-running .scroll-cue {
 
 @media (prefers-reduced-motion: reduce) {
   .intro {
+    /* Bez pohybu: žádné roztahování karty, rovnou plná plocha */
+    clip-path: none;
     transition: opacity .4s ease;
   }
 
@@ -1177,15 +1194,25 @@ h3.sub-label::after {
   }
 }
 
+/* Klidový stav (odpovídá 0 % klíčového snímku "vstup") — animace se
+   spustí až přidáním body.hero-enter (script.js, po dokončení intra).
+   Bez tohoto gatování by časová osa animace běžela od načtení
+   stránky, tedy NEVIDITELNĚ během celého intra, a po jeho skončení
+   by byla už z velké části (nebo úplně) odehraná. */
 .hero-text > * {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+body.hero-enter .hero-text > * {
   animation: vstup .8s ease-out both;
 }
 
-.hero-text > *:nth-child(2) { animation-delay: .08s; }
-.hero-text > *:nth-child(3) { animation-delay: .16s; }
-.hero-text > *:nth-child(4) { animation-delay: .24s; }
-.hero-text > *:nth-child(5) { animation-delay: .32s; }
-.hero-text > *:nth-child(6) { animation-delay: .40s; }
+body.hero-enter .hero-text > *:nth-child(2) { animation-delay: .08s; }
+body.hero-enter .hero-text > *:nth-child(3) { animation-delay: .16s; }
+body.hero-enter .hero-text > *:nth-child(4) { animation-delay: .24s; }
+body.hero-enter .hero-text > *:nth-child(5) { animation-delay: .32s; }
+body.hero-enter .hero-text > *:nth-child(6) { animation-delay: .40s; }
 
 /* Odhalování při scrollu — třídu .reveal přiděluje script.js.
    Bez JavaScriptu třída neexistuje, obsah je normálně viditelný. */
@@ -1210,6 +1237,10 @@ h3.sub-label::after {
 /* Respekt k systémovému omezení pohybu */
 @media (prefers-reduced-motion: reduce) {
   .hero-text > * {
+    /* Základní stav teď má opacity:0 (viz výše, čeká na .hero-enter) —
+       bez animace by tak zůstal navždy; zde ho vracíme na viditelný. */
+    opacity: 1;
+    transform: none;
     animation: none;
   }
 
