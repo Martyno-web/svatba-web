@@ -22,9 +22,11 @@ document.addEventListener("DOMContentLoaded", () => {
   //       — identicky, žádný odhad,
   //    2) podle SKUTEČNÉHO uplynulého času (ne podle "eased" scale
   //       hodnoty) plynule prolneme viditelnou literu do průhledné,
-  //    3) v závěrečné fázi ZÁROVEŇ s pokračujícím scale necháme růst
-  //       stroke-width na #introMaskUse — díra se tak rozpíná ven
-  //       z obrysů TÉHOŽ tvaru, žádná druhá geometrie.
+  //    3) v závěrečné fázi ZÁROVEŇ s pokračujícím scale necháme
+  //       plynule růst dilataci a jemný feather na filtru
+  //       #introFeather aplikovaném na #introMaskUse — díra se tak
+  //       měkce rozpíná ven z obrysů TÉHOŽ tvaru, žádná druhá geometrie
+  //       a žádný tvrdý topologický skok.
   //
   //    JS jen navíc: (a) počká na web font, ať se tvar uprostřed
   //    neplete, (b) po dobu běhu zamkne scroll a schová navigaci/
@@ -40,6 +42,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const introVisibleUse = document.getElementById("introVisibleUse");
     const introMaskUse = document.getElementById("introMaskUse");
+    const introDilate = document.getElementById("introDilate"); // feMorphology
+    const introBlur = document.getElementById("introBlur");     // feGaussianBlur
 
     const maskySwPodporovane =
       typeof CSS !== "undefined" &&
@@ -51,7 +55,9 @@ document.addEventListener("DOMContentLoaded", () => {
       bezPohybu ||
       !maskySwPodporovane ||
       !introVisibleUse ||
-      !introMaskUse;
+      !introMaskUse ||
+      !introDilate ||
+      !introBlur;
 
     document.body.classList.add("intro-running");
 
@@ -72,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const cy = rect.height / 2;
 
       // SCALE_MAX odvozený od skutečné velikosti obrazovky: cílem je,
-      // aby ve chvíli, kdy se rozjede stroke-width (t≈0,55), už
+      // aby ve chvíli, kdy se rozjede dilatace masky (t≈0,66), už
       // jednotlivé tahy "M & M" byly výrazně větší než viewport.
       // Odhad šířky nápisu při scale 1 = font-size × ~2,4 (poměr
       // "M & M" v použitém řezu). Výsledek omezen na 18–25.
@@ -83,20 +89,16 @@ document.addEventListener("DOMContentLoaded", () => {
         (Math.max(rect.width, rect.height) * 1.6) / logoSirka;
       const SCALE_MAX = Math.min(25, Math.max(18, potrebnyScale));
 
-      // MAX_SCREEN_STROKE — v REÁLNÝCH OBRAZOVKOVÝCH PIXELECH, ne
-      // v lokálních SVG jednotkách. Stroke totiž lemuje obrys na obě
-      // strany od linie, takže dosah od (cx, cy) ven je polovina této
-      // hodnoty; chceme, aby bezpečně přesáhl vzdálenost do
-      // NEJVZDÁLENĚJŠÍHO rohu viewportu (polovina úhlopříčky), s
-      // rezervou ×1.3:
-      //   MAX_SCREEN_STROKE / 2 ≥ (úhlopříčka / 2) × 1.3
-      // Tahle hodnota je záměrně NEZÁVISLÁ na SCALE_MAX — právě
-      // společné násobení stroke-width a scale způsobovalo, že se
-      // maska v posledních snímcích "vybuchla" naráz místo plynulého
-      // růstu (viz krok 3 níže, kde se z ní zpětně počítá lokální
-      // stroke-width podle AKTUÁLNÍHO scale).
+      // MAX_SCREEN_DILATE — v REÁLNÝCH OBRAZOVKOVÝCH PIXELECH, ne
+      // v lokálních SVG jednotkách. Na rozdíl od stroke (ten lemoval
+      // obrys na obě strany) je dilate čistě JEDNOSMĚRNÝ posun hranice
+      // ven, takže dosah od (cx, cy) do nejvzdálenějšího rohu
+      // viewportu (polovina úhlopříčky) stačí pokrýt přímo, s rezervou
+      // ×1.3. Hodnota je záměrně nezávislá na SCALE_MAX — dělením
+      // aktuálním scale (viz krok 3) se ruší multiplikativní efekt
+      // transformace, který dřív způsoboval skokovou "explozi" masky.
       const uhloprickaPanelu = Math.hypot(rect.width, rect.height);
-      const MAX_SCREEN_STROKE = uhloprickaPanelu * 1.3;
+      const MAX_SCREEN_DILATE = (uhloprickaPanelu / 2) * 1.3;
 
       const zacatek = performance.now();
 
@@ -109,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // t = reálný, lineární postup v čase (0–1) — na něm stavíme
-        // časování crossfade i růstu stroke-width, aby seděly na
+        // časování crossfade i růstu dilatace/featheru, aby seděly na
         // skutečné sekundy, ne na zakřivenou "eased" škálu.
         const t = Math.min(1, (uplynulo - HOLD) / DELKA_RUSTU);
         const scale = 1 + (SCALE_MAX - 1) * easeAkceleruj(t);
@@ -130,32 +132,39 @@ document.addEventListener("DOMContentLoaded", () => {
         else opacity = 1 - (t - 0.27) / (0.5 - 0.27);
         introVisibleUse.style.opacity = opacity;
 
-        // 3) Dokončení revealu = růst stroke-width TÉHOŽ #introMaskUse,
-        //    ne nový tvar. Start kolem t≈0,55 (M&M je už velmi velké).
+        // 3) Dokončení revealu = MĚKKÁ dilatace TÉHOŽ #introMaskUse přes
+        //    filtr #introFeather (feMorphology + feGaussianBlur složené
+        //    na bílé pozadí — viz komentář v index.html), ne tvrdý
+        //    stroke a ne nový tvar. Start kolem t≈0,66 (poslední
+        //    třetina), M&M je v tu chvíli už velmi velké.
         //
-        //    KLÍČOVÉ: nejdřív spočítáme požadovanou tloušťku PŘÍMO
-        //    V OBRAZOVKOVÝCH PIXELECH (desiredScreenStroke) po hladké
-        //    smoothstep křivce — ta roste plynule, frame po framu,
-        //    nezávisle na tom, jak rychle právě roste scale. Teprve
-        //    pak ji převedeme na lokální SVG stroke-width vydělením
-        //    aktuálním scale — tím se zruší násobící efekt transformace
-        //    (element se zvětšuje týmž "scale", takže lokální hodnota
-        //    × scale = přesně desiredScreenStroke, bez ohledu na to,
-        //    jak velké scale zrovna je). Bez tohohle kroku by se
-        //    zrychlující scale a zrychlující stroke-width násobily a
-        //    způsobovaly skokové "vybuchnutí" masky v posledních
-        //    desítkách milisekund.
-        const STROKE_START = 0.55;
-        const u = Math.max(0, Math.min(1, (t - STROKE_START) / (1 - STROKE_START)));
+        //    Stejný princip jako dřív u stroke: nejdřív spočítáme
+        //    požadovaný dosah PŘÍMO V OBRAZOVKOVÝCH PIXELECH
+        //    (desiredScreenDilate) po hladké smoothstep křivce, pak
+        //    ho převedeme na lokální jednotky filtru vydělením
+        //    aktuálním scale — tím se ruší multiplikativní efekt
+        //    transformace (dilate radius i blur stdDeviation se totiž
+        //    animací #introMaskUse škálují úplně stejně jako dřív
+        //    stroke-width).
+        //
+        //    Blur (feather) je záměrně jen zlomek dilatace (~18 %) —
+        //    "velmi jemný", jak žádáno: jeho úkolem je jen rozetřít
+        //    ostrou hranu do skutečného BAREVNÉHO přechodu (černá →
+        //    šedá → bílá), aby luminance maska četla plynulý přechod
+        //    místo tvrdého skoku — ne vytvořit viditelně mlhavý efekt.
+        const DILATE_START = 0.66;
+        const u = Math.max(0, Math.min(1, (t - DILATE_START) / (1 - DILATE_START)));
         const smooth = u * u * (3 - 2 * u); // smoothstep — plynulý start i konec
-        const desiredScreenStroke = smooth * MAX_SCREEN_STROKE;
-        const localniStrokeWidth = desiredScreenStroke / scale;
-        introMaskUse.setAttribute("stroke-width", localniStrokeWidth);
+        const desiredScreenDilate = smooth * MAX_SCREEN_DILATE;
+        const desiredScreenBlur = desiredScreenDilate * 0.18;
+
+        introDilate.setAttribute("radius", Math.max(0, desiredScreenDilate / scale));
+        introBlur.setAttribute("stdDeviation", Math.max(0, desiredScreenBlur / scale));
 
         if (t < 1) {
           requestAnimationFrame(krok);
         } else {
-          // t=1 → desiredScreenStroke je přesně MAX_SCREEN_STROKE,
+          // t=1 → desiredScreenDilate je přesně MAX_SCREEN_DILATE,
           // matematicky zaručeně dost na pokrytí celého panelu (viz
           // výpočet výše) — a protože se řídí v obrazovkových pixelech,
           // poslední snímky k tomu doputují plynule, ne skokem.

@@ -42,12 +42,17 @@
        tedy deterministická SVG transformace, ne odhad přes CSS
        transform-origin.
 
-       Dokončení revealu NENÍ samostatný tvar — v závěrečné fázi script.js
-       plynule zvětšuje stroke-width na #introMaskUse (obrys téhož
-       tvaru, stejná černá barva = díra). Průhled se tak doslova
-       rozpíná ven z obrysů písmen, dokud transparentní plochy mezi
-       M, & a M nesplynou a nezakryjí celou masku — žádná druhá
-       geometrie, žádný přechod na jiný efekt.
+       Dokončení revealu NENÍ samostatný tvar ani tvrdý stroke — je to
+       MĚKKÁ DILATACE téže geometrie přes SVG filtr (#introFeather):
+       feMorphology (dilate) rozšíří černý tvar ven, feGaussianBlur mu
+       zjemní hranu a feFlood+feComposite tuto rozmazanou hranu složí
+       na BÍLÉ pozadí — díky tomu na okraji vzniká skutečný ŠEDÝ
+       barevný přechod (černá → bílá), ne jen průhledná (alfa) hrana.
+       To je nutné: luminance maska počítá jas×alfa, a jas černé je
+       vždy 0 bez ohledu na alfu — čistě průhledná (alfa) hrana by se
+       v masce vůbec neprojevila jako plynulý přechod. Barevný šedý
+       přechod ano — proto se tím ruší tvrdý topologický skok, kdy
+       zbývající krémové ostrůvky mizí najednou v jednom snímku.
 
        Po dobu intra jsou navigace, hero text a scroll-cue schované
        přes body.intro-running (viz style.css) — díra tak nikdy
@@ -56,9 +61,18 @@
     <svg class="intro-svg" focusable="false">
       <defs>
         <text id="introLogoShape" x="50%" y="50%" text-anchor="middle" dominant-baseline="central">M &amp; M</text>
+        <!-- Velký filter region (userSpaceOnUse, výrazně přesahující
+             jakoukoli reálnou velikost obrazovky) — bez toho by prohlížeč
+             mohl výsledek filtru oříznout na hranici tvaru. -->
+        <filter id="introFeather" filterUnits="userSpaceOnUse" x="-5000" y="-5000" width="10000" height="10000">
+          <feMorphology id="introDilate" in="SourceGraphic" operator="dilate" radius="0" result="introDilated"/>
+          <feGaussianBlur id="introBlur" in="introDilated" stdDeviation="0" result="introBlurred"/>
+          <feFlood flood-color="#fff" result="introBile"/>
+          <feComposite in="introBlurred" in2="introBile" operator="over"/>
+        </filter>
         <mask id="introMask" mask-type="luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
           <rect x="0" y="0" width="100%" height="100%" fill="#fff"/>
-          <use id="introMaskUse" href="#introLogoShape"/>
+          <use id="introMaskUse" href="#introLogoShape" filter="url(#introFeather)"/>
         </mask>
       </defs>
       <rect id="introPanelRect" x="0" y="0" width="100%" height="100%" mask="url(#introMask)"/>

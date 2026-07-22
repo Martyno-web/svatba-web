@@ -101,11 +101,11 @@ h1, h2, h3 {
    #introPanelRect (bílý = neprůhledný, s SVG atributem mask="…")
    trvale kryje celou plochu masky (rect 0,0,100%,100%) — nikdy se
    needituje. #introMaskUse je JEDINÁ skutečná díra — žádný druhý
-   tvar. Dokončení revealu se neděje přechodem na jinou geometrii,
-   ale tím, že script.js v závěrečné fázi plynule zvětšuje
-   stroke-width přímo na #introMaskUse — obrys téhož tvaru se
-   rozpíná ven, transparentní plochy mezi písmeny postupně splynou
-   a zakryjí celou masku.
+   tvar. Dokončení revealu se neděje přechodem na jinou geometrii, ale
+   měkkou dilatací téhož tvaru přes SVG filtr #introFeather (viz
+   index.html) — script.js v závěrečné fázi plynule zvětšuje jeho
+   dilate radius a blur, takže se hranice díry rozpíná ven a zbývající
+   krémové ostrůvky mizí postupně, ne skokem.
 
    CROSSFADE:
    Opacity fade viditelné litery (#introVisibleUse) řídí JS přímo
@@ -137,10 +137,8 @@ h1, h2, h3 {
 
 #introMaskUse {
   fill: #000; /* v masce = díra, bez ohledu na to, co dědí .intro-svg */
-  stroke: #000;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  stroke-width: 0; /* JS ho v závěru animace plynule zvětšuje */
+  /* Dokončení revealu řeší filtr #introFeather (dilate + blur na bílém
+     pozadí), viz komentář v index.html — žádný stroke se tu už nepoužívá. */
 }
 
 /* Dokud intro běží: stránka nescrolluje a navigace/hero text/scroll-cue
