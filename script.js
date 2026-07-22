@@ -83,19 +83,20 @@ document.addEventListener("DOMContentLoaded", () => {
         (Math.max(rect.width, rect.height) * 1.6) / logoSirka;
       const SCALE_MAX = Math.min(25, Math.max(18, potrebnyScale));
 
-      // STROKE_MAX — MATEMATICKY odvozený, ne odhad. Stroke se aplikuje
-      // v LOKÁLNÍCH souřadnicích (před transformací), takže jeho
-      // efektivní dosah na obrazovce v t=1 je (STROKE_MAX/2) × SCALE_MAX
-      // (stroke lemuje obrys na obě strany od linie). Chceme, aby tento
-      // dosah — počítaný od středu (cx, cy) — bezpečně přesáhl
-      // vzdálenost do NEJVZDÁLENĚJŠÍHO rohu viewportu (polovina
-      // úhlopříčky), s rezervou ×1.3. Odtud:
-      //   (STROKE_MAX / 2) × SCALE_MAX ≥ (úhlopříčka / 2) × 1.3
-      // Platí bez ohledu na to, kde přesně uvnitř zvětšeného loga leží
-      // inkoust — je to záruka založená na geometrii viewportu, ne na
-      // odhadu tvaru písmen.
+      // MAX_SCREEN_STROKE — v REÁLNÝCH OBRAZOVKOVÝCH PIXELECH, ne
+      // v lokálních SVG jednotkách. Stroke totiž lemuje obrys na obě
+      // strany od linie, takže dosah od (cx, cy) ven je polovina této
+      // hodnoty; chceme, aby bezpečně přesáhl vzdálenost do
+      // NEJVZDÁLENĚJŠÍHO rohu viewportu (polovina úhlopříčky), s
+      // rezervou ×1.3:
+      //   MAX_SCREEN_STROKE / 2 ≥ (úhlopříčka / 2) × 1.3
+      // Tahle hodnota je záměrně NEZÁVISLÁ na SCALE_MAX — právě
+      // společné násobení stroke-width a scale způsobovalo, že se
+      // maska v posledních snímcích "vybuchla" naráz místo plynulého
+      // růstu (viz krok 3 níže, kde se z ní zpětně počítá lokální
+      // stroke-width podle AKTUÁLNÍHO scale).
       const uhloprickaPanelu = Math.hypot(rect.width, rect.height);
-      const STROKE_MAX = (uhloprickaPanelu * 1.3) / SCALE_MAX;
+      const MAX_SCREEN_STROKE = uhloprickaPanelu * 1.3;
 
       const zacatek = performance.now();
 
@@ -130,22 +131,34 @@ document.addEventListener("DOMContentLoaded", () => {
         introVisibleUse.style.opacity = opacity;
 
         // 3) Dokončení revealu = růst stroke-width TÉHOŽ #introMaskUse,
-        //    ne nový tvar. Start kolem t≈0,55 (M&M je už velmi velké),
-        //    mocnina 2 (místo dřívější 3) dá delší reálný čas viditelně
-        //    postupujícímu rozpínání — mocnina 3 stlačovala většinu
-        //    růstu do posledních desítek ms, takže reveal nestíhal
-        //    doběhnout. Křivka i tak zrychluje až do t=1 (nikdy
-        //    nezpomaluje), takže poslední krémové zbytky mizí čím dál
-        //    rychleji, ne že by se pohyb zastavoval.
-        const prah = 0.55;
-        const rozpinani = t <= prah ? 0 : Math.pow((t - prah) / (1 - prah), 2);
-        introMaskUse.setAttribute("stroke-width", STROKE_MAX * rozpinani);
+        //    ne nový tvar. Start kolem t≈0,55 (M&M je už velmi velké).
+        //
+        //    KLÍČOVÉ: nejdřív spočítáme požadovanou tloušťku PŘÍMO
+        //    V OBRAZOVKOVÝCH PIXELECH (desiredScreenStroke) po hladké
+        //    smoothstep křivce — ta roste plynule, frame po framu,
+        //    nezávisle na tom, jak rychle právě roste scale. Teprve
+        //    pak ji převedeme na lokální SVG stroke-width vydělením
+        //    aktuálním scale — tím se zruší násobící efekt transformace
+        //    (element se zvětšuje týmž "scale", takže lokální hodnota
+        //    × scale = přesně desiredScreenStroke, bez ohledu na to,
+        //    jak velké scale zrovna je). Bez tohohle kroku by se
+        //    zrychlující scale a zrychlující stroke-width násobily a
+        //    způsobovaly skokové "vybuchnutí" masky v posledních
+        //    desítkách milisekund.
+        const STROKE_START = 0.55;
+        const u = Math.max(0, Math.min(1, (t - STROKE_START) / (1 - STROKE_START)));
+        const smooth = u * u * (3 - 2 * u); // smoothstep — plynulý start i konec
+        const desiredScreenStroke = smooth * MAX_SCREEN_STROKE;
+        const localniStrokeWidth = desiredScreenStroke / scale;
+        introMaskUse.setAttribute("stroke-width", localniStrokeWidth);
 
         if (t < 1) {
           requestAnimationFrame(krok);
         } else {
-          // t=1 → stroke-width je přesně STROKE_MAX, matematicky
-          // zaručeně dost na pokrytí celého panelu (viz výpočet výše).
+          // t=1 → desiredScreenStroke je přesně MAX_SCREEN_STROKE,
+          // matematicky zaručeně dost na pokrytí celého panelu (viz
+          // výpočet výše) — a protože se řídí v obrazovkových pixelech,
+          // poslední snímky k tomu doputují plynule, ne skokem.
           // Než #intro smažeme, počkáme na DVA požadavky
           // requestAnimationFrame — to je standardní záruka, že
           // prohlížeč tento snímek se stoprocentním pokrytím skutečně
