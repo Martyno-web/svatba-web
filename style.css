@@ -81,104 +81,66 @@ h1, h2, h3 {
    Zobrazuje se při každém příchodu na web. JEDNA implementace, jeden
    princip — žádné další vrstvy nebo alternativní varianty vedle sebe.
 
-   PRINCIP (skutečná průhlednost, žádná duplikovaná fotka):
-   Maska je živý INLINE SVG element (<mask id="introMask"> v HTML),
-   ne externí obrázek — to je klíčové, protože jen tak lze mít:
-   - bílý obdélník (-5000…5000), který trvale kryje celou plochu,
-     nikdy se needituje, nikdy nemizí = panel je neprůhledný VŠUDE
-     mimo písmena, po celou dobu animace,
-   - #introMaskText jako NEZÁVISLE animovaný živý DOM prvek — jen ON
-     roste (scale), takže roste výhradně velikost DÍRY, nikdy se
-     nezmenšuje krytí kolem ní,
-   - #introMaskFinal — pojistný kruh, který se v posledních ~20 %
-     animace zvětší a "domete" i drobné neprůhledné zbytky uvnitř
-     tvaru písmen (např. vnitřní oko "&"), aby konec byl 100% čistý.
+   GEOMETRIE — jeden zdroj pravdy:
+   Celé intro je JEDNO SVG bez viewBoxu (.intro-svg), takže 1 SVG
+   jednotka = vždy přesně 1 CSS pixel. Tvar "M & M" existuje v
+   dokumentu JEDNOU (#introLogoShape, v <defs>, nevykreslený sám
+   o sobě) a je použit dvakrát přes <use>:
+   - #introVisibleUse — viditelná tmavá litera nad panelem,
+   - #introMaskUse — tentýž tvar jako skutečná díra uvnitř masky.
 
-   `.intro-mark` je viditelná plná litera NAD panelem — stejná velikost,
-   pozice i rychlost růstu jako díra pod ní (obě řídí táž `intro-rust`).
-   Na začátku díru přesně zakrývá; přibližně v polovině animace zmizí
-   (opacity), čímž díru "odkryje" — vzniká dojem, že litera zevnitř
-   zprůhledněla.
+   DŮLEŽITÉ: transformace (scale) se ZDE NEANIMUJE přes CSS a neběží
+   na sdíleném #introLogoShape — script.js na každém animačním snímku
+   spočítá JEDNU hodnotu progress a z ní sestaví JEDEN řetězec SVG
+   transformace (translate → scale → translate zpět, střed spočtený
+   z getBoundingClientRect()), který nastaví na OBĚ <use> instance
+   zároveň. Je to tedy deterministická SVG transformace, ne odhad
+   přes dvě nezávislé CSS animace nebo CSS transform-origin.
 
-   ČASOVÁNÍ (viz JS, sekce 0, které animaci teprve SPOUŠTÍ):
-   0 %                — klidná karta s malým tmavým "M & M"
-   0–300 ms            — čekání na web font (mimo tuto časovou osu)
-   300 ms (0 % zde)     — start růstu
-   300–1136 ms (0–38 %) — plné tmavé "M & M" roste
-   1136–1444 ms (38–52 %) — litera mizí, díra pod ní se odkrývá
-   1444–2016 ms (52–78 %) — díra dál roste, odhaluje víc hero
-   2016–2500 ms (78–100 %) — pojistný kruh dočistí zbytek plochy
-   -------------------------------------------------------------------------- */
-.intro-panel {
+   PANEL A DÍRA:
+   #introPanelRect (bílý = neprůhledný, s SVG atributem mask="…")
+   trvale kryje celou plochu masky (rect 0,0,100%,100%) — nikdy se
+   needituje. #introMaskUse je JEDINÁ skutečná díra — žádný druhý
+   tvar. Dokončení revealu se neděje přechodem na jinou geometrii,
+   ale tím, že script.js v závěrečné fázi plynule zvětšuje
+   stroke-width přímo na #introMaskUse — obrys téhož tvaru se
+   rozpíná ven, transparentní plochy mezi písmeny postupně splynou
+   a zakryjí celou masku.
+
+   CROSSFADE:
+   Opacity fade viditelné litery (#introVisibleUse) řídí JS přímo
+   (style.opacity), na konkrétní <use> instanci — díra v masce tak
+   zůstává plně neprůhledná bez ohledu na mizení litery nad ní.
+
+   Přesné časování viz komentáře v script.js, sekce 0. -------------------------------------------------------------------------- */
+.intro {
   position: fixed;
   inset: 0;
   z-index: 100; /* nad navigací (60) i mobilním menu (50) */
-  background: var(--color-cream);
-  -webkit-mask-image: url(#introMask);
-  mask-image: url(#introMask);
 }
 
-#introMaskText,
-#introMaskFinal {
-  fill: #000;
+.intro-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: var(--color-text); /* dědí viditelná <use>; maskovací má vlastní fill */
 }
 
-#introMaskText,
-.intro-mark {
+#introPanelRect {
+  fill: var(--color-cream);
+}
+
+#introLogoShape {
   font-family: var(--font-heading);
   font-size: clamp(44px, 10vw, 100px);
 }
 
-#introMaskText {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: intro-rust 2200ms 300ms cubic-bezier(.45, 0, .15, 1) forwards;
-  animation-play-state: paused; /* JS spustí až po načtení fontu */
-}
-
-#introMaskFinal {
-  animation: intro-final 2200ms 300ms cubic-bezier(.3, 0, .2, 1) forwards;
-  animation-play-state: paused;
-}
-
-.intro-mark {
-  position: fixed;
-  inset: 0;
-  z-index: 101;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  color: var(--color-text); /* jednobarevné, žádný karamelový akcent */
-  pointer-events: none;
-  animation:
-    intro-rust 2200ms 300ms cubic-bezier(.45, 0, .15, 1) forwards,
-    intro-mizi 2200ms 300ms forwards;
-  animation-play-state: paused, paused;
-}
-
-/* JS přidá až po potvrzení web fontu (nebo bezpečném timeoutu) */
-#intro.intro-go #introMaskText,
-#intro.intro-go #introMaskFinal,
-#intro.intro-go .intro-mark {
-  animation-play-state: running;
-}
-
-@keyframes intro-rust {
-  to {
-    transform: scale(42); /* velké — poslední zbytky dočistí #introMaskFinal */
-  }
-}
-
-@keyframes intro-mizi {
-  0%, 38% { opacity: 1; }
-  52%     { opacity: 0; }
-  100%    { opacity: 0; }
-}
-
-@keyframes intro-final {
-  0%, 78% { r: 0; }
-  100%    { r: 4000; }
+#introMaskUse {
+  fill: #000; /* v masce = díra, bez ohledu na to, co dědí .intro-svg */
+  stroke: #000;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-width: 0; /* JS ho v závěru animace plynule zvětšuje */
 }
 
 /* Dokud intro běží: stránka nescrolluje a navigace/hero text/scroll-cue
@@ -202,7 +164,8 @@ body.intro-running .scroll-cue {
 }
 
 /* Bezpečný fallback: chybí-li podpora CSS masky nebo je-li povoleno
-   omezení pohybu, žádný velký zoom — jen krátké jemné prolnutí. */
+   omezení pohybu, script.js smyčku requestAnimationFrame vůbec
+   nespustí (viz sekce 0) — stačí tedy celý panel krátce prolnout. */
 #intro.intro-simple {
   transition: opacity .4s ease;
 }
@@ -211,25 +174,13 @@ body.intro-running .scroll-cue {
   opacity: 0;
 }
 
-#intro.intro-simple #introMaskText,
-#intro.intro-simple #introMaskFinal,
-#intro.intro-simple .intro-mark {
-  animation: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  #intro {
+  .intro {
     transition: opacity .4s ease;
   }
 
-  #intro.intro-go {
+  .intro.intro-go {
     opacity: 0;
-  }
-
-  #introMaskText,
-  #introMaskFinal,
-  .intro-mark {
-    animation: none;
   }
 }
 

@@ -26,35 +26,44 @@
 </head>
 
 <body>
-  <!-- Úvodní přechod: neprůhledný panel má v sobě skutečnou DÍRU
-       (živá SVG maska ve tvaru "M & M"), která postupně roste — pod
-       panelem je vidět reálná, nezvětšená stránka. Nad panelem leží
-       ještě viditelná plná litera, která na začátku díru zakrývá
-       a postupně se ztrácí, čímž díru "odkryje".
+  <!-- Úvodní přechod — JEDNA sdílená SVG geometrie "M & M":
+       #introLogoShape je jediná definice tvaru (v <defs>, nevykreslená
+       sama o sobě). Použita je DVAKRÁT přes <use>, ve stejném SVG,
+       BEZ viewBoxu (=1 jednotka je vždy přesně 1 CSS pixel):
+       - #introVisibleUse — viditelné tmavé "M & M" nad panelem,
+       - #introMaskUse — tentýž tvar uvnitř masky = skutečná díra.
 
-       Princip masky (viz komentář v style.css, sekce 2b):
-       - bílý obdélník = trvale neprůhledná plocha, nikdy se needituje,
-       - #introMaskText = jediná skutečná díra, roste jako samostatný
-         živý DOM prvek,
-       - #introMaskFinal = pojistný kruh, který se zapne až v posledních
-         ~20 % animace a spolehlivě "zametá" zbytkové neprůhledné plochy
-         uvnitř písmen (např. oko "&"), aby konec byl čistý.
+       DŮLEŽITÉ: transformace (scale) se NEANIMUJE na sdíleném zdroji
+       ani přes CSS — script.js počítá JEDNU hodnotu progress na
+       požadavek animačního snímku a z ní sestaví JEDEN řetězec SVG
+       transformace, který nastaví na OBĚ <use> instance zároveň
+       (setAttribute "transform", stejná hodnota). Střed (cx, cy) se
+       počítá z getBoundingClientRect() skutečné intro karty — je to
+       tedy deterministická SVG transformace, ne odhad přes CSS
+       transform-origin.
+
+       Dokončení revealu NENÍ samostatný tvar — v závěrečné fázi script.js
+       plynule zvětšuje stroke-width na #introMaskUse (obrys téhož
+       tvaru, stejná černá barva = díra). Průhled se tak doslova
+       rozpíná ven z obrysů písmen, dokud transparentní plochy mezi
+       M, & a M nesplynou a nezakryjí celou masku — žádná druhá
+       geometrie, žádný přechod na jiný efekt.
 
        Po dobu intra jsou navigace, hero text a scroll-cue schované
-       přes body.intro-running (viz style.css) — díra tak NIKDY
+       přes body.intro-running (viz style.css) — díra tak nikdy
        neodkrývá nic jiného než .hero-photo. -->
   <div id="intro" class="intro" aria-hidden="true">
-    <svg width="0" height="0" style="position:absolute" focusable="false">
+    <svg class="intro-svg" focusable="false">
       <defs>
-        <mask id="introMask" mask-type="luminance" maskUnits="userSpaceOnUse" x="-5000" y="-5000" width="10000" height="10000">
-          <rect x="-5000" y="-5000" width="10000" height="10000" fill="#fff"/>
-          <text id="introMaskText" x="50%" y="50%" text-anchor="middle" dominant-baseline="central">M &amp; M</text>
-          <circle id="introMaskFinal" cx="50%" cy="50%" r="0"/>
+        <text id="introLogoShape" x="50%" y="50%" text-anchor="middle" dominant-baseline="central">M &amp; M</text>
+        <mask id="introMask" mask-type="luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
+          <rect x="0" y="0" width="100%" height="100%" fill="#fff"/>
+          <use id="introMaskUse" href="#introLogoShape"/>
         </mask>
       </defs>
+      <rect id="introPanelRect" x="0" y="0" width="100%" height="100%" mask="url(#introMask)"/>
+      <use id="introVisibleUse" href="#introLogoShape"/>
     </svg>
-    <div class="intro-panel"></div>
-    <p class="intro-mark">M&nbsp;&amp;&nbsp;M</p>
   </div>
   <!-- Bez JS by se #intro nikdy nespustil ani neodstranil (JS řídí
        start i úklid) a navždy by zablokoval stránku — tato pojistka

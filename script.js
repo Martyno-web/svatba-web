@@ -10,22 +10,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ------------------------------------------------------------
   // 0. Úvodní přechod (M & M jako rostoucí díra do hero)
-  //    Samotnou animaci celou odehraje CSS (viz style.css, 2b) —
-  //    JS jen rozhoduje KDY má začít a uklízí po sobě:
-  //    (a) počká na web font (jinak by se tvar díry uprostřed
-  //        animace přepočítal na jiné písmo — viditelný "skok"),
-  //    (b) po dobu běhu zamkne scroll a schová navigaci/hero text/
-  //        scroll-cue (jinak by je rostoucí díra odkryla předčasně),
-  //    (c) po dohrání intro odstraní z DOM a vše odemkne,
+  //
+  //    Jedna hodnota "progress" na animační snímek řídí VŠE — žádné
+  //    dvě nezávislé CSS animace, žádné spoléhání na to, že CSS
+  //    animace na sdíleném zdroji uvnitř <defs> se spolehlivě
+  //    propíše do obou <use> instancí (v praxi se to neukázalo
+  //    spolehlivé). Místo toho na každém snímku:
+  //    1) spočítáme JEDEN řetězec SVG transformace (translate → scale
+  //       → translate zpět, střed z getBoundingClientRect skutečné
+  //       intro karty) a nastavíme ho na introVisibleUse i introMaskUse
+  //       — identicky, žádný odhad,
+  //    2) podle SKUTEČNÉHO uplynulého času (ne podle "eased" scale
+  //       hodnoty) plynule prolneme viditelnou literu do průhledné,
+  //    3) v závěrečné fázi ZÁROVEŇ s pokračujícím scale necháme růst
+  //       stroke-width na #introMaskUse — díra se tak rozpíná ven
+  //       z obrysů TÉHOŽ tvaru, žádná druhá geometrie.
+  //
+  //    JS jen navíc: (a) počká na web font, ať se tvar uprostřed
+  //    neplete, (b) po dobu běhu zamkne scroll a schová navigaci/
+  //    hero text/scroll-cue, (c) po dohrání intro odstraní z DOM,
   //    (d) při omezení pohybu nebo chybějící podpoře CSS masky
-  //        přepne na jednoduché krátké prolnutí bez zoomu.
+  //    přepne na jednoduché krátké prolnutí bez zoomu.
   // ------------------------------------------------------------
   const intro = document.getElementById("intro");
   if (intro) {
-    // CSS: delay 300 ms + trvání 2200 ms = 2500 ms; +150 ms rezerva
-    const CELKOVA_DELKA = 2500;
-    const REZERVA = 150;
+    const HOLD = 300;          // ms klidu na začátku (malé M&M v klidu)
+    const DELKA_RUSTU = 2200;  // ms — samotný plynulý růst
     const CEKANI_NA_FONT = 400; // bezpečný strop, ať intro nečeká donekonečna
+
+    const introVisibleUse = document.getElementById("introVisibleUse");
+    const introMaskUse = document.getElementById("introMaskUse");
 
     const maskySwPodporovane =
       typeof CSS !== "undefined" &&
@@ -33,8 +47,11 @@ document.addEventListener("DOMContentLoaded", () => {
       (CSS.supports("mask-image", "url(#x)") ||
         CSS.supports("-webkit-mask-image", "url(#x)"));
 
-    const zjednodusit = bezPohybu || !maskySwPodporovane;
-    if (zjednodusit) intro.classList.add("intro-simple");
+    const zjednodusit =
+      bezPohybu ||
+      !maskySwPodporovane ||
+      !introVisibleUse ||
+      !introMaskUse;
 
     document.body.classList.add("intro-running");
 
@@ -43,9 +60,92 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.classList.remove("intro-running");
     };
 
+    // Plynulá S-křivka — konstantní "cit" v pohybu, bez tvrdého
+    // startu i konce (na rozdíl od lineárního růstu).
+    const easeInOut = (t) =>
+      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+    const animovat = () => {
+      const rect = intro.getBoundingClientRect();
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+
+      // SCALE_MAX odvozený od skutečné velikosti obrazovky: cílem je,
+      // aby ve chvíli, kdy se výrazněji rozjede stroke-width (t≈0,68),
+      // už jednotlivé tahy "M & M" odcházely za hranice viewportu.
+      // Odhad šířky nápisu při scale 1 = font-size × ~2,4 (poměr
+      // "M & M" v použitém řezu). Výsledek omezen na 18–25.
+      const fontSizePx =
+        parseFloat(getComputedStyle(introMaskUse).fontSize) || 70;
+      const logoSirka = fontSizePx * 2.4;
+      const potrebnyScale =
+        (Math.max(rect.width, rect.height) * 1.6) / logoSirka;
+      const SCALE_MAX = Math.min(25, Math.max(18, potrebnyScale));
+
+      // Maximální stroke-width v LOKÁLNÍCH jednotkách (před transformací)
+      // — po vynásobení aktuálním scale dá na konci efektivně tisíce
+      // pixelů, dost na spojení všech mezer a přesah přes celou obrazovku.
+      const STROKE_MAX = fontSizePx * 0.9;
+
+      const zacatek = performance.now();
+
+      const krok = (ted) => {
+        const uplynulo = ted - zacatek;
+
+        if (uplynulo < HOLD) {
+          requestAnimationFrame(krok);
+          return;
+        }
+
+        // t = reálný, lineární postup v čase (0–1) — na něm stavíme
+        // časování crossfade i růstu stroke-width, aby seděly na
+        // skutečné sekundy, ne na zakřivenou "eased" škálu.
+        const t = Math.min(1, (uplynulo - HOLD) / DELKA_RUSTU);
+        const scale = 1 + (SCALE_MAX - 1) * easeInOut(t);
+
+        // 1) Jedna transformace, nastavená na OBĚ <use> zároveň —
+        //    scale pokračuje plynule až do úplného konce (t=1),
+        //    nikdy se nezastaví dřív, než skončí celá animace.
+        const transform =
+          `translate(${cx} ${cy}) scale(${scale}) translate(${-cx} ${-cy})`;
+        introVisibleUse.setAttribute("transform", transform);
+        introMaskUse.setAttribute("transform", transform);
+
+        // 2) Crossfade viditelné litery — plynule mezi cca 0,9 s a 1,4 s
+        //    reálného času (t≈0,27–0,50 uvnitř okna růstu)
+        let opacity;
+        if (t <= 0.27) opacity = 1;
+        else if (t >= 0.5) opacity = 0;
+        else opacity = 1 - (t - 0.27) / (0.5 - 0.27);
+        introVisibleUse.style.opacity = opacity;
+
+        // 3) Dokončení revealu = růst stroke-width TÉHOŽ #introMaskUse,
+        //    ne nový tvar. Start kolem t≈0,68 (~1,8 s), mocnina 3 drží
+        //    náběh dlouho prakticky neznatelný, než se v posledních
+        //    procentech rozeběhne — souběžně s pokračujícím scale, ne
+        //    až po jeho skončení. Obrys se tak rozpíná ven z písmen,
+        //    dokud transparentní plochy mezi nimi nesplynou.
+        const prah = 0.68;
+        const rozpinani = t <= prah ? 0 : Math.pow((t - prah) / (1 - prah), 3);
+        introMaskUse.setAttribute("stroke-width", STROKE_MAX * rozpinani);
+
+        if (t < 1) {
+          requestAnimationFrame(krok);
+        } else {
+          setTimeout(uklidit, 150);
+        }
+      };
+
+      requestAnimationFrame(krok);
+    };
+
     const spustit = () => {
-      intro.classList.add("intro-go");
-      setTimeout(uklidit, zjednodusit ? 450 : CELKOVA_DELKA + REZERVA);
+      if (zjednodusit) {
+        intro.classList.add("intro-simple", "intro-go");
+        setTimeout(uklidit, 450);
+        return;
+      }
+      animovat();
     };
 
     if (document.fonts && document.fonts.ready) {
