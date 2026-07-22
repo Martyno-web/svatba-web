@@ -16,18 +16,17 @@ document.addEventListener("DOMContentLoaded", () => {
   //    "tmavá" kopie ani crossfade barvy.
   //
   //    Zjednodušené řešení, ~1,4 s celkem:
-  //    1) Naprostou většinu animace běží čistě SCALE (jeden řetězec
-  //       SVG transformace na #introMaskUse) — žádná dilatace, žádné
-  //       vrstvy navíc, maska je jen fill.
-  //    2) V posledních ~300 ms reálného času scale dál pokračuje
-  //       (nikdy se nezastaví) a SOUČASNĚ se jednou jedinou opacity
-  //       změnou na celém #intro plynule "rozpustí" zbývající krémové
-  //       zbytky. Kompozitorová vlastnost na jednom prvku — nejlevnější
-  //       možná operace, žádné přepočítávání SVG geometrie za běhu.
-  //    3) Souběžně (čistě přes CSS transition, viz .intro v CSS) se
-  //       levitující zaoblená karta v prvních ~300 ms roztáhne na celou
-  //       obrazovku — spouští ji stejná třída "intro-go", žádná další
-  //       JS logika navíc.
+  //    1) Celou dobu běží čistě SCALE (jeden řetězec SVG transformace
+  //       na #introMaskUse) — žádná dilatace, žádné vrstvy navíc,
+  //       maska je jen fill. Křivka zrychlování: pomalý, ale nenulový
+  //       start → plynulá kontinuální akcelerace → nejrychlejší konec.
+  //    2) Od chvíle, kdy M&M vizuálně zabírá většinu obrazovky (ještě
+  //       čitelné jako logo), scale dál pokračuje (nikdy se nezastaví)
+  //       a SOUČASNĚ se jednou jedinou opacity změnou na celém #intro
+  //       plynule "rozpustí" zbývající krémové okolí — stejný pohyb,
+  //       ne druhá animace. Kompozitorová vlastnost na jednom prvku —
+  //       nejlevnější možná operace, žádné přepočítávání SVG geometrie
+  //       za běhu.
   //
   //    JS jen navíc: (a) počká na konkrétní web font použitý v M&M
   //    (ne na všechny fonty stránky), ať se tvar uprostřed neplete,
@@ -81,12 +80,14 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.classList.add("hero-enter");
     };
 
-    // Akcelerující křivka s NENULOVOU počáteční rychlostí (na rozdíl
-    // od dřívějšího t^1.6, které mělo v t=0 nulový sklon — v kombinaci
-    // s HOLD to působilo jako "zaseknutí" na startu). Lineárně-kvadratická
-    // kombinace: p = a·t + (1-a)·t², a≈0.25 — pohyb začne OKAMŽITĚ
-    // znatelnou rychlostí, plynule dál akceleruje, nikde nezpomaluje.
-    const easeAkceleruj = (t) => 0.25 * t + 0.75 * t * t;
+    // Akcelerující křivka s NENULOVOU počáteční rychlostí (derivace
+    // v t=0 je 0.15 — pohyb je znatelný hned od prvního snímku, žádné
+    // "zaseknutí"). Lineární + kvadratický + kubický člen dohromady
+    // dávají výraznější oblouk než čistá kvadratika: začátek je záměrně
+    // pomalejší (uživatel stihne přečíst "M & M"), střední fáze plynule
+    // zrychluje a poslední třetina je nejrychlejší — bez zlomu mezi
+    // fázemi, protože jde o jednu spojitou funkci. V t=1 přesně 1.
+    const easeAkceleruj = (t) => 0.15 * t + 0.25 * t * t + 0.6 * t * t * t;
 
     const animovat = () => {
       // Rozměry se čtou JEDNOU, před startem smyčky — v samotném
@@ -107,10 +108,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const potrebnyScale =
         (Math.max(rect.width, rect.height) * 1.6) / logoSirka;
       const SCALE_MAX = Math.min(25, Math.max(18, potrebnyScale));
-
-      // Spustí CSS transition levitující karty (viz .intro/.intro-go
-      // v CSS) — čistě deklarativně, žádná další JS logika za běhu.
-      intro.classList.add("intro-go");
 
       const zacatek = performance.now();
 
@@ -137,11 +134,16 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         // 2) Dokončení revealu = JEDNA opacity změna na celém #intro,
-        //    ne geometrie navíc. Fade dostává ~300 ms reálného času
-        //    (FADE_START odvozený z DELKA_RUSTU, ne fixní procento) —
-        //    do té doby zůstává #intro plně neprůhledné (opacity 1).
-        //    Smoothstep zajišťuje plynulý, ne lineární, náběh.
-        const FADE_START = (DELKA_RUSTU - 300) / DELKA_RUSTU; // ≈ 0.77
+        //    ne geometrie navíc — scale se kvůli ní nikde nezastavuje
+        //    ani nemění, je to stejný pohyb, jen s přidaným průhledem.
+        //    FADE_START = 0.68 odpovídá chvíli, kdy M&M (díky SCALE_MAX
+        //    odvozenému z rozměru obrazovky) zabírá většinu viewportu,
+        //    ale jednotlivé tahy ještě nedosáhly okraje — tzn. logo je
+        //    stále čitelné jako "M & M". Dává fade cca 415 ms reálného
+        //    času (déle a dřív než předchozí verze), smoothstep zajišťuje
+        //    plynulý, ne lineární, náběh — na startu skoro neznatelný,
+        //    postupně sílící až do opacity 0 přesně v t=1.
+        const FADE_START = 0.68;
         const uf = Math.max(0, Math.min(1, (t - FADE_START) / (1 - FADE_START)));
         const smoothFade = uf * uf * (3 - 2 * uf);
         intro.style.opacity = 1 - smoothFade;

@@ -117,15 +117,6 @@ h1, h2, h3 {
   position: fixed;
   inset: 0;
   z-index: 100; /* nad navigací (60) i mobilním menu (50) */
-  /* Na startu levitující zaoblená karta (12 px odstup, 20 px rohy);
-     jakmile animace začne, plynule se roztáhne na celou obrazovku.
-     Čistě vnější ořez — nemění souřadnicový systém SVG masky uvnitř. */
-  clip-path: inset(12px round 20px);
-  transition: clip-path .3s cubic-bezier(.25, .1, .25, 1);
-}
-
-#intro.intro-go {
-  clip-path: inset(0px round 0px);
 }
 
 .intro-svg {
@@ -180,8 +171,6 @@ body.intro-running .scroll-cue {
 
 @media (prefers-reduced-motion: reduce) {
   .intro {
-    /* Bez pohybu: žádné roztahování karty, rovnou plná plocha */
-    clip-path: none;
     transition: opacity .4s ease;
   }
 
