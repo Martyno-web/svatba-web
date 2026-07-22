@@ -109,6 +109,13 @@ document.addEventListener("DOMContentLoaded", () => {
         (Math.max(rect.width, rect.height) * 1.6) / logoSirka;
       const SCALE_MAX = Math.min(25, Math.max(18, potrebnyScale));
 
+      // Počáteční velikost: na mobilu M&M startuje 2× menší (stejný
+      // breakpoint 999px jako zbytek webu — viz .nav-burger, hero-mobile
+      // apod.). Konečná velikost (SCALE_MAX), střed růstu, délka i
+      // křivka zůstávají stejné — mobil jen projde větším rozsahem.
+      const jeMobil = window.matchMedia("(max-width: 999px)").matches;
+      const START_SCALE = jeMobil ? 0.5 : 1;
+
       const zacatek = performance.now();
 
       const krok = (ted) => {
@@ -123,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // časování závěrečného fade, aby sedělo na skutečné sekundy,
         // ne na zakřivenou "eased" škálu.
         const t = Math.min(1, (uplynulo - HOLD) / DELKA_RUSTU);
-        const scale = 1 + (SCALE_MAX - 1) * easeAkceleruj(t);
+        const scale = START_SCALE + (SCALE_MAX - START_SCALE) * easeAkceleruj(t);
 
         // 1) Jedna transformace na #introMaskUse — scale pokračuje
         //    plynule až do úplného konce (t=1), nikdy se nezastaví
@@ -136,14 +143,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // 2) Dokončení revealu = JEDNA opacity změna na celém #intro,
         //    ne geometrie navíc — scale se kvůli ní nikde nezastavuje
         //    ani nemění, je to stejný pohyb, jen s přidaným průhledem.
-        //    FADE_START = 0.68 odpovídá chvíli, kdy M&M (díky SCALE_MAX
-        //    odvozenému z rozměru obrazovky) zabírá většinu viewportu,
-        //    ale jednotlivé tahy ještě nedosáhly okraje — tzn. logo je
-        //    stále čitelné jako "M & M". Dává fade cca 415 ms reálného
-        //    času (déle a dřív než předchozí verze), smoothstep zajišťuje
-        //    plynulý, ne lineární, náběh — na startu skoro neznatelný,
-        //    postupně sílící až do opacity 0 přesně v t=1.
-        const FADE_START = 0.68;
+        //    FADE_START posunut na polovinu předchozí hodnoty (0.68 →
+        //    0.34), fade tak dostává cca 860 ms reálného času — začíná
+        //    dřív a trvá déle. Smoothstep má nulovou derivaci na obou
+        //    koncích, takže těsně po FADE_START je průhled ještě prakticky
+        //    neznatelný (M&M je krátce čitelné na plné krémové ploše) a
+        //    pak plynule sílí až do opacity 0 přesně v t=1.
+        const FADE_START = 0.34;
         const uf = Math.max(0, Math.min(1, (t - FADE_START) / (1 - FADE_START)));
         const smoothFade = uf * uf * (3 - 2 * uf);
         intro.style.opacity = 1 - smoothFade;

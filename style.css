@@ -356,6 +356,20 @@ body.menu-otevrene .nav-logo {
 @media (max-width: 999px) {
   .nav-burger {
     display: flex;
+    /* Fixed vůči viewportu, aby zůstal dostupný i při scrollu (jinak
+       by odscrolloval pryč spolu s .nav, který je jen position:absolute
+       v rámci .header). Ani .header, ani .nav nemají transform/filter/
+       perspective/will-change, takže containing block pro fixed je
+       čistě viewport — žádný obchvat struktury není potřeba.
+       top/right kopírují původní vizuální pozici danou paddingem .nav
+       (--space-s / --space-m), navíc s odsazením o safe-area (notch /
+       dynamic island). Zůstává potomkem .nav, takže ho beze změny dál
+       schovává body.intro-running .nav (opacity/visibility) a dál je
+       nad .menu díky stávající stacking-context hierarchii (.nav: 60
+       > .menu: 50) — z-index samotného tlačítka měnit nebylo potřeba. */
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + var(--space-s));
+    right: calc(env(safe-area-inset-right, 0px) + var(--space-m));
   }
 }
 
