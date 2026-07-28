@@ -210,9 +210,15 @@ document.addEventListener("DOMContentLoaded", () => {
     dnes.setHours(0, 0, 0, 0);
     const dni = Math.round((svatba - dnes) / 86400000);
     if (dni >= 0) {
-      // České skloňování: 1 den, 2–4 dny, 5+ dní
-      const tvar = dni === 1 ? "den" : dni >= 2 && dni <= 4 ? "dny" : "dní";
-      odpocet.textContent = dni === 0 ? "je to dnes! · " : `za ${dni} ${tvar} · `;
+      if (dni === 0) {
+        odpocet.textContent = "je to dnes! · ";
+      } else {
+        // Zbývající dny zaokrouhlené nahoru na celé týdny
+        const tydny = Math.ceil(dni / 7);
+        // České skloňování: 1 týden, 2–4 týdny, 5+ týdnů
+        const tvar = tydny === 1 ? "týden" : tydny >= 2 && tydny <= 4 ? "týdny" : "týdnů";
+        odpocet.textContent = `za ${tydny} ${tvar} · `;
+      }
     }
   }
 
