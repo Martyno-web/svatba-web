@@ -38,7 +38,14 @@ document.addEventListener("DOMContentLoaded", () => {
   //    prolnutí bez zoomu.
   // ------------------------------------------------------------
   const intro = document.getElementById("intro");
-  if (intro) {
+  // Na mobilu (stejný breakpoint jako zbytek webu) se M&M animace
+  // vůbec nespouští — rovnou hero, jen s běžným jemným vstupním fade-inem.
+  const jeMobil = window.matchMedia("(max-width: 999px)").matches;
+
+  if (intro && jeMobil) {
+    intro.remove();
+    document.body.classList.add("hero-enter");
+  } else if (intro) {
     const HOLD = 100;          // ms téměř nepostřehnutelného klidu na startu
     const DELKA_RUSTU = 1300;  // ms — samotný plynulý růst (celkem ≈ 1,4 s)
     const CEKANI_NA_FONT = 150; // bezpečný strop pro JEDEN konkrétní font řez
@@ -109,12 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (Math.max(rect.width, rect.height) * 1.6) / logoSirka;
       const SCALE_MAX = Math.min(25, Math.max(18, potrebnyScale));
 
-      // Počáteční velikost: na mobilu M&M startuje 2× menší (stejný
-      // breakpoint 999px jako zbytek webu — viz .nav-burger, hero-mobile
-      // apod.). Konečná velikost (SCALE_MAX), střed růstu, délka i
-      // křivka zůstávají stejné — mobil jen projde větším rozsahem.
-      const jeMobil = window.matchMedia("(max-width: 999px)").matches;
-      const START_SCALE = jeMobil ? 0.5 : 1;
+      const START_SCALE = 1;
 
       const zacatek = performance.now();
 
