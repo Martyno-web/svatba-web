@@ -6,7 +6,66 @@
 
 const bezPohybu = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// Scroll je od vypnutí history.scrollRestoration (viz index.html, <head>)
+// čistě naše režie — doskroluje na #kotvu z URL, jinak na úplný začátek.
+// behavior: "instant", protože web má globálně CSS scroll-behavior:
+// smooth, které by jinak i tohle plynule animovalo.
+function doskrolovatNaKotvuNeboZacatek() {
+  const cil = location.hash && document.getElementById(location.hash.slice(1));
+  if (cil) {
+    cil.scrollIntoView({ behavior: "instant", block: "start" });
+  } else {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }
+}
+
+// Back/Forward MEZI KOTVAMI v rámci téže stránky (např. Program → Místo
+// → zpět) je same-document navigace, žádný nový DOMContentLoaded se
+// nekoná — proto vlastní posluchač na "popstate". Skutečné opuštění a
+// návrat na stránku (jiný dokument) řeší sekce -1 v DOMContentLoaded níže.
+window.addEventListener("popstate", doskrolovatNaKotvuNeboZacatek);
+
+// Klíč pro uložení scroll pozice — jen pro návrat přes Back/Forward
+// MIMO bfcache (viz sekce -1 níže). `pagehide`, ne `beforeunload`/
+// `unload` — ty by stránku vyřadily ze způsobilosti pro bfcache, což by
+// paradoxně zhoršilo přirozené chování Back/Forward, které bfcache řeší
+// samo, mnohem lépe než my.
+const KLIC_SCROLLU = "scrollY:" + location.pathname;
+window.addEventListener("pagehide", () => {
+  try {
+    sessionStorage.setItem(KLIC_SCROLLU, String(window.scrollY));
+  } catch (e) {}
+});
+
 document.addEventListener("DOMContentLoaded", () => {
+
+  // ------------------------------------------------------------
+  // -1. Ruční obnova scroll pozice (viz index.html, <head> —
+  //     scrollRestoration je "manual", takže prohlížeč už sám
+  //     nerestoruje vůbec nic, ani #kotvu z URL při reloadu).
+  //
+  //     - back_forward mimo bfcache → obnovit uloženou pozici ze
+  //       sessionStorage (bfcache tenhle kód vůbec nespustí, řeší se
+  //       sám, přirozeně).
+  //     - reload s #kotvou v URL → doskrolovat na ni ručně (jediný
+  //       vedlejší efekt vypnutí automatické restorace — prohlížeč bez
+  //       ní na reloadu přestane sám doskrolovat i na #kotvu).
+  //     - reload bez #kotvy / čerstvá navigace → nic neděláme, stránka
+  //       přirozeně zůstává na úplném začátku.
+  // ------------------------------------------------------------
+  try {
+    const zaznam = performance.getEntriesByType &&
+      performance.getEntriesByType("navigation")[0];
+
+    if (zaznam && zaznam.type === "back_forward") {
+      const ulozene = sessionStorage.getItem(KLIC_SCROLLU);
+      if (ulozene !== null) {
+        window.scrollTo({ top: parseInt(ulozene, 10), left: 0, behavior: "instant" });
+      }
+    } else if (zaznam && zaznam.type === "reload") {
+      doskrolovatNaKotvuNeboZacatek();
+    }
+  } catch (e) {}
 
   // ------------------------------------------------------------
   // 0. Úvodní přechod (M & M jako rostoucí díra do hero)

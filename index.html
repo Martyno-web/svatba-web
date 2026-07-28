@@ -3,6 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Vypnutí automatické obnovy scroll pozice prohlížečem (Chrome i
+       Safari po reloadu sami skočí na starou pozici, ještě než doběhne
+       layout — proto je vidět skok doprostřed/na konec). MUSÍ běžet
+       úplně první v <head>, na KAŽDÉM načtení (ne jen při reloadu) —
+       prohlížeč se při reloadu řídí hodnotou nastavenou při PŘEDCHOZÍM
+       načtení stránky, nastavit ji až reaktivně uvnitř reloadu samotného
+       je pozdě. Obnovu pozice pro Back/Forward mimo bfcache řešíme sami
+       v script.js, ze sessionStorage — přirozené Back/Forward na mobilu
+       obvykle jede přes bfcache a to zůstává úplně beze změny. -->
+  <script>
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+  </script>
+
   <title>Martin &amp; Michaela — 24. 4. 2027</title>
   <meta name="description" content="Svatba Martina a Michaely — 24. dubna 2027, Jitkovský mlýn, Chotěboř.">
 
