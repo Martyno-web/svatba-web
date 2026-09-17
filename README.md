@@ -5,9 +5,14 @@
 Je to ukázková (portfolio) verze svatebního webu, určená k nahrání na
 prezentační web jako živé demo. Oproti `main` se liší takto:
 
-- **anonymizovaná data** — Anna & Petr, 12. 6. 2027, Mlýn Podhájí,
-  řidič Tomáš (777 123 456), Penzion Na Návsi. Žádné skutečné jméno,
-  adresa ani telefonní číslo.
+- **anonymizovaní lidé** — Anna & Petr, 12. 6. 2027, řidič Tomáš
+  (777 123 456). Žádné skutečné jméno snoubenců ani soukromé
+  telefonní číslo.
+- **místo a ubytování zůstávají skutečné** (Jitkovský mlýn, Penzion
+  Račín) — záměrně. Jsou to veřejné podniky, ne soukromé osoby, a
+  ukázka díky tomu obsahuje funkční odkaz na mapu i na web penzionu.
+  Konkrétní místo, na které se dá kliknout a nechat si najít trasu,
+  působí věrohodněji než obecné vyhledávání.
 - **metadata** — bez kanonické adresy a bez absolutních URL na ostrý web,
   navíc `<meta name="robots" content="noindex, nofollow">`, aby ukázka
   nekonkurovala webům klientů ve vyhledávání.
