@@ -5,7 +5,7 @@
 Je to ukázková (portfolio) verze svatebního webu, určená k nahrání na
 prezentační web jako živé demo. Oproti `main` se liší takto:
 
-- **anonymizovaní lidé** — Anna & Petr, 12. 6. 2027, řidič Tomáš
+- **anonymizovaní lidé** — Adam & Anežka, 12. 6. 2027, řidič Tomáš
   (777 123 456). Žádné skutečné jméno snoubenců ani soukromé
   telefonní číslo.
 - **místo a ubytování zůstávají skutečné** (Jitkovský mlýn, Penzion
