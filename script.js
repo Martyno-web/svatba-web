@@ -263,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------------------------
   const odpocet = document.getElementById("odpocet");
   if (odpocet) {
-    const svatba = new Date(2027, 3, 24); // měsíce od 0 → 3 = duben
+    const svatba = new Date(2027, 5, 12); // měsíce od 0 → 5 = červen
     const dnes = new Date();
     svatba.setHours(0, 0, 0, 0);
     dnes.setHours(0, 0, 0, 0);
