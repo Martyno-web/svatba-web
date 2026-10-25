@@ -134,6 +134,26 @@ h1, h2, h3 {
   font-size: clamp(44px, 10vw, 100px);
 }
 
+/* Oddělovač mezi iniciálami — tenká linka, ne písmeno. Výška je
+   odvozená ze stejné clamp() škály jako písmo (~58 % velikosti
+   iniciály), takže poměr linky k písmenům zůstává stejný na každé
+   šířce. Vlastní geometrie rectu se nastavuje přes CSS, svislé
+   vystředění přes translate o polovinu vlastní výšky; vodorovně
+   odsazení o polovinu tloušťky, aby linka stála přesně na ose. */
+.intro-delic {
+  width: 2px;
+  /* ~43 % velikosti písma, tj. zhruba dvě třetiny výšky verzálky M —
+     oddělovač má písmena provázat, ne s nimi soupeřit. Škála kopíruje
+     clamp() u písma, takže poměr drží na každé šířce. */
+  height: clamp(19px, 4.3vw, 43px);
+  /* transform-box je u SVG ve výchozím stavu view-box, takže by se
+     procenta počítala z celého plátna (a linka by uletěla mimo).
+     fill-box je přepne na vlastní rozměr rectu — translate(-50%, -50%)
+     tak linku přesně vystředí na průsečík x=50 % / y=50 %. */
+  transform-box: fill-box;
+  transform: translate(-50%, -50%);
+}
+
 #introMaskUse {
   fill: #000; /* v masce = díra, bez ohledu na to, co dědí .intro-svg */
 }
@@ -188,7 +208,11 @@ body.intro-running .scroll-cue {
 
 /* Navigace leží PŘES fotku (průhledná), ne nad ní.
    z-index musí být NAD otevřeným menu (50), jinak by křížek
-   hamburgeru nešel zmáčknout — nav tvoří vlastní stacking context */
+   hamburgeru nešel zmáčknout — nav tvoří vlastní stacking context.
+   Monogram vlevo tu není; kapitoly proto drží u pravého okraje,
+   kde byly i dřív (flex-end místo space-between). Pod 1000 px je
+   jediným prvkem hamburger, a ten je position:fixed, takže do
+   rozložení nezasahuje. */
 .nav {
   position: absolute;
   top: 0;
@@ -197,24 +221,10 @@ body.intro-running .scroll-cue {
   z-index: 60;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-s);
   padding: var(--space-s) var(--space-m);
   background: transparent;
-}
-
-.nav-logo {
-  font-family: var(--font-heading);
-  font-size: 20px;
-  color: var(--color-on-caramel); /* leží na fotce s tmavým pruhem */
-  text-decoration: none;
-  letter-spacing: .08em;
-  transition: color .3s;
-}
-
-/* Při otevřeném menu je logo na krémové — ztmavne */
-body.menu-otevrene .nav-logo {
-  color: var(--color-text);
 }
 
 .nav-links {
@@ -477,6 +487,20 @@ h1 {
   margin: 6px 0 0;
 }
 
+/* Osobní věta pod jmény — jemný doplněk, ne nadpis. Kurzíva ze
+   stávající rodiny (Cormorant Garamond), řádově menší než jména,
+   takže nesoupeří ani s nimi, ani s datem a místem pod linkou.
+   Linka .rule pod ní odděluje osobní část od informační. */
+.hero-veta {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: clamp(19px, 5.1vw, 22px);
+  line-height: 1.35;
+  color: var(--color-text);
+  margin: 10px 0 0;
+  max-width: 22ch; /* mobil: smí se zalomit do dvou řádků */
+}
+
 @media (min-width: 1000px) {
   /* Desktop — fotografie je pozadím CELÉHO hero (od kraje ke kraji,
      od horního okraje stránky; navigace na ní opticky leží).
@@ -528,6 +552,14 @@ h1 {
 
   .hero-text .place {
     font-size: 16px;
+  }
+
+  /* Desktop: víc místa, věta se vejde na jeden řádek a dostane
+     o něco velkorysejší odstup od jmen i od linky nad datem */
+  .hero-veta {
+    font-size: 24px;
+    margin-top: 14px;
+    max-width: none;
   }
 
   /* Desktop: text leží na ztmavené zdi — světlé tóny */
@@ -726,10 +758,13 @@ h2.chapter-label::after {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Obě varianty fotky (desktop i mobil) už mají dvojici i kámen
-     vykomponované uprostřed — držet tedy střed záběru při jakémkoli
-     poměru okna, ať parallax ani cover neuříznou hlavy či kámen. */
-  object-position: 50% 50%;
+  /* Fotka je záměrně vyšší, než kolik se do pásu vejde — object-fit
+     ji ořízne a script.js pak při průchodu sekcí posouvá object-position
+     od spodního okraje k hornímu, takže se postupně odhalí víc jejího
+     obsahu. Žádné zvětšování: cover sám zaručí, že se nikdy neobjeví
+     prázdný okraj, a poměr stran zůstává nedotčený.
+     Hodnota níže je zároveň klidový výřez bez JS a při omezeném pohybu. */
+  object-position: 50% 65%;
   display: block;
 }
 
@@ -985,24 +1020,8 @@ h3.sub-label::after {
   text-align: center;
 }
 
-.mezihra-amp {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -54%);
-  z-index: 0;
-  font-family: var(--font-heading);
-  font-style: italic;
-  font-size: clamp(260px, 38vw, 520px);
-  line-height: 1;
-  color: var(--color-beige); /* duch — o odstín světlejší než pískové pozadí */
-  pointer-events: none;
-  user-select: none;
-}
-
 .mezihra-quote {
   position: relative;
-  z-index: 1;
   margin: 0;
 }
 
@@ -1017,17 +1036,12 @@ h3.sub-label::after {
 }
 
 /* --------------------------------------------------------------------------
-   13. Co na sebe — paleta jako pás pruhů přes celou šířku
+   13. Paleta barev svatby — pruhy uvnitř odpovědi „Co na sebe?"
    -------------------------------------------------------------------------- */
-.dresscode-line {
-  text-align: left;
-  max-width: 520px;
-  margin: 0;
-}
 
 .palette {
   list-style: none;
-  margin: 0;
+  margin: var(--space-s) 0;
   padding: 0;
   display: flex;
   width: 100%;
@@ -1035,7 +1049,7 @@ h3.sub-label::after {
 
 .palette li {
   flex: 1;
-  height: 100px; /* vzorník, ne banner — nesmí soupeřit s akcentem Darů */
+  height: 72px; /* vzorník uvnitř odpovědi — drobnější než dřívější pás */
   background: var(--c);
   position: relative;
 }
@@ -1043,10 +1057,10 @@ h3.sub-label::after {
 .palette li span {
   position: absolute;
   left: 50%;
-  bottom: var(--space-s);
+  bottom: 10px;
   transform: translateX(-50%);
-  font-size: 11px;
-  letter-spacing: .18em;
+  font-size: 10px;
+  letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--t);
   white-space: nowrap;
@@ -1054,7 +1068,12 @@ h3.sub-label::after {
 
 @media (min-width: 700px) {
   .palette li {
-    height: 140px;
+    height: 84px;
+  }
+
+  .palette li span {
+    font-size: 11px;
+    letter-spacing: .12em;
   }
 }
 
@@ -1104,8 +1123,21 @@ h3.sub-label::after {
   transition: transform .2s;
 }
 
+/* Bez JS (a při omezeném pohybu) rozhoduje o indikátoru [open] */
 .faq-item[open] summary::after {
   transform: rotate(45deg); /* z + se stane × */
+}
+
+/* Se zapnutou animací přebírá řízení script.js: během sbalování
+   zůstává [open] ještě chvíli true, takže by se křížek otočil zpět
+   až na konci. Třída .je-otevrena drží skutečný záměr, a indikátor
+   se tak otáčí souběžně s pohybem odpovědi. */
+body.faq-animovane .faq-item[open] summary::after {
+  transform: none;
+}
+
+body.faq-animovane .faq-item.je-otevrena summary::after {
+  transform: rotate(45deg);
 }
 
 .faq-item summary:hover {
@@ -1115,6 +1147,32 @@ h3.sub-label::after {
 .faq-item p {
   text-align: left;
   margin: 0 0 var(--space-s);
+}
+
+/* Obal odpovědi — jeho výšku animuje script.js, proto overflow.
+   Bez JS i při omezeném pohybu je to obyčejný blok bez vlivu. */
+.faq-odpoved {
+  overflow: hidden;
+}
+
+/* Doplňující prosba pod vzorníkem — jemně menší a kurzívou,
+   ale v plné textové barvě, aby zůstal kontrast i na mobilu. */
+/* Doplňující prosba pod vzorníkem — odlišená menším písmem
+   a kurzívou, ale v plné textové barvě. Zbytek odpovědí má přes
+   `.section p` tlumený odstín (kontrast ~3,3 : 1), což by u menšího
+   stupně bylo na čtení málo; vyšší specificita to tu proto přebíjí. */
+.faq-item .faq-poznamka {
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+/* Telefon v odpovědi — splývá s textem, jen podtržení napoví,
+   že je klikací (nahrazuje dřívější inline style). */
+.tel-odkaz {
+  color: inherit;
+  text-decoration: underline;
 }
 
 /* --------------------------------------------------------------------------
@@ -1161,16 +1219,10 @@ h3.sub-label::after {
   font-style: italic;
   font-size: clamp(40px, 7vw, 88px);
   color: var(--color-on-caramel);
-  margin: 0 0 var(--space-m);
-}
-
-.finale-amp {
-  font-family: var(--font-heading);
-  font-style: italic;
-  font-size: 56px;
-  line-height: 1;
-  color: var(--color-caramel);
-  margin: 0 0 var(--space-s);
+  /* Po odstranění dekorativního „&" pod nadpisem drží odstup jen
+     tahle mezera — proto je větší než původních var(--space-m),
+     aby závěr nezhoustl, ale ani nezůstala prázdná díra. */
+  margin: 0 0 clamp(28px, 5vh, 48px);
 }
 
 .finale-names {
@@ -1236,11 +1288,15 @@ body.hero-enter .hero-text > *:nth-child(6) { animation-delay: .40s; }
   transform: none;
 }
 
-/* Parallax fotek řídí script.js — prohlížeči předem hlásíme změny */
+/* Parallax fotek řídí script.js — prohlížeči předem hlásíme změny.
+   Předěl se neposouvá transformem, ale výřezem (object-position). */
 .hero-photo img,
-.predel img,
 .finale-photo {
   will-change: transform;
+}
+
+.predel img {
+  will-change: object-position;
 }
 
 /* Respekt k systémovému omezení pohybu */
