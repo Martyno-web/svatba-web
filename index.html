@@ -181,7 +181,12 @@
     </section>
 
     <div class="predel">
-      <img src="images/misto-siroka.png" alt="Jitkovský mlýn u rybníka z výšky" loading="lazy">
+      <picture>
+        <!-- Mobil dostane ořez soustředěný na nás dva, desktop široký pás —
+             prohlížeč stáhne vždy jen jednu z nich (stejně jako u hero) -->
+        <source media="(max-width: 999px)" srcset="images/predel-u-vody-mobil.webp">
+        <img src="images/predel-u-vody.webp" alt="Martin a Michaela na kameni u vody" loading="lazy">
+      </picture>
     </div>
 
     <section id="misto" class="band">
