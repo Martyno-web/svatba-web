@@ -202,14 +202,26 @@
       <div class="misto-media">
         <details class="galerie">
           <summary>
-            <img src="images/misto-detail.png" alt="Ovečky na pastvině u mlýna" loading="lazy">
+            <img src="images/misto-detail-nahled.webp" width="960" height="720" alt="Ovečky na pastvině u mlýna" loading="lazy">
             <span class="galerie-hint">Více fotek místa <span class="galerie-plus" aria-hidden="true">+</span></span>
           </summary>
           <div class="galerie-grid">
-            <img src="images/misto-1.jpg" alt="Jitkovský mlýn — fotografie místa" loading="lazy">
-            <img src="images/misto-2.jpg" alt="Jitkovský mlýn — fotografie místa" loading="lazy">
-            <img src="images/misto-3.jpg" alt="Jitkovský mlýn — fotografie místa" loading="lazy">
-            <img src="images/misto-4.jpg" alt="Jitkovský mlýn — fotografie místa" loading="lazy">
+            <button type="button" class="zvetsit" data-velka="images/misto-1-velka.webp" aria-label="Zvětšit fotografii: Jitkovský mlýn">
+                      <img src="images/misto-1-nahled.webp" width="520" height="390" alt="Jitkovský mlýn — fotografie místa" loading="lazy">
+                      <span class="zvetsit-ikona" aria-hidden="true"></span>
+                    </button>
+            <button type="button" class="zvetsit" data-velka="images/misto-2-velka.webp" aria-label="Zvětšit fotografii: Jitkovský mlýn">
+                      <img src="images/misto-2-nahled.webp" width="520" height="390" alt="Jitkovský mlýn — fotografie místa" loading="lazy">
+                      <span class="zvetsit-ikona" aria-hidden="true"></span>
+                    </button>
+            <button type="button" class="zvetsit" data-velka="images/misto-3-velka.webp" aria-label="Zvětšit fotografii: Jitkovský mlýn">
+                      <img src="images/misto-3-nahled.webp" width="520" height="390" alt="Jitkovský mlýn — fotografie místa" loading="lazy">
+                      <span class="zvetsit-ikona" aria-hidden="true"></span>
+                    </button>
+            <button type="button" class="zvetsit" data-velka="images/misto-4-velka.webp" aria-label="Zvětšit fotografii: Jitkovský mlýn">
+                      <img src="images/misto-4-nahled.webp" width="520" height="390" alt="Jitkovský mlýn — fotografie místa" loading="lazy">
+                      <span class="zvetsit-ikona" aria-hidden="true"></span>
+                    </button>
           </div>
         </details>
       </div>
@@ -246,8 +258,14 @@
                   <span class="galerie-hint">Fotky <span class="galerie-plus" aria-hidden="true">+</span></span>
                 </summary>
                 <div class="galerie-grid">
-                  <img src="images/ubytovani-mlyn-1.jpg" alt="Ubytování na mlýně" loading="lazy">
-                  <img src="images/ubytovani-mlyn-2.jpg" alt="Ubytování na mlýně" loading="lazy">
+                  <button type="button" class="zvetsit" data-velka="images/ubytovani-mlyn-1-velka.webp" aria-label="Zvětšit fotografii: ubytování na mlýně">
+                      <img src="images/ubytovani-mlyn-1-nahled.webp" width="520" height="390" alt="Ubytování na mlýně" loading="lazy">
+                      <span class="zvetsit-ikona" aria-hidden="true"></span>
+                    </button>
+                  <button type="button" class="zvetsit" data-velka="images/ubytovani-mlyn-2-velka.webp" aria-label="Zvětšit fotografii: ubytování na mlýně">
+                      <img src="images/ubytovani-mlyn-2-nahled.webp" width="520" height="390" alt="Ubytování na mlýně" loading="lazy">
+                      <span class="zvetsit-ikona" aria-hidden="true"></span>
+                    </button>
                 </div>
               </details>
             </div>
@@ -262,8 +280,14 @@
                   <span class="galerie-hint">Fotky <span class="galerie-plus" aria-hidden="true">+</span></span>
                 </summary>
                 <div class="galerie-grid">
-                  <img src="images/ubytovani-okoli-1.jpg" alt="Ubytování v okolí" loading="lazy">
-                  <img src="images/ubytovani-okoli-2.jpg" alt="Ubytování v okolí" loading="lazy">
+                  <button type="button" class="zvetsit" data-velka="images/ubytovani-okoli-1-velka.webp" aria-label="Zvětšit fotografii: ubytování v okolí">
+                      <img src="images/ubytovani-okoli-1-nahled.webp" width="520" height="390" alt="Ubytování v okolí" loading="lazy">
+                      <span class="zvetsit-ikona" aria-hidden="true"></span>
+                    </button>
+                  <button type="button" class="zvetsit" data-velka="images/ubytovani-okoli-2-velka.webp" aria-label="Zvětšit fotografii: ubytování v okolí">
+                      <img src="images/ubytovani-okoli-2-nahled.webp" width="520" height="390" alt="Ubytování v okolí" loading="lazy">
+                      <span class="zvetsit-ikona" aria-hidden="true"></span>
+                    </button>
                 </div>
               </details>
             </div>
@@ -344,6 +368,13 @@
       </div>
     </section>
   </main>
+
+  <!-- Zvětšenina fotografie z galerie. Velká verze se do src doplňuje
+       až při otevření (script.js), aby se nestahovala zbytečně. -->
+  <div class="lupa" id="lupa" role="dialog" aria-modal="true" aria-label="Zvětšená fotografie" hidden>
+    <button type="button" class="lupa-zavrit" aria-label="Zavřít zvětšeninu">&times;</button>
+    <img class="lupa-foto" src="" alt="">
+  </div>
 
   <script src="script.js"></script>
 </body>
