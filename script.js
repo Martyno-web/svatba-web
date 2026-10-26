@@ -368,14 +368,21 @@ document.addEventListener("DOMContentLoaded", () => {
         cekaPredel = false;
         const vyskaOkna = window.innerHeight;
         const r = predel.getBoundingClientRect();
-        if (r.bottom < 0 || r.top > vyskaOkna) return; // mimo obrazovku
 
-        // Krajní výřezy schválně nastávají ve chvíli, kdy je pás celý
-        // na obrazovce (dosedlý dolů, resp. nahoru) — ne až když je
-        // napůl za okrajem. Jinak by divák nejzazší polohy nikdy
-        // pořádně neviděl a pohyb by působil mdle.
-        const rozjezd = Math.max(1, vyskaOkna - r.height);
-        const prubeh = Math.min(1, Math.max(0, (rozjezd - r.top) / rozjezd));
+        // Celý rozsah se rozkládá do CELÉHO průchodu sekce obrazovkou:
+        //   r.top =  vyskaOkna  → pás se právě objevuje u spodního okraje
+        //   r.top = -r.height   → pás právě zmizel za horním okrajem
+        // Proto jmenovatel (vyskaOkna + r.height), ne (vyskaOkna − výška):
+        // kratší úsek by znamenal, že se krajní hodnoty vyčerpají, zatímco
+        // je fotka ještě velkou částí na obrazovce, a zbytek průchodu by
+        // stál na dorazu. Vztah je lineární, takže při rovnoměrném scrollu
+        // je i změna výřezu rovnoměrná a obrácení směru je okamžité.
+        //
+        // Nic se tu neodfiltrovává ani neprodlužuje: hodnota se dopočítá
+        // i mimo obrazovku (ořez na 0–1 ji přirozeně drží na krajích),
+        // aby na hranicích viditelnosti nevznikl skok z výchozí hodnoty.
+        const prusvit = Math.max(1, vyskaOkna + r.height);
+        const prubeh = Math.min(1, Math.max(0, (vyskaOkna - r.top) / prusvit));
         predelFoto.style.objectPosition =
           "50% " + ((1 - prubeh) * 100).toFixed(2) + "%";
       };
