@@ -840,6 +840,19 @@ h2.chapter-label::after {
   transition: max-height .6s ease, opacity .6s ease;
 }
 
+/* Náhled v mřížce je tlačítko, aby šel otevřít i z klávesnice.
+   Vizuálně zůstává čistou fotkou — žádné pozadí ani rámeček. */
+.galerie-grid .zvetsit {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  line-height: 0;
+  overflow: hidden; /* drží přiblížení fotky uvnitř dlaždice */
+  cursor: zoom-in;
+}
+
 .galerie-grid img {
   width: 100%;
   height: auto;
@@ -851,9 +864,35 @@ h2.chapter-label::after {
   transition: transform .6s ease;
 }
 
-/* Jemné přiblížení fotky pod kurzorem */
-.galerie-grid img:hover {
+/* Jemné přiblížení fotky pod kurzorem i při zaměření klávesnicí */
+.galerie-grid .zvetsit:hover img,
+.galerie-grid .zvetsit:focus-visible img {
   transform: scale(1.02);
+}
+
+.galerie-grid .zvetsit:focus-visible {
+  outline: 1px solid var(--color-caramel);
+  outline-offset: 3px;
+}
+
+/* Decentní náznak, že fotka jde zvětšit — dvě lupy nejsou potřeba,
+   stačí tenký roh v pravém dolním rohu dlaždice. */
+.zvetsit-ikona {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 14px;
+  height: 14px;
+  border-right: 1.5px solid var(--color-on-caramel);
+  border-bottom: 1.5px solid var(--color-on-caramel);
+  opacity: .75;
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+
+.galerie-grid .zvetsit:hover .zvetsit-ikona,
+.galerie-grid .zvetsit:focus-visible .zvetsit-ikona {
+  opacity: 1;
 }
 
 /* Decentní focus místo modrého rámečku prohlížeče */
@@ -1327,6 +1366,89 @@ body.hero-enter .hero-text > *:nth-child(6) { animation-delay: .40s; }
   .reveal {
     opacity: 1;
     transform: none;
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   17. Zvětšenina fotografie z galerie
+   Celý snímek bez ořezu (object-fit: contain) přes ztmavenou stránku,
+   velikost omezená viewportem, takže se vejde na mobil i na desktop.
+   -------------------------------------------------------------------------- */
+.lupa {
+  position: fixed;
+  inset: 0;
+  /* scrollbar-gutter: stable (viz html) zužuje plochu, vůči které se
+     inset počítá — bez tohoto by vpravo zůstal nezakrytý pruh. Fixed
+     prvek nerozšiřuje rolovatelnou plochu, takže 100vw nic nerozbije. */
+  width: 100vw;
+  z-index: 120; /* nad navigací (60) i mobilním menu (50) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-s);
+  box-sizing: border-box;
+  background: rgba(46, 38, 32, .88); /* mocca, jen ztmavení — ne černá */
+  cursor: zoom-out;
+}
+
+@media (min-width: 700px) {
+  .lupa {
+    padding: var(--space-m);
+  }
+}
+
+.lupa[hidden] {
+  display: none; /* bez tohoto by flex přebil atribut hidden */
+}
+
+.lupa-foto {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain; /* celý snímek, nikdy oříznutý */
+  display: block;
+  cursor: default;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+
+/* Fotka se objeví, až je skutečně načtená — jinak by problikl prázdný rám */
+.lupa.je-nactena .lupa-foto {
+  opacity: 1;
+}
+
+.lupa-zavrit {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + var(--space-s));
+  right: calc(env(safe-area-inset-right, 0px) + var(--space-s));
+  width: 44px;  /* pohodlná dotyková plocha i na mobilu */
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--color-on-caramel);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity .2s ease;
+}
+
+.lupa-zavrit:hover {
+  opacity: .7;
+}
+
+.lupa-zavrit:focus-visible {
+  outline: 1px solid var(--color-sand);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lupa-foto {
     transition: none;
   }
 }

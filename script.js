@@ -536,6 +536,77 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------------------------------------
+  // 4c. Zvětšenina fotografie z galerie
+  //
+  //     Jeden prvek na celou stránku, velká verze se do src doplní
+  //     teprve při otevření — dokud nikdo nic nerozklikne, nestáhne
+  //     se nic navíc. Zavření: křížek, klik mimo fotku, Escape.
+  //     Zaměření se vrací na náhled, ze kterého se otevíralo.
+  // ------------------------------------------------------------
+  const lupa = document.getElementById("lupa");
+  const lupaFoto = lupa && lupa.querySelector(".lupa-foto");
+  const lupaZavrit = lupa && lupa.querySelector(".lupa-zavrit");
+  const nahledy = document.querySelectorAll(".galerie-grid .zvetsit");
+
+  if (lupa && lupaFoto && lupaZavrit && nahledy.length) {
+    let puvodniFokus = null;
+
+    const otevri = (tlacitko) => {
+      const nahled = tlacitko.querySelector("img");
+      puvodniFokus = tlacitko;
+
+      lupa.classList.remove("je-nactena");
+      lupaFoto.alt = nahled ? nahled.alt : "";
+      lupaFoto.src = tlacitko.dataset.velka;
+      lupa.hidden = false;
+      // Stránka pod zvětšeninou nescrolluje; scrollbar-gutter: stable
+      // v CSS drží šířku, takže se nic nepřeskládá.
+      document.body.style.overflow = "hidden";
+      lupaZavrit.focus();
+
+      if (lupaFoto.complete && lupaFoto.naturalWidth) {
+        lupa.classList.add("je-nactena");
+      }
+    };
+
+    const zavri = () => {
+      lupa.hidden = true;
+      lupa.classList.remove("je-nactena");
+      lupaFoto.removeAttribute("src"); // ať se velká verze neschovává v paměti
+      document.body.style.overflow = "";
+      if (puvodniFokus) {
+        puvodniFokus.focus(); // návrat přesně tam, odkud se otevíralo
+        puvodniFokus = null;
+      }
+    };
+
+    lupaFoto.addEventListener("load", () => lupa.classList.add("je-nactena"));
+
+    nahledy.forEach((tlacitko) => {
+      tlacitko.addEventListener("click", () => otevri(tlacitko));
+    });
+
+    lupaZavrit.addEventListener("click", zavri);
+
+    // Klik mimo fotku (na ztmavené pozadí) zavírá, klik na fotku ne
+    lupa.addEventListener("click", (udalost) => {
+      if (udalost.target === lupa) zavri();
+    });
+
+    document.addEventListener("keydown", (udalost) => {
+      if (lupa.hidden) return;
+      if (udalost.key === "Escape") {
+        zavri();
+      } else if (udalost.key === "Tab") {
+        // Jediný ovladatelný prvek uvnitř je křížek — držíme fokus u něj,
+        // ať se tabulátorem nedá odejít na skrytou stránku pod zvětšeninou.
+        udalost.preventDefault();
+        lupaZavrit.focus();
+      }
+    });
+  }
+
+  // ------------------------------------------------------------
   // 5. Mobilní menu (hamburger)
   // ------------------------------------------------------------
   const burger = document.querySelector(".nav-burger");
