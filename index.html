@@ -80,7 +80,15 @@
   <div id="intro" class="intro" aria-hidden="true">
     <svg class="intro-svg" focusable="false">
       <defs>
-        <text id="introLogoShape" x="50%" y="50%" text-anchor="middle" dominant-baseline="central">M &amp; M</text>
+        <!-- "M | M" — dvě iniciály a mezi nimi tenká grafická linka
+             (<rect>, ne písmeno). Skupina se jako celek používá přes
+             <use> a script.js na ni nasazuje jedinou transformaci,
+             takže linka roste s písmeny naprosto shodně. -->
+        <g id="introLogoShape">
+          <text class="intro-litera" x="50%" y="50%" dx="-0.36em" text-anchor="end" dominant-baseline="central">M</text>
+          <rect class="intro-delic" x="50%" y="50%"/>
+          <text class="intro-litera" x="50%" y="50%" dx="0.36em" text-anchor="start" dominant-baseline="central">M</text>
+        </g>
         <mask id="introMask" mask-type="luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
           <rect x="0" y="0" width="100%" height="100%" fill="#fff"/>
           <use id="introMaskUse" href="#introLogoShape"/>
@@ -98,7 +106,6 @@
 
   <header class="header">
     <nav class="nav">
-      <a class="nav-logo" href="#uvod">M&nbsp;&amp;&nbsp;M</a>
       <div class="nav-links">
         <a href="#program">Program</a>
         <a href="#misto">Místo</a>
@@ -126,6 +133,7 @@
     <section id="uvod" class="hero">
       <div class="hero-text">
         <h1>Martin <span class="amp">&amp;</span> Michaela</h1>
+        <p class="hero-veta">Cez cestu nám prebehli dve&nbsp;líšky...</p>
         <div class="rule"></div>
         <p class="date">Sobota 24. dubna 2027</p>
         <p class="place">Jitkovský mlýn, Chotěboř</p>
@@ -268,25 +276,10 @@
     <section id="dary" class="band-sand">
       <div class="mezihra">
       <h2 class="chapter-label">Dary</h2>
-      <span class="mezihra-amp" aria-hidden="true">&amp;</span>
       <blockquote class="mezihra-quote">
         <p>„Jó, vždyť víš, štěstí je krásná věc... štěstí je tak krásná a přepychová věc, ale prachy si za něj nekoupíš."</p>
       </blockquote>
       </div>
-    </section>
-
-    <section id="dresscode" class="dresscode">
-      <div class="section">
-        <h2 class="chapter-label">Co na sebe</h2>
-        <p class="dresscode-line">Společenský oděv v přírodních tónech — tak, aby ladil s místem. Část dne strávíme venku, myslete i na pohodlné boty.</p>
-      </div>
-      <ul class="palette" aria-label="Doporučené barvy">
-        <li style="--c:#FAF7F1; --t:#8A7A6A"><span>krémová</span></li>
-        <li style="--c:#E3D5BE; --t:#6D5C48"><span>písková</span></li>
-        <li style="--c:#B08D5F; --t:#FFFDF8"><span>karamel</span></li>
-        <li style="--c:#8A7A6A; --t:#FAF7F1"><span>mocca</span></li>
-        <li style="--c:#3E3630; --t:#E3D5BE"><span>hnědá</span></li>
-      </ul>
     </section>
 
     <section id="faq" class="band">
@@ -295,19 +288,48 @@
         <div class="qa-grid">
           <details class="faq-item">
             <summary>Můžeme vzít děti?</summary>
-            <p>Vaše děti máme rádi stejně jako vás. Pokud je to ale ve vašich možnostech, budeme rádi, když jim pro tento den zajistíte hlídání.</p>
+            <div class="faq-odpoved">
+              <p>Vaše děti máme rádi stejně jako vás. Pokud je to ale ve vašich možnostech, budeme rádi, když jim pro tento den zajistíte hlídání.</p>
+            </div>
           </details>
           <details class="faq-item">
             <summary>Jak je to s ubytováním a dopravou?</summary>
-            <p>Po příjezdu se ubytujete v penzionu Račín a zavoláte řidiči Michalovi, který vás odveze na mlýn. Večer vás zase bezpečně doveze zpátky k ubytování. Pokud budete chtít jet rovnou domů, odveze vás tam, kam budete potřebovat. Kontakt: řidič Michal tel. <a href="tel:+420728444333" style="color: inherit; text-decoration: underline;">728 444 333</a></p>
+            <div class="faq-odpoved">
+              <p>Po příjezdu se ubytujete v penzionu Račín a zavoláte řidiči Michalovi, který vás odveze na mlýn. Večer vás zase bezpečně doveze zpátky k ubytování. Pokud budete chtít jet rovnou domů, odveze vás tam, kam budete potřebovat. Kontakt: řidič Michal tel. <a class="tel-odkaz" href="tel:+420728444333">728 444 333</a></p>
+            </div>
           </details>
           <details class="faq-item">
             <summary>Kde zaparkujeme?</summary>
-            <p>Pokud se večer chystáte odjet domů vlastním autem, můžete zaparkovat přímo u mlýna.</p>
+            <div class="faq-odpoved">
+              <p>Pokud se večer chystáte odjet domů vlastním autem, můžete zaparkovat přímo u mlýna.</p>
+            </div>
           </details>
           <details class="faq-item">
             <summary>Jak je to s placením ubytování?</summary>
-            <p>Ubytování je na nás. Vy si s sebou vezměte jen dobrou náladu.</p>
+            <div class="faq-odpoved">
+              <p>Ubytování je na nás. Vy si s sebou vezměte jen dobrou náladu.</p>
+            </div>
+          </details>
+          <!-- id zůstává kvůli odkazu „Co na sebe" v mobilním menu -->
+          <details class="faq-item" id="dresscode">
+            <summary>Co na sebe?</summary>
+            <div class="faq-odpoved">
+              <p>Poprosíme vás o společenský oděv. Pokud se budete chtít sladit s barvami naší svatby a zvolíte oblečení v některém z níže uvedených odstínů, budeme rádi. Pokud ale dáte přednost svému oblíbenému oblečení v jiné barvě, vůbec to nevadí. Těšíme se na vás, ne na vaše oblečení.</p>
+              <ul class="palette" aria-label="Barvy naší svatby">
+                <li style="--c:#FAF7F1; --t:#8A7A6A"><span>krémová</span></li>
+                <li style="--c:#E3D5BE; --t:#6D5C48"><span>písková</span></li>
+                <li style="--c:#B08D5F; --t:#FFFDF8"><span>karamel</span></li>
+                <li style="--c:#8A7A6A; --t:#FAF7F1"><span>mocca</span></li>
+                <li style="--c:#3E3630; --t:#E3D5BE"><span>hnědá</span></li>
+              </ul>
+              <p class="faq-poznamka">Máme jen jednu drobnou prosbu – ponechte nám pro tento den naši jedinečnost. Nevěsta bude v tradičních bílých šatech a ženich v černém obleku s černým motýlkem.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary>Co když mám ještě nějaké otázky?</summary>
+            <div class="faq-odpoved">
+              <p>Pokud vám něco není jasné nebo potřebujete s čímkoliv poradit, neváhejte se obrátit na některého z našich svědků.</p>
+            </div>
           </details>
         </div>
       </div>
@@ -317,7 +339,6 @@
       <img class="finale-photo" src="images/finale.png" alt="Jitkovský mlýn v podvečerním světle" loading="lazy">
       <div class="finale-content">
         <h2 class="finale-title">Těšíme se na vás</h2>
-        <p class="finale-amp" aria-hidden="true">&amp;</p>
         <p class="finale-names">Martin &amp; Michaela</p>
         <p class="finale-meta">24 / 04 / 27 · Jitkovský mlýn</p>
       </div>

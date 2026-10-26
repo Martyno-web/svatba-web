@@ -308,11 +308,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------------------------------------
-  // 3. Jemný parallax velkých fotografií (předěl, finále)
+  // 3. Jemný parallax velkých fotografií (hero, finále)
   //    Fotka je zvětšená na 110 % a posouvá se o ±4 % výšky.
+  //    Předěl má vlastní, výraznější režim — viz sekce 3b.
   // ------------------------------------------------------------
   if (!bezPohybu) {
-    const fotky = document.querySelectorAll(".hero-photo img, .predel img, .finale-photo");
+    const fotky = document.querySelectorAll(".hero-photo img, .finale-photo");
     if (fotky.length) {
       let cekam = false;
 
@@ -336,6 +337,58 @@ document.addEventListener("DOMContentLoaded", () => {
       }, { passive: true });
 
       posun();
+    }
+  }
+
+  // ------------------------------------------------------------
+  // 3b. Předěl — postupné odhalování fotografie při průchodu sekcí
+  //
+  //     Fotka je ve zdroji vyšší, než kolik se do pásu vejde;
+  //     object-fit: cover ji ořízne a my jen posouváme, KTERÁ část
+  //     je vidět (object-position), takže se odkrývá skutečný obsah
+  //     snímku, ne že by se obrázek mechanicky posouval mimo rám.
+  //
+  //     Proč ne transform/scale jako u ostatních fotek: zvětšování
+  //     by muselo být velké, aby vzniklo dost rezervy, a tím by se
+  //     snímek jen přiblížil. Cover navíc sám zaručuje, že se nikdy
+  //     neobjeví prázdný okraj, a nedeformuje poměr stran.
+  //
+  //     100 % = spodní výřez (postavy a kámen zblízka, jako dosud),
+  //       0 % = horní výřez (odhalí se louka a les nad rybníkem).
+  //     Oba kraje jsou vybrané tak, aby hlavy ani kámen nikdy
+  //     nevypadly z rámu — viz rozměry ořezů v images/.
+  // ------------------------------------------------------------
+  if (!bezPohybu) {
+    const predel = document.querySelector(".predel");
+    const predelFoto = predel && predel.querySelector("img");
+    if (predelFoto) {
+      let cekaPredel = false;
+
+      const prekresliPredel = () => {
+        cekaPredel = false;
+        const vyskaOkna = window.innerHeight;
+        const r = predel.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > vyskaOkna) return; // mimo obrazovku
+
+        // Krajní výřezy schválně nastávají ve chvíli, kdy je pás celý
+        // na obrazovce (dosedlý dolů, resp. nahoru) — ne až když je
+        // napůl za okrajem. Jinak by divák nejzazší polohy nikdy
+        // pořádně neviděl a pohyb by působil mdle.
+        const rozjezd = Math.max(1, vyskaOkna - r.height);
+        const prubeh = Math.min(1, Math.max(0, (rozjezd - r.top) / rozjezd));
+        predelFoto.style.objectPosition =
+          "50% " + ((1 - prubeh) * 100).toFixed(2) + "%";
+      };
+
+      window.addEventListener("scroll", () => {
+        if (!cekaPredel) {
+          cekaPredel = true;
+          requestAnimationFrame(prekresliPredel);
+        }
+      }, { passive: true });
+      window.addEventListener("resize", prekresliPredel, { passive: true });
+
+      prekresliPredel();
     }
   }
 
@@ -386,6 +439,93 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     });
+  }
+
+  // ------------------------------------------------------------
+  // 4b. Plynulé rozbalování a sbalování otázek (details.faq-item)
+  //
+  //     Animuje se SKUTEČNÁ výška obalu odpovědi, takže se spolu
+  //     s ní průběžně posouvá i obsah pod otázkou — žádný skok.
+  //     Výška se vždy měří z aktuálního obsahu (scrollHeight), nikdy
+  //     se neodhaduje max-height: krátká i dlouhá odpověď proto
+  //     trvají stejně dlouho a nikde nevzniká prodleva.
+  //
+  //     Rychlé opakované kliknutí: pohyb se nerestartuje od kraje,
+  //     ale pokračuje z právě naměřené výšky, takže se plynule obrátí.
+  //     Záměr drží proměnná `cil` — polozka.open je totiž po celou
+  //     dobu animace true (obsah musí být v rozložení, aby šel měřit).
+  //
+  //     Indikátor +/× se řídí stejným záměrem (třída .je-otevrena),
+  //     aby se otáčel souběžně se sbalováním, ne až na jeho konci.
+  // ------------------------------------------------------------
+  if (!bezPohybu) {
+    const otazky = document.querySelectorAll("details.faq-item");
+
+    if (otazky.length) {
+      const TRVANI = 300;
+      const KRIVKA = "cubic-bezier(.22, .61, .36, 1)"; // jemné dojetí, bez pružení
+
+      // Teprve teď přebírá indikátor JS — bez skriptu i při omezeném
+      // pohybu zůstává v CSS navázaný na [open] (viz style.css).
+      document.body.classList.add("faq-animovane");
+
+      otazky.forEach((polozka) => {
+        const spoustec = polozka.querySelector("summary");
+        const obsah = polozka.querySelector(".faq-odpoved");
+        if (!spoustec || !obsah) return;
+
+        let cil = polozka.open;
+        let animace = null;
+
+        polozka.classList.toggle("je-otevrena", cil);
+        spoustec.setAttribute("aria-expanded", String(cil));
+
+        spoustec.addEventListener("click", (udalost) => {
+          udalost.preventDefault();
+
+          cil = !cil;
+
+          // Odkud pohyb pokračuje. Pozor: u zavřeného <details> vrací
+          // Chrome pro obsah nenulovou výšku boxu (obsah jen přeskočí
+          // vykreslení), takže se z ní vycházet nedá — při otevírání
+          // proto startujeme natvrdo z nuly. Běžící animaci naopak
+          // navážeme tam, kde se právě nachází, aby se plynule obrátila.
+          let zVysky;
+          if (animace) {
+            zVysky = obsah.getBoundingClientRect().height;
+            animace.onfinish = null; // ať doběhlý handler nepřepíše nový stav
+            animace.cancel();
+            animace = null;
+          } else {
+            zVysky = cil ? 0 : obsah.getBoundingClientRect().height;
+          }
+
+          // Obsah musí být v rozložení, jinak ho nelze změřit ani animovat
+          polozka.open = true;
+          polozka.classList.toggle("je-otevrena", cil);
+          spoustec.setAttribute("aria-expanded", String(cil));
+
+          const naVysku = cil ? obsah.scrollHeight : 0;
+          obsah.style.height = naVysku + "px";
+
+          animace = obsah.animate(
+            {
+              height: [zVysky + "px", naVysku + "px"],
+              // prolnutí je jen doplněk, text se nikde nenatahuje
+              opacity: [cil ? 0.4 : 1, cil ? 1 : 0.4],
+            },
+            { duration: TRVANI, easing: KRIVKA }
+          );
+
+          animace.onfinish = () => {
+            animace = null;
+            polozka.open = cil;   // zavřené <details> schová obsah i tabulátoru
+            obsah.style.height = ""; // zpět na auto kvůli změnám šířky okna
+            obsah.style.opacity = "";
+          };
+        });
+      });
+    }
   }
 
   // ------------------------------------------------------------
