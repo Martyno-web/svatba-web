@@ -759,28 +759,6 @@ h2.chapter-label::after {
   border-bottom: none;
 }
 
-/* Sloupec ikon má pevnou šířku, takže všechny ikony stojí na jedné
-   svislé ose bez ohledu na délku názvu i na to, zda má řádek čas. */
-.menu-dne .ikona {
-  flex: 0 0 24px;
-  display: flex;
-  justify-content: center;
-  /* Čísla a text sedí na účaří, ikona ale účaří nemá — vystředí se
-     proto na výšku řádku, aby opticky seděla. */
-  align-self: center;
-  color: var(--color-caramel);
-}
-
-.menu-dne .ikona svg {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 /* Mobil: jedna textová skupina — známý čas stojí nad názvem.
    Řádky bez času žádný prázdný řádek nevytvářejí, protože se prvek
    s časem v kódu vůbec neobjeví. */
@@ -816,7 +794,7 @@ h2.chapter-label::after {
   text-transform: uppercase;
 }
 
-/* Desktop: tři sloupce — ikona | název | čas. Název drží společný
+/* Desktop: dva sloupce — název vlevo, čas vpravo. Název drží společný
    levý okraj, čas společný pravý. Sloupec času má pevnou šířku
    v jednotce `ch` (šířka číslice právě použitého písma), aby se do
    něj vešlo i nejdelší rozmezí (8,8 ch v Cormorantu, ~9,7 ch
@@ -1180,31 +1158,50 @@ h3.sub-label::after {
 /* --------------------------------------------------------------------------
    13. Co na sebe — paleta jako pás pruhů přes celou šířku
    -------------------------------------------------------------------------- */
-/* Hlavní odstavec je běžný informativní text webu: tělová rodina,
-   základní stupeň i řádkování z <body> a plná textová barva. Přebíjí
-   `.section p`, které odstavce centruje a tlumí — tady mají oba
-   odstavce stát na jedné levé ose pod štítkem kapitoly.
-   Blok je užší než kontejner kapitoly kvůli pohodlné délce řádku.
-   Dvě třídy v selektoru jsou tu nutné: `.section p` má vyšší
-   specificitu než samotná `.dresscode-line` a přebila by ji. */
+/* Hlavní odstavec má hlas otázek ze sekce „Dobré vědět" — stejná
+   rodina, řez i stupeň jako `.faq-item summary` (Cormorant Garamond,
+   400, 20 px). Dvě třídy v selektoru jsou nutné: `.section p` má
+   vyšší specificitu než samotná `.dresscode-line` a přebila by ji.
+   Šířka je omezená, aby vystředěné řádky zůstaly dobře čitelné. */
 .dresscode .dresscode-line {
-  text-align: left;
-  max-width: 62ch;
-  margin: 0;
+  text-align: center;
+  /* 26em při 20px = ~520 px, tedy zhruba 60 znaků na řádek — nad tím
+     se vystředěné řádky čtou těžko. */
+  max-width: 26em;
+  margin: 0 auto;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.6;
   color: var(--color-text);
 }
 
-/* Doplňující prosba — o stupeň menší a s výraznějším odstupem, takže
+/* Doplňující prosba — o poznání menší a s výrazným odstupem, takže
    nikdy nepůsobí silněji než hlavní odstavec. Barvu drží plnou:
    tlumený odstín má na krémové kontrast jen ~3,9 : 1, což je u menšího
-   písma na čtení málo. Hierarchii nese velikost a mezera. */
+   písma na čtení málo. Hierarchii nese velikost a mezera.
+   Blok je užší než hlavní odstavec — menší písmo snese kratší řádek. */
 .dresscode .dresscode-poznamka {
-  text-align: left;
-  max-width: 62ch;
-  margin: var(--space-m) 0 0;
+  text-align: center;
+  max-width: 30em;
+  margin: calc(var(--space-m) + var(--space-s)) auto 0;
   font-size: 15px;
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--color-text);
+}
+
+/* Vystředěný štítek kapitoly — vlásková linka vede z obou stran,
+   takže nadpis nepůsobí vychýleně. `.chapter-label::after` už
+   `flex: 1` má, stačí doplnit zrcadlový protějšek vlevo. */
+.chapter-label.na-stred {
+  justify-content: center;
+}
+
+.chapter-label.na-stred::before {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-sand);
 }
 
 .palette {
