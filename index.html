@@ -133,7 +133,7 @@
     <section id="uvod" class="hero">
       <div class="hero-text">
         <h1>Martin <span class="amp">&amp;</span> Michaela</h1>
-        <p class="hero-veta">Cez cestu nám prebehli dve&nbsp;líšky...</p>
+        <p class="hero-veta">Přes cestu nám přeběhly dvě&nbsp;lišky...</p>
         <div class="rule"></div>
         <p class="date">Sobota 24. dubna 2027</p>
         <p class="place">Jitkovský mlýn, Chotěboř</p>
@@ -161,27 +161,63 @@
         <h2 class="chapter-label">Program</h2>
         <ul class="menu-dne">
           <li>
-            <span class="time">13:00</span>
+            <span class="time"><span class="time-predpona">od</span>&nbsp;10:00</span>
+            <div>
+              <span class="event">Ubytování v hotelu Račín</span>
+            </div>
+          </li>
+          <li>
+            <span class="time">10:30–11:00</span>
+            <div>
+              <span class="event">Příjezd hostů</span>
+            </div>
+          </li>
+          <li>
+            <span class="time">12:00</span>
             <div>
               <span class="event">Obřad</span>
             </div>
           </li>
+          <!-- Závěr dne už nemá pevné časy: místo nich je ve stejném sloupci
+               drobná linková ikona. SVG je vložené přímo v kódu (tři ikony
+               nestojí za celou knihovnu) a je dekorativní — význam nese text
+               vedle něj, proto aria-hidden. -->
           <li>
-            <span class="time">14:00</span>
+            <span class="time time-ikona" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24">
+                <rect x="2.6" y="7" width="18.8" height="12.6" rx="2.4"/>
+                <path d="M8.6 7 10 4.6h4L15.4 7"/>
+                <circle cx="12" cy="13.3" r="3.6"/>
+              </svg>
+            </span>
             <div>
-              <span class="event">Společné focení a gratulace</span>
+              <span class="event">Vyfotíme se</span>
             </div>
           </li>
           <li>
-            <span class="time">15:00</span>
+            <span class="time time-ikona" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24">
+                <path d="M5 3v5.1a2.5 2.5 0 0 0 5 0V3"/>
+                <path d="M7.5 3v5"/>
+                <path d="M7.5 10.8V21"/>
+                <path d="M16 12.6V4.2c0-.9 1.1-1.2 1.5-.4 1 1.9 1.5 4 1.5 6.1 0 1.5-.8 2.7-2 2.7z"/>
+                <path d="M16 12.6V21"/>
+              </svg>
+            </span>
             <div>
-              <span class="event">Hostina</span>
+              <span class="event">Najíme se</span>
             </div>
           </li>
           <li>
-            <span class="time">20:00</span>
+            <span class="time time-ikona" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24">
+                <path d="M9 17.4V5.1l10-2.2v12.3"/>
+                <circle cx="6.4" cy="17.6" r="2.6"/>
+                <circle cx="16.4" cy="15.3" r="2.6"/>
+              </svg>
+            </span>
             <div>
-              <span class="event">Večerní zábava</span>
+              <span class="event">Budeme se bavit</span>
             </div>
           </li>
         </ul>
@@ -309,8 +345,8 @@
     <section id="dresscode" class="dresscode">
       <div class="section">
         <h2 class="chapter-label">Co na sebe?</h2>
-        <p class="dresscode-line">Poprosíme vás o společenský oděv. Pokud se budete chtít sladit s barvami naší svatby a zvolíte oblečení v některém z níže uvedených odstínů, budeme rádi. Pokud ale dáte přednost svému oblíbenému oblečení v jiné barvě, vůbec to nevadí. Těšíme se na vás, ne na vaše oblečení.</p>
-        <p class="dresscode-poznamka">Máme jen jednu drobnou prosbu – ponechte nám pro tento den naši jedinečnost. Nevěsta bude v tradičních bílých šatech a ženich v černém obleku s černým motýlkem.</p>
+        <p class="dresscode-line">Poprosíme Vás o společenský oděv. Pokud se budete chtít sladit do barev svatby a vyberete si obleček v níže uvedených barvách, budeme rádi. Pokud si ale vezmete svoje oblíbené šaty v jiné barvě, nevadí. Těšíme se na Vás, ne na Vaše oblečení.</p>
+        <p class="dresscode-poznamka">Ponechte nám pro tento den prosím naši jedinečnost. Nevěsta bude v obvyklých bílých šatech, ženich v černém obleku s černým motýlkem.</p>
       </div>
       <ul class="palette" aria-label="Doporučené barvy">
         <li style="--c:#FAF7F1; --t:#8A7A6A"><span>krémová</span></li>
