@@ -1075,12 +1075,29 @@ h3.sub-label::after {
 }
 
 /* --------------------------------------------------------------------------
-   13. Paleta barev svatby — pruhy uvnitř odpovědi „Co na sebe?"
+   13. Co na sebe — paleta jako pás pruhů přes celou šířku
    -------------------------------------------------------------------------- */
+.dresscode-line {
+  text-align: left;
+  max-width: 520px;
+  margin: 0;
+}
+
+/* Doplňující prosba pod hlavním odstavcem — menší stupeň, ale v plné
+   textové barvě. `.section p` dává odstavcům tlumený odstín (kontrast
+   ~3,5 : 1), což by u menšího písma bylo na čtení málo. */
+.dresscode .dresscode-poznamka {
+  text-align: left;
+  max-width: 520px;
+  margin: var(--space-s) 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text);
+}
 
 .palette {
   list-style: none;
-  margin: var(--space-s) 0;
+  margin: 0;
   padding: 0;
   display: flex;
   width: 100%;
@@ -1088,7 +1105,7 @@ h3.sub-label::after {
 
 .palette li {
   flex: 1;
-  height: 72px; /* vzorník uvnitř odpovědi — drobnější než dřívější pás */
+  height: 100px; /* vzorník, ne banner — nesmí soupeřit s akcentem Darů */
   background: var(--c);
   position: relative;
 }
@@ -1096,10 +1113,10 @@ h3.sub-label::after {
 .palette li span {
   position: absolute;
   left: 50%;
-  bottom: 10px;
+  bottom: var(--space-s);
   transform: translateX(-50%);
-  font-size: 10px;
-  letter-spacing: .08em;
+  font-size: 11px;
+  letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--t);
   white-space: nowrap;
@@ -1107,12 +1124,7 @@ h3.sub-label::after {
 
 @media (min-width: 700px) {
   .palette li {
-    height: 84px;
-  }
-
-  .palette li span {
-    font-size: 11px;
-    letter-spacing: .12em;
+    height: 140px;
   }
 }
 
@@ -1192,19 +1204,6 @@ body.faq-animovane .faq-item.je-otevrena summary::after {
    Bez JS i při omezeném pohybu je to obyčejný blok bez vlivu. */
 .faq-odpoved {
   overflow: hidden;
-}
-
-/* Doplňující prosba pod vzorníkem — jemně menší a kurzívou,
-   ale v plné textové barvě, aby zůstal kontrast i na mobilu. */
-/* Doplňující prosba pod vzorníkem — odlišená menším písmem
-   a kurzívou, ale v plné textové barvě. Zbytek odpovědí má přes
-   `.section p` tlumený odstín (kontrast ~3,3 : 1), což by u menšího
-   stupně bylo na čtení málo; vyšší specificita to tu proto přebíjí. */
-.faq-item .faq-poznamka {
-  font-size: 15px;
-  font-style: italic;
-  line-height: 1.6;
-  color: var(--color-text);
 }
 
 /* Telefon v odpovědi — splývá s textem, jen podtržení napoví,
