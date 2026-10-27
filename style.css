@@ -30,6 +30,10 @@
   --space-section-l: 72px; /* zvýrazněná sekce (Program, RSVP) */
 
   --content-width: 680px;
+
+  /* Levé odsazení textu v hero na desktopu — sdílí ho jména
+     i odkotvená osobní věta dole, aby stály na jedné ose. */
+  --hero-odsazeni: 6vw;
 }
 
 @media (min-width: 1000px) {
@@ -487,17 +491,19 @@ h1 {
   margin: 6px 0 0;
 }
 
-/* Osobní věta pod jmény — jemný doplněk, ne nadpis. Kurzíva ze
-   stávající rodiny (Cormorant Garamond), řádově menší než jména,
-   takže nesoupeří ani s nimi, ani s datem a místem pod linkou.
-   Linka .rule pod ní odděluje osobní část od informační. */
+/* Osobní poznámka k fotografii — jemný doplněk, ne nadpis. Kurzíva ze
+   stávající rodiny (Cormorant Garamond), řádově menší než jména.
+   Mobil: stojí v toku jako poslední prvek hero, tedy vlevo dole pod
+   informačním blokem, od kterého ji odděluje velkorysá mezera.
+   Barvu drží shodnou s místem konání („Jitkovský mlýn, Chotěboř") —
+   na mobilu je hero text tmavý na světlém rozpuštění do béžové. */
 .hero-veta {
   font-family: var(--font-heading);
   font-style: italic;
   font-size: clamp(19px, 5.1vw, 22px);
   line-height: 1.35;
-  color: var(--color-text);
-  margin: 10px 0 0;
+  color: var(--color-text-soft);
+  margin: calc(var(--space-m) + var(--space-xs)) 0 0;
   max-width: 22ch; /* mobil: smí se zalomit do dvou řádků */
 }
 
@@ -511,11 +517,16 @@ h1 {
     height: 100svh; /* fotka přes celou obrazovku */
   }
 
-  /* Jen rozdíly proti mobilu: užší blok, svislé centrování, levý okraj */
+  /* Jen rozdíly proti mobilu: užší blok, svislé centrování, levý okraj.
+     Levé odsazení je jediný zdroj pravdy — stejnou hodnotu používá
+     i odkotvená věta dole, takže obě osy sedí přesně na sobě. */
   .hero-text {
     max-width: 640px;
     justify-content: center;
-    padding: var(--space-m) var(--space-m) var(--space-m) 6%;
+    /* Spodní odsazení rezervuje pás pro odkotvenou větu, takže se
+       informační blok středuje nad ní. Bez toho by se u nízkých oken
+       (1366 × 768) obojí k sobě přitisklo. */
+    padding: var(--space-m) var(--space-m) 15vh var(--hero-odsazeni);
   }
 
   .hero-photo img {
@@ -554,12 +565,24 @@ h1 {
     font-size: 16px;
   }
 
-  /* Desktop: víc místa, věta se vejde na jeden řádek a dostane
-     o něco velkorysejší odstup od jmen i od linky nad datem */
+  /* Desktop: věta se odkotví z toku a položí se ke spodnímu okraji
+     fotografie vlevo — samostatná poznámka ke snímku, jasně oddělená
+     od jmen i od informačního bloku uprostřed.
+     `left` je shodné s levým odsazením .hero-text, takže věta začíná
+     přesně pod levým okrajem jmen (obě hodnoty jsou v jedné jednotce
+     od stejného počátku — levé hrany hero).
+     `bottom` drží větu nad světlým rozpouštěním do další sekce, které
+     začíná 150 px nad spodním okrajem; dole proto zůstává jen tmavší
+     plocha zdi. Vodorovně končí hluboko před postavami i před
+     středovým indikátorem scrollování. */
   .hero-veta {
+    position: absolute;
+    left: var(--hero-odsazeni);
+    bottom: clamp(180px, 22vh, 240px);
+    margin: 0;
     font-size: 24px;
-    margin-top: 14px;
-    max-width: none;
+    max-width: 30ch;
+    color: var(--color-sand);
   }
 
   /* Desktop: text leží na ztmavené zdi — světlé tóny */
@@ -587,6 +610,13 @@ h1 {
 .section.roomy {
   padding-top: var(--space-section-l);
   padding-bottom: var(--space-section-l);
+}
+
+/* Široká osa hlavních kapitol — shodná s .mezihra (Dary), takže
+   štítek kapitoly i jeho vlásková linka začínají a končí na stejném
+   místě jako u Darů. */
+.section.wide {
+  max-width: 1000px;
 }
 
 .section p {
@@ -713,9 +743,10 @@ h2.chapter-label::after {
   list-style: none;
   margin: 0;
   padding: 0;
-  max-width: 520px; /* záměrně vlevo, ne centrované — editorial asymetrie */
 }
 
+/* Dělicí linky jdou přes celou šířku seznamu — program působí jako
+   jedna souvislá sestava, ne jako oddělené položky. */
 .menu-dne li {
   display: flex;
   align-items: baseline;
@@ -728,39 +759,19 @@ h2.chapter-label::after {
   border-bottom: none;
 }
 
-.menu-dne .time {
-  font-family: var(--font-heading);
-  font-size: 26px;
-  color: var(--color-caramel);
-  /* Sloupec má pevnou šířku v jednotce `ch` (šířka číslice právě
-     použitého písma). Vejde se do něj i nejdelší rozmezí
-     „10:30–11:00“ (8,8 ch v Cormorantu, ~9,7 ch v záložní Georgii),
-     takže se nezalomí a popisky všech řádků zůstanou v jedné ose —
-     i v krátkém okamžiku, než se Cormorant načte. */
-  flex: 0 0 auto;
-  min-width: 10.2ch;
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* Předpona „od“ u ubytování — drobnější, aby nekonkurovala času,
-   ale v tmavším odstínu akcentu kvůli kontrastu v menším stupni. */
-.menu-dne .time-predpona {
-  font-size: .64em;
-  color: var(--color-caramel-dark);
-}
-
-/* Poslední tři body nemají čas, ale ikonu. Sedí ve stejném sloupci
-   a u jeho pravého okraje, takže svislá osa programu zůstává jedna. */
-.menu-dne .time-ikona {
+/* Sloupec ikon má pevnou šířku, takže všechny ikony stojí na jedné
+   svislé ose bez ohledu na délku názvu i na to, zda má řádek čas. */
+.menu-dne .ikona {
+  flex: 0 0 24px;
   display: flex;
-  justify-content: flex-end;
-  /* Čísla sedí na účaří popisku, ikona ale nemá účaří — proto se
-     místo toho vystředí na výšku řádku, aby opticky seděla. */
+  justify-content: center;
+  /* Čísla a text sedí na účaří, ikona ale účaří nemá — vystředí se
+     proto na výšku řádku, aby opticky seděla. */
   align-self: center;
+  color: var(--color-caramel);
 }
 
-.menu-dne .time-ikona svg {
+.menu-dne .ikona svg {
   width: 22px;
   height: 22px;
   fill: none;
@@ -770,17 +781,69 @@ h2.chapter-label::after {
   stroke-linejoin: round;
 }
 
+/* Mobil: jedna textová skupina — známý čas stojí nad názvem.
+   Řádky bez času žádný prázdný řádek nevytvářejí, protože se prvek
+   s časem v kódu vůbec neobjeví. */
+.menu-dne .udalost {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-dne .time {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--color-caramel);
+  /* Rozmezí „10:30–11:00" se nikdy nesmí zalomit. */
+  white-space: nowrap;
+}
+
+/* Předpona „od" — drobnější, aby nekonkurovala času, ale v tmavším
+   odstínu akcentu kvůli kontrastu v menším stupni. */
+.menu-dne .time-predpona {
+  font-size: .64em;
+  color: var(--color-caramel-dark);
+}
+
 .menu-dne .event {
-  display: block;
   font-size: 14px;
   font-weight: 400;
   letter-spacing: .18em;
+  line-height: 1.5;
   text-transform: uppercase;
 }
 
+/* Desktop: tři sloupce — ikona | název | čas. Název drží společný
+   levý okraj, čas společný pravý. Sloupec času má pevnou šířku
+   v jednotce `ch` (šířka číslice právě použitého písma), aby se do
+   něj vešlo i nejdelší rozmezí (8,8 ch v Cormorantu, ~9,7 ch
+   v záložní Georgii) a aby pravá osa držela i v okamžiku, než se
+   Cormorant načte. */
 @media (min-width: 700px) {
   .menu-dne li {
     gap: var(--space-m);
+  }
+
+  .menu-dne .udalost {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-m);
+  }
+
+  .menu-dne .event {
+    order: 1;
+    flex: 1;
+  }
+
+  .menu-dne .time {
+    order: 2;
+    flex: 0 0 auto;
+    min-width: 10.2ch;
+    font-size: 26px;
+    text-align: right;
   }
 }
 
@@ -1117,21 +1180,30 @@ h3.sub-label::after {
 /* --------------------------------------------------------------------------
    13. Co na sebe — paleta jako pás pruhů přes celou šířku
    -------------------------------------------------------------------------- */
-.dresscode-line {
+/* Hlavní odstavec je běžný informativní text webu: tělová rodina,
+   základní stupeň i řádkování z <body> a plná textová barva. Přebíjí
+   `.section p`, které odstavce centruje a tlumí — tady mají oba
+   odstavce stát na jedné levé ose pod štítkem kapitoly.
+   Blok je užší než kontejner kapitoly kvůli pohodlné délce řádku.
+   Dvě třídy v selektoru jsou tu nutné: `.section p` má vyšší
+   specificitu než samotná `.dresscode-line` a přebila by ji. */
+.dresscode .dresscode-line {
   text-align: left;
-  max-width: 520px;
+  max-width: 62ch;
   margin: 0;
+  color: var(--color-text);
 }
 
-/* Doplňující prosba pod hlavním odstavcem — menší stupeň, ale v plné
-   textové barvě. `.section p` dává odstavcům tlumený odstín (kontrast
-   ~3,5 : 1), což by u menšího písma bylo na čtení málo. */
+/* Doplňující prosba — o stupeň menší a s výraznějším odstupem, takže
+   nikdy nepůsobí silněji než hlavní odstavec. Barvu drží plnou:
+   tlumený odstín má na krémové kontrast jen ~3,9 : 1, což je u menšího
+   písma na čtení málo. Hierarchii nese velikost a mezera. */
 .dresscode .dresscode-poznamka {
   text-align: left;
-  max-width: 520px;
-  margin: var(--space-s) 0 0;
+  max-width: 62ch;
+  margin: var(--space-m) 0 0;
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--color-text);
 }
 
