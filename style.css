@@ -719,7 +719,7 @@ h2.chapter-label::after {
 .menu-dne li {
   display: flex;
   align-items: baseline;
-  gap: var(--space-m);
+  gap: var(--space-s);
   padding: var(--space-m) 0;
   border-bottom: 1px solid var(--color-sand);
 }
@@ -732,8 +732,42 @@ h2.chapter-label::after {
   font-family: var(--font-heading);
   font-size: 26px;
   color: var(--color-caramel);
-  min-width: 76px;
+  /* Sloupec má pevnou šířku v jednotce `ch` (šířka číslice právě
+     použitého písma). Vejde se do něj i nejdelší rozmezí
+     „10:30–11:00“ (8,8 ch v Cormorantu, ~9,7 ch v záložní Georgii),
+     takže se nezalomí a popisky všech řádků zůstanou v jedné ose —
+     i v krátkém okamžiku, než se Cormorant načte. */
+  flex: 0 0 auto;
+  min-width: 10.2ch;
   text-align: right;
+  white-space: nowrap;
+}
+
+/* Předpona „od“ u ubytování — drobnější, aby nekonkurovala času,
+   ale v tmavším odstínu akcentu kvůli kontrastu v menším stupni. */
+.menu-dne .time-predpona {
+  font-size: .64em;
+  color: var(--color-caramel-dark);
+}
+
+/* Poslední tři body nemají čas, ale ikonu. Sedí ve stejném sloupci
+   a u jeho pravého okraje, takže svislá osa programu zůstává jedna. */
+.menu-dne .time-ikona {
+  display: flex;
+  justify-content: flex-end;
+  /* Čísla sedí na účaří popisku, ikona ale nemá účaří — proto se
+     místo toho vystředí na výšku řádku, aby opticky seděla. */
+  align-self: center;
+}
+
+.menu-dne .time-ikona svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .menu-dne .event {
@@ -742,6 +776,12 @@ h2.chapter-label::after {
   font-weight: 400;
   letter-spacing: .18em;
   text-transform: uppercase;
+}
+
+@media (min-width: 700px) {
+  .menu-dne li {
+    gap: var(--space-m);
+  }
 }
 
 /* --------------------------------------------------------------------------
