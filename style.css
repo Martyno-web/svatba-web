@@ -7,16 +7,20 @@
    1. Proměnné
    -------------------------------------------------------------------------- */
 :root {
-  /* Barvy — světlá teplá paleta (hnědá jen pro text a linky) */
-  --color-cream: #FAF7F1;       /* dominantní pozadí */
-  --color-beige: #F1E9DC;       /* tmavší pásy sekcí */
-  --color-sand: #E3D5BE;        /* linky, RSVP pás */
-  --color-caramel: #B08D5F;     /* akcent: tlačítka, linky, & */
-  --color-caramel-dark: #8A6A42;/* text na světlém v akcentní roli, hover */
-  --color-text: #3E3630;        /* hlavní text */
-  --color-text-soft: #8A7A6A;   /* vedlejší text */
-  --color-on-caramel: #FFFDF8;  /* text na karamelové */
-  --color-mocca: #2E2620;       /* nejtmavší tón — patička, overlay finále */
+  /* Barvy — navazují na pozvánku: téměř bílá, světle zelená a zelená
+     číslic 24 / 04 / 27, k tomu tmavá olivová a tmavý text.
+     Zelená `--color-green` je dekorativní akcent: na světlém podkladu
+     má kontrast jen 2,45 : 1, takže nikdy nenese text ani ovládací
+     prvek — ty jsou v olivové (6,07 : 1). */
+  --color-paper: #F8F9F5;       /* dominantní pozadí */
+  --color-sage: #E8ECDF;        /* odlišené pásy sekcí */
+  --color-line: #CFD6C3;        /* zelenošedé vlásové linky; na fotkách světlý tón */
+  --color-green: #9AA587;       /* akcent pozvánky — jen grafika, & a linky */
+  --color-olive: #566348;       /* odkazy, tlačítka, drobné nadpisy */
+  --color-text: #292C27;        /* hlavní text */
+  --color-text-soft: #5F6A55;   /* vedlejší text (5,4 : 1 na papíru) */
+  --color-on-dark: #F8F9F5;     /* text na tmavém podkladu a fotkách */
+  --color-deep: #20231E;        /* nejtmavší tón — overlay finále a lupy */
 
   /* Typografie */
   --font-heading: "Cormorant Garamond", Georgia, serif;
@@ -63,7 +67,7 @@ body {
   font-size: 17px;
   line-height: 1.7;
   color: var(--color-text);
-  background: var(--color-cream);
+  background: var(--color-paper);
 }
 
 h1, h2, h3 {
@@ -75,14 +79,14 @@ h1, h2, h3 {
 
 .amp {
   font-style: italic;
-  color: var(--color-caramel);
+  color: var(--color-green);
 }
 
 /* Tenká akcentní linka */
 .rule {
   width: 40px;
   height: 1px;
-  background: var(--color-caramel);
+  background: var(--color-green);
   margin: var(--space-s) 0;
 }
 
@@ -130,7 +134,7 @@ h1, h2, h3 {
 }
 
 #introPanelRect {
-  fill: var(--color-cream);
+  fill: var(--color-paper);
 }
 
 #introLogoShape {
@@ -236,7 +240,7 @@ body.intro-running .scroll-cue {
 }
 
 .nav-links a {
-  color: var(--color-on-caramel);
+  color: var(--color-on-dark);
   text-decoration: none;
   font-size: 13px;
   font-weight: 400;
@@ -250,7 +254,7 @@ body.intro-running .scroll-cue {
 .nav-links a:hover,
 .nav-links a:focus-visible,
 .nav-links a.active {
-  border-bottom-color: var(--color-sand); /* .active = kapitola na obrazovce */
+  border-bottom-color: var(--color-line); /* .active = kapitola na obrazovce */
 }
 
 /* --------------------------------------------------------------------------
@@ -274,7 +278,7 @@ body.intro-running .scroll-cue {
   display: block;
   width: 24px;
   height: 1.5px;
-  background: var(--color-on-caramel);
+  background: var(--color-on-dark);
   transition: transform .5s ease, background .3s ease, opacity .4s ease;
 }
 
@@ -303,10 +307,10 @@ body.intro-running .scroll-cue {
   align-items: center;
   gap: var(--space-m);
   border-radius: 20px;
-  background: rgba(250, 247, 241, .8);
+  background: rgba(248, 249, 245, .88);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(227, 213, 190, .7);
+  border: 1px solid rgba(207, 214, 195, .7);
   opacity: 0;
   transform: translateY(10px) scale(.985);
   pointer-events: none;
@@ -338,7 +342,7 @@ body.intro-running .scroll-cue {
 
 .menu-links a:hover,
 .menu-links a:focus-visible {
-  color: var(--color-caramel-dark);
+  color: var(--color-olive);
 }
 
 /* Kapitoly se vynoří postupně — stejný rukopis jako reveal při scrollu.
@@ -436,12 +440,12 @@ body.intro-running .scroll-cue {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(62, 54, 48, .25) 0, rgba(62, 54, 48, 0) 110px),
+    linear-gradient(180deg, rgba(41, 44, 39, .25) 0, rgba(41, 44, 39, 0) 110px),
     linear-gradient(180deg,
-      rgba(241, 233, 220, 0) 44%,
-      rgba(241, 233, 220, .55) 62%,
-      rgba(241, 233, 220, .88) 80%,
-      var(--color-beige) 100%);
+      rgba(232, 236, 223, 0) 44%,
+      rgba(232, 236, 223, .55) 62%,
+      rgba(232, 236, 223, .88) 80%,
+      var(--color-sage) 100%);
 }
 
 .hero-text {
@@ -464,7 +468,7 @@ body.intro-running .scroll-cue {
 }
 
 .hero-text .amp {
-  color: var(--color-caramel);
+  color: var(--color-green);
 }
 
 .hero-text .place {
@@ -542,17 +546,17 @@ h1 {
      3. spodních ~180 px se rozpouští do krémové další sekce. */
   .hero-photo::after {
     background:
-      linear-gradient(180deg, rgba(62, 54, 48, .30) 0, rgba(62, 54, 48, 0) 140px),
+      linear-gradient(180deg, rgba(41, 44, 39, .30) 0, rgba(41, 44, 39, 0) 140px),
       linear-gradient(90deg,
-        rgba(110, 91, 69, .20) 0%,
-        rgba(110, 91, 69, .12) 22%,
-        rgba(110, 91, 69, .05) 38%,
-        rgba(110, 91, 69, 0) 52%),
+        rgba(41, 44, 39, .46) 0%,
+        rgba(41, 44, 39, .34) 20%,
+        rgba(41, 44, 39, .16) 38%,
+        rgba(41, 44, 39, 0) 56%),
       linear-gradient(180deg,
-        rgba(241, 233, 220, 0) calc(100% - 150px),
-        rgba(241, 233, 220, .25) calc(100% - 60px),
-        rgba(241, 233, 220, .78) calc(100% - 12px),
-        var(--color-beige) 100%);
+        rgba(232, 236, 223, 0) calc(100% - 150px),
+        rgba(232, 236, 223, .25) calc(100% - 60px),
+        rgba(232, 236, 223, .78) calc(100% - 12px),
+        var(--color-sage) 100%);
   }
 
   /* Desktop: stejný caps popisek jako mobil, jen o chlup větší —
@@ -582,18 +586,23 @@ h1 {
     margin: 0;
     font-size: 24px;
     max-width: 30ch;
-    color: var(--color-sand);
+    color: var(--color-line);
   }
 
   /* Desktop: text leží na ztmavené zdi — světlé tóny */
   .hero-text h1,
   .hero-text .date {
-    color: #F7F2EA;
+    color: var(--color-on-dark);
   }
 
-  .hero-text .amp,
+  /* `&` si i na desktopu drží zelený akcent pozvánky — je to velký
+     grafický prvek na ztmavené fotce, ne text nesoucí informaci. */
+  .hero-text .amp {
+    color: var(--color-green);
+  }
+
   .hero-text .place {
-    color: var(--color-sand);
+    color: var(--color-line);
   }
 
 }
@@ -624,14 +633,12 @@ h1 {
   color: var(--color-text-soft);
 }
 
-/* Tmavší pásy přes celou šířku — rytmus stránky */
+/* Světle zelený pás přes celou šířku — rytmus stránky.
+   Nosí ho prolog („Bereme se…") a kapitola Místo; Dary, Co na sebe
+   a Dobré vědět zůstávají na papírovém podkladu a odlišuje je
+   prostor a vlásové linky kapitol. */
 .band {
-  background: var(--color-beige);
-}
-
-/* Pískový akcent — emoční vrchol světlé části (Dary) */
-.band-sand {
-  background: var(--color-sand);
+  background: var(--color-sage);
 }
 
 /* --------------------------------------------------------------------------
@@ -648,7 +655,7 @@ h1 {
   align-items: center;
   gap: var(--space-xs);
   text-decoration: none;
-  color: var(--color-on-caramel);
+  color: var(--color-on-dark);
   font-size: 11px;
   letter-spacing: .22em;
   text-transform: uppercase;
@@ -658,7 +665,7 @@ h1 {
   content: "";
   width: 1px;
   height: 44px;
-  background: rgba(255, 253, 248, .7);
+  background: rgba(248, 249, 245, .7);
 }
 
 /* Pomalý „dech" — jediný pohyblivý prvek klidného hero */
@@ -681,9 +688,9 @@ h1 {
    7. Prolog — osobní věta pod hero
    -------------------------------------------------------------------------- */
 .prolog {
-  /* Nejsvětlejší písková ze stávající palety — fotka hero se rozpouští
-     přímo do ní, žádná bílá */
-  background: var(--color-beige);
+  /* Světle zelená z pozvánky — spodek fotografie hero se rozpouští
+     přímo do ní, žádná bílá hrana mezi nimi */
+  background: var(--color-sage);
   padding: var(--space-section-l) var(--space-m);
   text-align: center;
 }
@@ -718,7 +725,7 @@ h2.chapter-label {
   font-weight: 400;
   letter-spacing: .22em; /* Popisek L — jednotný proklad kapitol */
   text-transform: uppercase;
-  color: var(--color-caramel-dark);
+  color: var(--color-olive);
   text-align: left;
   margin: 0 0 var(--space-m);
 }
@@ -727,13 +734,8 @@ h2.chapter-label::after {
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--color-sand);
+  background: var(--color-line);
   margin: 0;
-}
-
-/* Na pískovém pozadí by písková linka zanikla */
-.band-sand h2.chapter-label::after {
-  background: rgba(138, 106, 66, .28);
 }
 
 /* --------------------------------------------------------------------------
@@ -752,7 +754,7 @@ h2.chapter-label::after {
   align-items: baseline;
   gap: var(--space-s);
   padding: var(--space-m) 0;
-  border-bottom: 1px solid var(--color-sand);
+  border-bottom: 1px solid var(--color-line);
 }
 
 .menu-dne li:last-child {
@@ -774,7 +776,9 @@ h2.chapter-label::after {
   font-family: var(--font-heading);
   font-size: 22px;
   line-height: 1.2;
-  color: var(--color-caramel);
+  /* Olivová, ne akcentní zelená: čas nese informaci a zelená má na
+     papírovém podkladu kontrast jen 2,45 : 1. */
+  color: var(--color-olive);
   /* Rozmezí „10:30–11:00" se nikdy nesmí zalomit. */
   white-space: nowrap;
 }
@@ -783,7 +787,7 @@ h2.chapter-label::after {
    odstínu akcentu kvůli kontrastu v menším stupni. */
 .menu-dne .time-predpona {
   font-size: .64em;
-  color: var(--color-caramel-dark);
+  color: var(--color-olive);
 }
 
 .menu-dne .event {
@@ -895,13 +899,13 @@ h2.chapter-label::after {
   font-weight: 400;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: var(--color-caramel-dark);
-  border-bottom: 1px solid var(--color-sand);
+  color: var(--color-olive);
+  border-bottom: 1px solid var(--color-line);
 }
 
 .galerie-plus {
   font-size: 20px;
-  color: var(--color-caramel);
+  color: var(--color-olive);
   transition: transform .2s;
 }
 
@@ -952,7 +956,7 @@ h2.chapter-label::after {
 }
 
 .galerie-grid .zvetsit:focus-visible {
-  outline: 1px solid var(--color-caramel);
+  outline: 1px solid var(--color-olive);
   outline-offset: 3px;
 }
 
@@ -964,8 +968,8 @@ h2.chapter-label::after {
   bottom: 8px;
   width: 14px;
   height: 14px;
-  border-right: 1.5px solid var(--color-on-caramel);
-  border-bottom: 1.5px solid var(--color-on-caramel);
+  border-right: 1.5px solid var(--color-on-dark);
+  border-bottom: 1.5px solid var(--color-on-dark);
   opacity: .75;
   pointer-events: none;
   transition: opacity .3s ease;
@@ -978,7 +982,7 @@ h2.chapter-label::after {
 
 /* Decentní focus místo modrého rámečku prohlížeče */
 .galerie summary:focus-visible {
-  outline: 1px solid var(--color-caramel);
+  outline: 1px solid var(--color-olive);
   outline-offset: 4px;
 }
 
@@ -1030,7 +1034,7 @@ h2.chapter-label::after {
   grid-template-columns: 104px 1fr;
   gap: var(--space-s);
   padding: var(--space-s) 0;
-  border-bottom: 1px solid var(--color-sand);
+  border-bottom: 1px solid var(--color-line);
   font-size: 15px;
 }
 
@@ -1051,12 +1055,12 @@ h2.chapter-label::after {
   position: relative;
   display: inline-block;
   margin-top: var(--space-m);
-  color: var(--color-caramel-dark);
+  color: var(--color-olive);
   text-decoration: none;
   font-size: 13px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--color-sand);
+  border-bottom: 1px solid var(--color-line);
   padding-bottom: 4px;
   transition: color .2s;
 }
@@ -1107,7 +1111,7 @@ h3.sub-label::after {
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--color-sand);
+  background: var(--color-line);
 }
 
 @media (min-width: 1000px) {
@@ -1201,7 +1205,7 @@ h3.sub-label::after {
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--color-sand);
+  background: var(--color-line);
 }
 
 .palette {
@@ -1256,7 +1260,7 @@ h3.sub-label::after {
 }
 
 .faq-item {
-  border-bottom: 1px solid var(--color-sand);
+  border-bottom: 1px solid var(--color-line);
 }
 
 .faq-item summary {
@@ -1279,7 +1283,7 @@ h3.sub-label::after {
 .faq-item summary::after {
   content: "+";
   font-size: 22px;
-  color: var(--color-caramel);
+  color: var(--color-olive);
   transition: transform .2s;
 }
 
@@ -1301,7 +1305,7 @@ body.faq-animovane .faq-item.je-otevrena summary::after {
 }
 
 .faq-item summary:hover {
-  color: var(--color-caramel-dark);
+  color: var(--color-olive);
 }
 
 .faq-item p {
@@ -1352,8 +1356,8 @@ body.faq-animovane .faq-item.je-otevrena summary::after {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg,
-              rgba(46, 38, 32, .42) 0%,
-              rgba(46, 38, 32, .62) 100%);
+              rgba(32, 35, 30, .42) 0%,
+              rgba(32, 35, 30, .62) 100%);
 }
 
 .finale-content {
@@ -1365,7 +1369,7 @@ body.faq-animovane .faq-item.je-otevrena summary::after {
   /* Emocionální podpis webu — kurzíva uzavírá hlas z prologu a Darů */
   font-style: italic;
   font-size: clamp(40px, 7vw, 88px);
-  color: var(--color-on-caramel);
+  color: var(--color-on-dark);
   /* Po odstranění dekorativního „&" pod nadpisem drží odstup jen
      tahle mezera — proto je větší než původních var(--space-m),
      aby závěr nezhoustl, ale ani nezůstala prázdná díra. */
@@ -1375,7 +1379,7 @@ body.faq-animovane .faq-item.je-otevrena summary::after {
 .finale-names {
   font-family: var(--font-heading);
   font-size: 26px;
-  color: var(--color-on-caramel);
+  color: var(--color-on-dark);
   margin: 0;
 }
 
@@ -1383,7 +1387,7 @@ body.faq-animovane .faq-item.je-otevrena summary::after {
   font-size: 12px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: var(--color-sand);
+  color: var(--color-line);
   margin: var(--space-xs) 0 0;
 }
 
@@ -1496,7 +1500,7 @@ body.hero-enter .hero-text > *:nth-child(6) { animation-delay: .40s; }
   justify-content: center;
   padding: var(--space-s);
   box-sizing: border-box;
-  background: rgba(46, 38, 32, .88); /* mocca, jen ztmavení — ne černá */
+  background: rgba(32, 35, 30, .88); /* mocca, jen ztmavení — ne černá */
   cursor: zoom-out;
 }
 
@@ -1539,7 +1543,7 @@ body.hero-enter .hero-text > *:nth-child(6) { animation-delay: .40s; }
   font-family: var(--font-body);
   font-size: 30px;
   line-height: 1;
-  color: var(--color-on-caramel);
+  color: var(--color-on-dark);
   background: none;
   border: none;
   cursor: pointer;
@@ -1551,7 +1555,7 @@ body.hero-enter .hero-text > *:nth-child(6) { animation-delay: .40s; }
 }
 
 .lupa-zavrit:focus-visible {
-  outline: 1px solid var(--color-sand);
+  outline: 1px solid var(--color-line);
   outline-offset: 2px;
 }
 
