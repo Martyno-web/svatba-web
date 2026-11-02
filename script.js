@@ -609,148 +609,179 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------------------------
   // 4d. Rozlitá barva ze vzorníku „Co na sebe"
   //
-  //     Klepnutí na kaňku rozlije její barvu zhruba přes polovinu
-  //     displeje, aby šla porovnat s látkou v ruce. Barva vyrůstá
-  //     ze středu kaňky a roste převážně nahoru — cílový tvar je
-  //     v CSS posazený nad střed obrazovky, takže z puntíku ve spodní
-  //     části stránky vede pohyb hlavně vzhůru a jen zčásti dolů
-  //     a do stran. Zbytek stránky se schová za mléčné sklo.
+  //     Klepnutí na kaňku rozlije její barvu po displeji, aby šla
+  //     porovnat s látkou v ruce. Barva vyrůstá přímo ze zvoleného
+  //     puntíku a rozlévá se převážně vzhůru, méně do stran a dolů.
   //
-  //     Proč Web Animations API a ne CSS přechod: další klepnutí musí
-  //     umět pohyb obrátit i uprostřed rozlévání, bez skoku.
-  //     `animace.reverse()` to udělá přesně — naváže na čas, ve kterém
-  //     se právě nachází, a pustí tutéž časovou osu pozpátku.
-  //
-  //     Obrys se cestou mění přes několik mezistavů, aby to působilo
-  //     jako kaňka, která se rozlévá, ne jako zvětšenina jednoho tvaru.
+  //     Tvar nedělá `border-radius` ani transformace — ty umí jen
+  //     zvětšit jeden a týž ovál. Vrstva je proto vybarvená celá
+  //     a viditelný tvar z ní vyřízne `clip-path: polygon(...)`,
+  //     jehož body počítá `obrys()` níž. Mezi snímky se tak mění
+  //     samotný obrys, ne jeho měřítko.
   //
   //     Zavření: klepnutí kamkoli nebo Escape. Křížek není potřeba,
   //     fokus drží sama vrstva (tabindex -1) a tabulátor z ní neodejde.
+  //     `animace.reverse()` naváže na čas, ve kterém se pohyb právě
+  //     nachází, takže stažení zpět funguje i uprostřed rozlévání.
   // ------------------------------------------------------------
   const barvaLupa = document.getElementById("barvaLupa");
   const barvaVzorek = barvaLupa && barvaLupa.querySelector(".barva-lupa-vzorek");
   const kanky = document.querySelectorAll(".palette .kanka");
 
   if (barvaLupa && barvaVzorek && kanky.length) {
-    // Mezistavy obrysu — od tvaru kaňky přes dvě rozvlněné polohy
-    // k usazené loužičce. Čísla se drží blízko 50 %, aby šlo pořád
-    // o mírně nepravidelný kruh, ne o amébu.
-    const OBRYS = [
-      "54% 46% 57% 43% / 45% 55% 45% 55%",
-      "43% 57% 44% 56% / 57% 43% 57% 43%",
-      "46% 54% 52% 48% / 54% 48% 52% 46%"
-    ];
-    const TRVANI = 900;  // pomalejší rozlévání než dřív (bylo 520 ms)
-    const KRIVKA = "cubic-bezier(.45, .09, .25, 1)"; // rozjezd i dojezd, ne skok
-    const PODIL_NAHORU = 0.68; // kolik z výšky barvy padne nad puntík
+    const BODU = 48;      // dost na hladký obrys i přes celou obrazovku
+    const TRVANI = 1300;  // klidné rozlévání
+    const KRIVKA = "cubic-bezier(.38, .08, .22, 1)"; // bez pružení a dojíždění
 
-    let animaceTvar = null;
-    let animaceSklo = null;
+    // Jak daleko barva doteče podle směru. Nahoru naplno, do stran
+    // méně, dolů nejméně — odtud ten dojem rozlévání vzhůru.
+    const NAHORU = 1.16;
+    const STRANY = 0.76;
+    const DOLU = 0.48;
+
+    /**
+     * Jeden snímek obrysu jako `polygon()`.
+     * @param stred  {x, y} v pixelech okna
+     * @param polomer  základní dosah v pixelech
+     * @param faze   posouvá zvlnění po obvodu, takže se tvar v čase převlňuje
+     * @param mira   síla zvlnění (0 = hladký ovál)
+     */
+    const obrys = (stred, polomer, faze, mira) => {
+      const sirka = window.innerWidth;
+      const vyska = window.innerHeight;
+      const body = [];
+
+      for (let i = 0; i < BODU; i++) {
+        const uhel = (i / BODU) * Math.PI * 2 - Math.PI / 2; // start nahoře
+
+        // Zvlnění skládáme ze tří harmonických s různými fázemi.
+        // Výsledek je nestejně zakřivený a nesouměrný, ale pořád hladký —
+        // žádné špičky ani pravidelné pulzování.
+        const vlna = 1 + mira * (
+          Math.sin(uhel * 2 + faze) * 0.5 +
+          Math.sin(uhel * 3 - faze * 0.8) * 0.32 +
+          Math.sin(uhel * 5 + faze * 1.6) * 0.18
+        );
+
+        const r = polomer * vlna;
+        const dx = Math.cos(uhel) * r;
+        const dy = Math.sin(uhel) * r;
+
+        // POZOR: různý dosah podle směru se musí nasadit až na
+        // souřadnice, ne na poloměr. Když se jím násobil poloměr,
+        // vyšel nejnižší bod obrysu vedle spodního bodu, ne v něm,
+        // a dole vznikl ostrý zářez do tvaru srdce. Takto je přechod
+        // u vodorovné osy spojitý, protože se tam `dy` blíží nule.
+        const x = stred.x + dx * STRANY;
+        const y = stred.y + dy * (dy < 0 ? NAHORU : DOLU);
+        body.push(((x / sirka) * 100).toFixed(2) + "% " + ((y / vyska) * 100).toFixed(2) + "%");
+      }
+      return "polygon(" + body.join(", ") + ")";
+    };
+
+    let animace = null;
     let aktivniKanka = null;
     let otevreno = false;
 
-    // Transformace, která cílový vzorek posadí přesně na kaňku.
-    // Rozměry cíle se berou z jeho vlastního layoutu, ne z aktuálně
-    // vykreslené podoby — ta je během animace zdeformovaná a počítalo
-    // by se z ní špatně.
-    const doKanky = (kanka) => {
-      const z = kanka.getBoundingClientRect();
-      const na = { // vzorek bez jakékoli transformace
-        sirka: barvaVzorek.offsetWidth,
-        vyska: barvaVzorek.offsetHeight
-      };
-      const stred = {
-        x: barvaVzorek.offsetLeft + na.sirka / 2,
-        y: barvaVzorek.offsetTop + na.vyska / 2
-      };
-      const posunX = (z.left + z.width / 2) - stred.x;
-      const posunY = (z.top + z.height / 2) - stred.y;
-      const pomer = z.width / na.sirka;
-      return `translate(${posunX}px, ${posunY}px) scale(${pomer})`;
+    // Posloupnost snímků od puntíku po rozlitou kaňku. Střed se cestou
+    // posouvá vzhůru, dosah roste a fáze zvlnění se otáčí, takže se
+    // obrys průběžně proměňuje.
+    const snimky = (kanka) => {
+      const p = kanka.getBoundingClientRect();
+      const zacatek = { x: p.left + p.width / 2, y: p.top + p.height / 2 };
+      const zPolomer = p.width / 2;
+
+      const sirka = window.innerWidth;
+      const vyska = window.innerHeight;
+      // Dosah je volený tak, aby se celý obrys vešel do okna — kdyby
+      // přetékal, ořízly by se mu boky a z organického tvaru by zůstal
+      // rovný pruh u hran.
+      const cilPolomer = Math.min(sirka * 0.58, vyska * 0.31);
+
+      // Konečný střed: vodorovně na střed okna, svisle tak, aby se
+      // horní i dolní okraj vešly na obrazovku.
+      const nejvys = cilPolomer * NAHORU * 1.08 + 8; // rezerva na zvlnění
+      const nejniz = vyska - cilPolomer * DOLU * 1.08 - 8;
+      const chteny = zacatek.y - cilPolomer * 0.2;
+      let stredY = Math.min(Math.max(chteny, nejvys), Math.max(nejvys, nejniz));
+      // Na nízkém displeji by ořez posunul střed tak vysoko, že by
+      // rozlitá barva skončila nad puntíkem a opticky se od něj
+      // odtrhla. Držíme ji proto vždy aspoň přes něj.
+      stredY = Math.max(stredY, zacatek.y - cilPolomer * DOLU * 0.8);
+      const cil = { x: sirka / 2, y: stredY };
+
+      const mezi = (podil) => ({
+        x: zacatek.x + (cil.x - zacatek.x) * podil,
+        y: zacatek.y + (cil.y - zacatek.y) * podil
+      });
+      const polomer = (podil) => zPolomer + (cilPolomer - zPolomer) * podil;
+
+      return [
+        { clipPath: obrys(zacatek, zPolomer, 0, 0.04), offset: 0 },
+        { clipPath: obrys(mezi(0.22), polomer(0.22), 0.9, 0.08), offset: 0.22 },
+        { clipPath: obrys(mezi(0.48), polomer(0.48), 1.9, 0.1), offset: 0.48 },
+        { clipPath: obrys(mezi(0.74), polomer(0.74), 2.8, 0.085), offset: 0.74 },
+        { clipPath: obrys(cil, cilPolomer, 3.6, 0.062), offset: 1 }
+      ];
     };
 
-    const zrus = () => {
-      if (animaceTvar) { animaceTvar.onfinish = null; animaceTvar.cancel(); animaceTvar = null; }
-      if (animaceSklo) { animaceSklo.cancel(); animaceSklo = null; }
+    const uklid = () => {
+      barvaLupa.classList.remove("je-videt");
+      barvaLupa.hidden = true;
+      document.body.style.overflow = "";
+      if (aktivniKanka) { aktivniKanka.focus(); aktivniKanka = null; }
+      if (animace) { animace.cancel(); animace = null; }
     };
 
     const otevri = (kanka) => {
-      // Běží-li zrovna návrat k téže kaňce, stačí ho obrátit zpátky
-      if (animaceTvar && aktivniKanka === kanka && animaceTvar.playbackRate < 0) {
-        animaceTvar.reverse();
-        if (animaceSklo) animaceSklo.reverse();
+      // Běží-li zrovna stažení téže kaňky, stačí ho obrátit zpátky
+      if (animace && aktivniKanka === kanka && animace.playbackRate < 0) {
+        animace.reverse();
         otevreno = true;
         return;
       }
-      zrus();
+      if (animace) { animace.onfinish = null; animace.cancel(); animace = null; }
 
       const polozka = kanka.closest("li");
-      const styl = getComputedStyle(polozka);
       aktivniKanka = kanka;
       otevreno = true;
 
-      barvaVzorek.style.setProperty("--c", styl.getPropertyValue("--c").trim());
-
+      barvaVzorek.style.setProperty("--c", getComputedStyle(polozka).getPropertyValue("--c").trim());
       barvaLupa.setAttribute("aria-label", "Barva: " + kanka.textContent.trim());
       barvaLupa.hidden = false;
       document.body.style.overflow = "hidden"; // stránka pod sklem nescrolluje
       barvaLupa.classList.add("je-videt");
       barvaLupa.focus();
 
-      // Kam se barva usadí: střed posuneme tak, aby nad puntíkem byla
-      // zhruba dvoutřetinová část výšky a pod ním zbytek. Výsledek
-      // ořízneme, aby se barva vešla na obrazovku i tehdy, když je
-      // puntík úplně nahoře nebo dole. Rozměry se čtou až teď — do
-      // odkrytí vrstvy je `offsetHeight` nula.
-      barvaVzorek.style.setProperty("--posun-y", "0px");
-      const vyskaBarvy = barvaVzorek.offsetHeight;
-      const vyskaOkna = window.innerHeight;
-      const puntik = kanka.getBoundingClientRect();
-      const chtenyStred = (puntik.top + puntik.height / 2) - vyskaBarvy * (PODIL_NAHORU - 0.5);
-      const nejvys = vyskaBarvy / 2 + 8;
-      const nejniz = vyskaOkna - vyskaBarvy / 2 - 8;
-      const cilovyStred = Math.min(Math.max(chtenyStred, nejvys), Math.max(nejvys, nejniz));
-      barvaVzorek.style.setProperty("--posun-y", ((vyskaOkna / 2 - cilovyStred) * 2).toFixed(1) + "px");
+      const kroky = snimky(kanka);
 
-      const zTvaru = styl.getPropertyValue("--r").trim();
+      if (bezPohybu) {
+        // Při systémovém omezení animací jen nasadíme konečný tvar
+        barvaVzorek.style.setProperty("--tvar", kroky[kroky.length - 1].clipPath);
+        return;
+      }
 
-      animaceSklo = barvaLupa.animate(
-        { opacity: [0, 1] },
-        { duration: TRVANI * 0.6, easing: "ease", fill: "both" }
-      );
-
-      // Růst nese jediný přechod transformace, obrys se mezitím
-      // převlní přes dva mezistavy — barva se tím „rozlévá", místo aby
-      // se jen zvětšoval jeden tvar.
-      animaceTvar = barvaVzorek.animate(
-        [
-          { transform: doKanky(kanka), borderRadius: zTvaru },
-          { borderRadius: OBRYS[0], offset: 0.35 },
-          { borderRadius: OBRYS[1], offset: 0.7 },
-          { transform: "none", borderRadius: OBRYS[2] }
-        ],
-        { duration: TRVANI, easing: KRIVKA, fill: "both" }
-      );
+      barvaVzorek.style.removeProperty("--tvar");
+      animace = barvaVzorek.animate(kroky, {
+        duration: TRVANI,
+        easing: KRIVKA,
+        fill: "both"
+      });
     };
 
     const zavri = () => {
       if (!otevreno) return;
       otevreno = false;
 
-      if (animaceTvar) {
-        // Obrácení běžící i doběhlé osy — v obou případech navazuje
-        // přesně tam, kde se pohyb nachází, takže nikde neskočí.
-        animaceTvar.reverse();
-        if (animaceSklo) animaceSklo.reverse();
-        animaceTvar.onfinish = () => {
-          if (otevreno) return; // mezitím někdo klepl znovu
-          zrus();
-          barvaLupa.classList.remove("je-videt");
-          barvaLupa.hidden = true;
-          document.body.style.overflow = "";
-          if (aktivniKanka) { aktivniKanka.focus(); aktivniKanka = null; }
-        };
-      }
+      if (!animace) { uklid(); return; }
+
+      // Obrácení běžící i doběhlé osy — v obou případech navazuje
+      // přesně na tvar, ve kterém se pohyb právě nachází.
+      animace.reverse();
+      animace.onfinish = () => {
+        if (otevreno) return; // mezitím někdo klepl znovu
+        uklid();
+      };
     };
 
     kanky.forEach((kanka) => {
