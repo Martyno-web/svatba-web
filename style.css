@@ -269,39 +269,68 @@ body.intro-running .scroll-cue {
 /* --------------------------------------------------------------------------
    3b. Mobilní menu — hamburger + celoobrazovkové kapitoly
    -------------------------------------------------------------------------- */
+/* Tlačítko je celé dotyková plocha (48 px), ale vidět je z něj jen
+   kroužek o 34 px — zbytek je prázdný prostor navíc pro prst. */
 .nav-burger {
   display: none; /* zobrazuje se jen na mobilu */
+  position: relative;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   gap: 7px;
-  width: 44px;
-  height: 44px;
-  padding: 10px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
   background: none;
   border: none;
   cursor: pointer;
   z-index: 60; /* nad otevřeným menu, aby šlo zavřít */
 }
 
+/* Podklad pod ikonou. Čárky jsou ve stejném odstínu jako hlavní text,
+   takže na světlých sekcích čitelné jsou samy o sobě — kroužek je kvůli
+   fotkám. Nad hero fotografií klesá jas pozadí až k 13 z 255 a bez
+   podkladu by tmavé čárky zmizely.
+
+   Krytí 0,62: nad nejtmavším místem fotky vyjde kontrast čárek 5,0 : 1
+   (WCAG žádá 4,5 : 1 pro drobnou kresbu), na papírové sekci je kroužek
+   proti pozadí úplně neviditelný a na šalvějovém pásu se liší jen
+   o deset stupňů jasu — tedy jemný náznak, ne terč.
+
+   Žádný stín, rámeček ani rozmazání pozadí: tlačítko má být vidět,
+   ne upozorňovat na sebe. Vzhled se nemění se scrollem. */
+.nav-burger::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  background: rgba(248, 249, 245, .62);
+}
+
+/* Čárky leží nad kroužkem; bez `position` by je absolutně umístěný
+   podklad překryl. */
 .nav-burger span {
+  position: relative;
+  z-index: 1;
   display: block;
-  width: 24px;
-  height: 1.5px;
-  background: var(--color-on-dark);
-  transition: transform .5s ease, background .3s ease, opacity .4s ease;
-}
-
-/* Otevřeno: čárky se zkříží a ztmavnou (leží na krémovém menu) */
-.nav-burger.open span {
+  width: 22px;
+  height: 1.75px;
   background: var(--color-text);
+  transition: transform .5s ease, opacity .4s ease;
 }
 
+/* Otevřeno: čárky se zkříží. Posun je polovina rozestupu os
+   (1,75 px čára + 7 px mezera), aby se protnuly přesně uprostřed. */
 .nav-burger.open span:first-child {
-  transform: translateY(4.25px) rotate(45deg);
+  transform: translateY(4.375px) rotate(45deg);
 }
 
 .nav-burger.open span:last-child {
-  transform: translateY(-4.25px) rotate(-45deg);
+  transform: translateY(-4.375px) rotate(-45deg);
 }
 
 /* Levitující karta: odsazená od krajů, zaoblená, poloprůsvitná
@@ -395,8 +424,10 @@ body.intro-running .scroll-cue {
        nad .menu díky stávající stacking-context hierarchii (.nav: 60
        > .menu: 50) — z-index samotného tlačítka měnit nebylo potřeba. */
     position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + var(--space-s));
-    right: calc(env(safe-area-inset-right, 0px) + var(--space-m));
+    /* −2 px vyrovnává zvětšení tlačítka ze 44 na 48 px, aby ikona
+       zůstala opticky tam, kde byla. */
+    top: calc(env(safe-area-inset-top, 0px) + var(--space-s) - 2px);
+    right: calc(env(safe-area-inset-right, 0px) + var(--space-m) - 2px);
   }
 }
 
