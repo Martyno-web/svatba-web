@@ -612,6 +612,11 @@ document.addEventListener("DOMContentLoaded", () => {
   //     Klepnutí na kaňku rozlije její barvu po displeji, aby šla
   //     porovnat s látkou v ruce. Dalším klepnutím se stáhne zpět.
   //
+  //     JEN NA DOTYKOVÝCH ZAŘÍZENÍCH. S myší zůstává u vzorníku pouze
+  //     zvětšení kaňky při najetí — rozlití přes celý displej je gesto
+  //     pro telefon v ruce, ne pro desktop. Stejnou podmínku drží
+  //     i styl (`cursor` u `.kanka`), aby se obojí nikdy nepřekrývalo.
+  //
   //     Tvar nedělá `border-radius` ani transformace — ty umí jen
   //     zvětšit jeden a týž ovál. Vrstva je proto vybarvená celá
   //     a viditelný tvar z ní vyřízne `clip-path: polygon(...)`.
@@ -886,12 +891,30 @@ document.addEventListener("DOMContentLoaded", () => {
       jed(-1);
     };
 
+    // Dotykové zařízení poznáme stejně jako styl: chybí najíždění myší,
+    // nebo je hlavní ukazovátko hrubé (prst). Vyhodnocuje se při každém
+    // klepnutí, takže připojení myši k tabletu nebo přepnutí v nástrojích
+    // prohlížeče se projeví hned a není potřeba znovu načítat stránku.
+    const dotykove = window.matchMedia("(hover: none), (pointer: coarse)");
+
     kanky.forEach((kanka, poradi) => {
       kanka.addEventListener("click", (udalost) => {
+        if (!dotykove.matches) return; // s myší zůstává jen zvětšení při najetí
         udalost.stopPropagation();
         otevri(kanka, poradi);
       });
     });
+
+    // Kdyby se zařízení změnilo s rozlitou barvou na displeji, vrstva by
+    // zůstala viset bez možnosti ji klepnutím zavřít — zavřeme ji sami.
+    const zmenaZarizeni = () => {
+      if (dotykove.matches || barvaLupa.hidden) return;
+      smer = -1;
+      cas = 0;
+      uklid();
+    };
+    if (dotykove.addEventListener) dotykove.addEventListener("change", zmenaZarizeni);
+    else if (dotykove.addListener) dotykove.addListener(zmenaZarizeni); // starší Safari
 
     // Klepnutí kamkoli po vrstvě zavírá — celá plocha je jedno gesto
     barvaLupa.addEventListener("click", zavri);

@@ -1306,7 +1306,8 @@ h3.sub-label::after {
   /* Reset tlačítka — kaňka je klikací, ale nemá vypadat jako tlačítko */
   border: 0;
   padding: 0;
-  cursor: pointer;
+  /* Kurzor jen tam, kde klepnutí něco dělá — viz dvojici dotazů níž */
+  cursor: default;
   -webkit-appearance: none;
   appearance: none;
   touch-action: manipulation;
@@ -1314,11 +1315,24 @@ h3.sub-label::after {
   will-change: transform;
 }
 
-/* Zvětšení jen tam, kde se opravdu najíždí myší. Na dotykovém
-   displeji `:hover` po klepnutí „uvízne" a kaňka by zůstala velká. */
+/* Dvě chování, která se nepotkávají:
+
+   S myší se kaňka jen zvětší při najetí. Rozlévání barvy přes displej
+   tu smysl nedává — vzorník se porovnává s látkou v ruce, což je gesto
+   pro telefon. Na dotykovém displeji by zas `:hover` po klepnutí
+   „uvízl" a kaňka by zůstala velká, proto je zvětšení zamčené za
+   `hover: hover`. */
 @media (hover: hover) {
   .kanka:hover {
     transform: scale(1.22);
+  }
+}
+
+/* Dotykové zařízení: klepnutí rozlije barvu (skript drží stejnou
+   podmínku, aby se obojí nikdy nepřekrývalo). */
+@media (hover: none), (pointer: coarse) {
+  .kanka {
+    cursor: pointer;
   }
 }
 
