@@ -109,6 +109,8 @@
       <div class="nav-links">
         <a href="#program">Program</a>
         <a href="#misto">Místo</a>
+        <a href="#dary">Dary</a>
+        <a href="#dresscode">Co na sebe</a>
         <a href="#faq">Dobré vědět</a>
       </div>
       <button class="nav-burger" aria-label="Otevřít menu" aria-expanded="false">
@@ -212,7 +214,7 @@
       </picture>
     </div>
 
-    <section id="misto" class="band">
+    <section id="misto">
       <div class="chapter-misto">
       <div class="misto-media">
         <details class="galerie">
@@ -312,7 +314,7 @@
       </div>
     </section>
 
-    <section id="dary">
+    <section id="dary" class="band">
       <div class="mezihra">
       <h2 class="chapter-label">Dary</h2>
       <blockquote class="mezihra-quote">
@@ -325,7 +327,7 @@
       <div class="section wide">
         <h2 class="chapter-label na-stred">Co na sebe</h2>
         <p class="dresscode-line">Poprosíme Vás o společenský oděv. Pokud se budete chtít sladit do barev svatby a vyberete si obleček v níže uvedených barvách, budeme rádi. Pokud si ale vezmete svoje oblíbené šaty v jiné barvě, nevadí. Těšíme se na Vás, ne na Vaše oblečení.</p>
-        <p class="dresscode-poznamka">Ponechte nám pro tento den prosím naši jedinečnost. Nevěsta bude v obvyklých bílých šatech, ženich v černém obleku s černým motýlkem.</p>
+        <p class="dresscode-poznamka">Ponechte nám, prosím, pro tento den naši jedinečnost. Nevěsta bude v bílých šatech a ženich s černým motýlkem.</p>
       </div>
       <!-- Samostatná paleta oblečení pro hosty — odstíny jsou odečtené
            z druhé strany pozvánky, ne z barevnosti webu. Každá kaňka má
@@ -343,7 +345,7 @@
       </ul>
     </section>
 
-    <section id="faq">
+    <section id="faq" class="band">
       <div class="section dobre-vedet">
         <h2 class="chapter-label">Dobré vědět</h2>
         <div class="qa-grid">
@@ -396,8 +398,7 @@
   <!-- Rozlitá barva ze vzorníku. Pozadí je mléčné sklo (rozmazání
        + zesvětlení stránky pod ním), barva se do něj rozlije z kaňky,
        na kterou se kliklo. -->
-  <div class="barva-lupa" id="barvaLupa" role="dialog" aria-modal="true" hidden>
-    <button type="button" class="barva-lupa-zavrit" aria-label="Zavřít barvu">&times;</button>
+  <div class="barva-lupa" id="barvaLupa" role="dialog" aria-modal="true" tabindex="-1" hidden>
     <div class="barva-lupa-vzorek"></div>
   </div>
 

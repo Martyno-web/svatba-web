@@ -610,113 +610,165 @@ document.addEventListener("DOMContentLoaded", () => {
   // 4d. Rozlitá barva ze vzorníku „Co na sebe"
   //
   //     Klepnutí na kaňku rozlije její barvu zhruba přes polovinu
-  //     displeje, aby šla porovnat s látkou v ruce. Zbytek stránky se
-  //     schová za mléčné sklo (rozmazání + zesvětlení), takže barvu
-  //     nic neruší.
+  //     displeje, aby šla porovnat s látkou v ruce. Barva vyrůstá
+  //     ze středu kaňky a roste převážně nahoru — cílový tvar je
+  //     v CSS posazený nad střed obrazovky, takže z puntíku ve spodní
+  //     části stránky vede pohyb hlavně vzhůru a jen zčásti dolů
+  //     a do stran. Zbytek stránky se schová za mléčné sklo.
   //
-  //     Animace je udělaná technikou FLIP: cílový tvar je v CSS už
-  //     na svém místě a ve své velikosti, JS mu jen na jednu snímkovou
-  //     dávku nasadí transformaci zpátky do kaňky, ze které se kliklo,
-  //     a hned ji sundá. Prohlížeč tak animuje jen `transform`, což
-  //     zvládne na grafické kartě — žádné přepočítávání rozvržení.
-  //     Zavření: křížek, klik mimo barvu, Escape.
+  //     Proč Web Animations API a ne CSS přechod: další klepnutí musí
+  //     umět pohyb obrátit i uprostřed rozlévání, bez skoku.
+  //     `animace.reverse()` to udělá přesně — naváže na čas, ve kterém
+  //     se právě nachází, a pustí tutéž časovou osu pozpátku.
+  //
+  //     Obrys se cestou mění přes několik mezistavů, aby to působilo
+  //     jako kaňka, která se rozlévá, ne jako zvětšenina jednoho tvaru.
+  //
+  //     Zavření: klepnutí kamkoli nebo Escape. Křížek není potřeba,
+  //     fokus drží sama vrstva (tabindex -1) a tabulátor z ní neodejde.
   // ------------------------------------------------------------
   const barvaLupa = document.getElementById("barvaLupa");
   const barvaVzorek = barvaLupa && barvaLupa.querySelector(".barva-lupa-vzorek");
-  const barvaZavrit = barvaLupa && barvaLupa.querySelector(".barva-lupa-zavrit");
   const kanky = document.querySelectorAll(".palette .kanka");
 
-  if (barvaLupa && barvaVzorek && barvaZavrit && kanky.length) {
-    // Tvar, do kterého se barva po rozlití usadí — o něco klidnější
-    // než samotná kaňka, ať to působí jako loužička, ne jako zvětšenina.
-    const TVAR_ROZLITY = "46% 54% 52% 48% / 54% 48% 52% 46%";
-    const TRVANI = 520; // musí sedět s přechodem v CSS
+  if (barvaLupa && barvaVzorek && kanky.length) {
+    // Mezistavy obrysu — od tvaru kaňky přes dvě rozvlněné polohy
+    // k usazené loužičce. Čísla se drží blízko 50 %, aby šlo pořád
+    // o mírně nepravidelný kruh, ne o amébu.
+    const OBRYS = [
+      "54% 46% 57% 43% / 45% 55% 45% 55%",
+      "43% 57% 44% 56% / 57% 43% 57% 43%",
+      "46% 54% 52% 48% / 54% 48% 52% 46%"
+    ];
+    const TRVANI = 900;  // pomalejší rozlévání než dřív (bylo 520 ms)
+    const KRIVKA = "cubic-bezier(.45, .09, .25, 1)"; // rozjezd i dojezd, ne skok
+    const PODIL_NAHORU = 0.68; // kolik z výšky barvy padne nad puntík
 
-    let puvodniFokus = null;
-    let zaviraciCas = null;
+    let animaceTvar = null;
+    let animaceSklo = null;
+    let aktivniKanka = null;
+    let otevreno = false;
 
-    // Transformace, která cílový vzorek posadí přesně na kaňku —
-    // odtud se pak rozlije.
+    // Transformace, která cílový vzorek posadí přesně na kaňku.
+    // Rozměry cíle se berou z jeho vlastního layoutu, ne z aktuálně
+    // vykreslené podoby — ta je během animace zdeformovaná a počítalo
+    // by se z ní špatně.
     const doKanky = (kanka) => {
       const z = kanka.getBoundingClientRect();
-      const na = barvaVzorek.getBoundingClientRect();
-      const posunX = (z.left + z.width / 2) - (na.left + na.width / 2);
-      const posunY = (z.top + z.height / 2) - (na.top + na.height / 2);
-      const pomer = z.width / na.width;
+      const na = { // vzorek bez jakékoli transformace
+        sirka: barvaVzorek.offsetWidth,
+        vyska: barvaVzorek.offsetHeight
+      };
+      const stred = {
+        x: barvaVzorek.offsetLeft + na.sirka / 2,
+        y: barvaVzorek.offsetTop + na.vyska / 2
+      };
+      const posunX = (z.left + z.width / 2) - stred.x;
+      const posunY = (z.top + z.height / 2) - stred.y;
+      const pomer = z.width / na.sirka;
       return `translate(${posunX}px, ${posunY}px) scale(${pomer})`;
     };
 
+    const zrus = () => {
+      if (animaceTvar) { animaceTvar.onfinish = null; animaceTvar.cancel(); animaceTvar = null; }
+      if (animaceSklo) { animaceSklo.cancel(); animaceSklo = null; }
+    };
+
     const otevri = (kanka) => {
-      clearTimeout(zaviraciCas);
+      // Běží-li zrovna návrat k téže kaňce, stačí ho obrátit zpátky
+      if (animaceTvar && aktivniKanka === kanka && animaceTvar.playbackRate < 0) {
+        animaceTvar.reverse();
+        if (animaceSklo) animaceSklo.reverse();
+        otevreno = true;
+        return;
+      }
+      zrus();
+
       const polozka = kanka.closest("li");
-      puvodniFokus = kanka;
-
-      // Barvu i výchozí tvar si vzorek převezme z kaňky, na kterou se kleplo
       const styl = getComputedStyle(polozka);
-      barvaVzorek.style.setProperty("--c", styl.getPropertyValue("--c").trim());
-      barvaVzorek.style.borderRadius = styl.getPropertyValue("--r").trim();
-      barvaLupa.setAttribute("aria-label", "Barva: " + kanka.textContent.trim());
+      aktivniKanka = kanka;
+      otevreno = true;
 
+      barvaVzorek.style.setProperty("--c", styl.getPropertyValue("--c").trim());
+
+      barvaLupa.setAttribute("aria-label", "Barva: " + kanka.textContent.trim());
       barvaLupa.hidden = false;
       document.body.style.overflow = "hidden"; // stránka pod sklem nescrolluje
-
-      // Výchozí poloha = kaňka. Bez přechodu, ať to nikdo nezahlédne.
-      barvaVzorek.style.transition = "none";
-      barvaVzorek.style.transform = doKanky(kanka);
-      void barvaVzorek.offsetWidth; // vynutí přepočet, jinak se oba stavy slijí
-      barvaVzorek.style.transition = "";
-
-      // A teď samotné rozlití
       barvaLupa.classList.add("je-videt");
-      barvaVzorek.style.transform = "";
-      barvaVzorek.style.borderRadius = TVAR_ROZLITY;
-      barvaZavrit.focus();
+      barvaLupa.focus();
+
+      // Kam se barva usadí: střed posuneme tak, aby nad puntíkem byla
+      // zhruba dvoutřetinová část výšky a pod ním zbytek. Výsledek
+      // ořízneme, aby se barva vešla na obrazovku i tehdy, když je
+      // puntík úplně nahoře nebo dole. Rozměry se čtou až teď — do
+      // odkrytí vrstvy je `offsetHeight` nula.
+      barvaVzorek.style.setProperty("--posun-y", "0px");
+      const vyskaBarvy = barvaVzorek.offsetHeight;
+      const vyskaOkna = window.innerHeight;
+      const puntik = kanka.getBoundingClientRect();
+      const chtenyStred = (puntik.top + puntik.height / 2) - vyskaBarvy * (PODIL_NAHORU - 0.5);
+      const nejvys = vyskaBarvy / 2 + 8;
+      const nejniz = vyskaOkna - vyskaBarvy / 2 - 8;
+      const cilovyStred = Math.min(Math.max(chtenyStred, nejvys), Math.max(nejvys, nejniz));
+      barvaVzorek.style.setProperty("--posun-y", ((vyskaOkna / 2 - cilovyStred) * 2).toFixed(1) + "px");
+
+      const zTvaru = styl.getPropertyValue("--r").trim();
+
+      animaceSklo = barvaLupa.animate(
+        { opacity: [0, 1] },
+        { duration: TRVANI * 0.6, easing: "ease", fill: "both" }
+      );
+
+      // Růst nese jediný přechod transformace, obrys se mezitím
+      // převlní přes dva mezistavy — barva se tím „rozlévá", místo aby
+      // se jen zvětšoval jeden tvar.
+      animaceTvar = barvaVzorek.animate(
+        [
+          { transform: doKanky(kanka), borderRadius: zTvaru },
+          { borderRadius: OBRYS[0], offset: 0.35 },
+          { borderRadius: OBRYS[1], offset: 0.7 },
+          { transform: "none", borderRadius: OBRYS[2] }
+        ],
+        { duration: TRVANI, easing: KRIVKA, fill: "both" }
+      );
     };
 
     const zavri = () => {
-      if (barvaLupa.hidden) return;
-      const kanka = puvodniFokus;
+      if (!otevreno) return;
+      otevreno = false;
 
-      // Barva se stáhne zpátky do své kaňky, sklo se rozplyne
-      if (kanka) {
-        const polozka = kanka.closest("li");
-        barvaVzorek.style.transform = doKanky(kanka);
-        barvaVzorek.style.borderRadius = getComputedStyle(polozka).getPropertyValue("--r").trim();
+      if (animaceTvar) {
+        // Obrácení běžící i doběhlé osy — v obou případech navazuje
+        // přesně tam, kde se pohyb nachází, takže nikde neskočí.
+        animaceTvar.reverse();
+        if (animaceSklo) animaceSklo.reverse();
+        animaceTvar.onfinish = () => {
+          if (otevreno) return; // mezitím někdo klepl znovu
+          zrus();
+          barvaLupa.classList.remove("je-videt");
+          barvaLupa.hidden = true;
+          document.body.style.overflow = "";
+          if (aktivniKanka) { aktivniKanka.focus(); aktivniKanka = null; }
+        };
       }
-      barvaLupa.classList.remove("je-videt");
-
-      zaviraciCas = setTimeout(() => {
-        barvaLupa.hidden = true;
-        barvaVzorek.style.transition = "none";
-        barvaVzorek.style.transform = "";
-        void barvaVzorek.offsetWidth;
-        barvaVzorek.style.transition = "";
-        document.body.style.overflow = "";
-        if (kanka) kanka.focus(); // návrat přesně tam, odkud se otevíralo
-        puvodniFokus = null;
-      }, TRVANI);
     };
 
     kanky.forEach((kanka) => {
       kanka.addEventListener("click", () => otevri(kanka));
     });
 
-    barvaZavrit.addEventListener("click", zavri);
-
-    // Klik na sklo i na samotnou barvu zavírá — celá vrstva je jedno gesto
-    barvaLupa.addEventListener("click", (udalost) => {
-      if (udalost.target !== barvaZavrit) zavri();
-    });
+    // Klepnutí kamkoli po vrstvě zavírá — celá plocha je jedno gesto
+    barvaLupa.addEventListener("click", zavri);
 
     document.addEventListener("keydown", (udalost) => {
       if (barvaLupa.hidden) return;
       if (udalost.key === "Escape") {
         zavri();
       } else if (udalost.key === "Tab") {
-        // Uvnitř je jediný ovladatelný prvek — křížek. Držíme u něj fokus,
-        // ať se tabulátorem nedá odejít na stránku schovanou pod sklem.
+        // Uvnitř není co ovládat — fokus zůstává na vrstvě, ať se
+        // tabulátorem nedá odejít na stránku schovanou pod sklem.
         udalost.preventDefault();
-        barvaZavrit.focus();
+        barvaLupa.focus();
       }
     });
   }
