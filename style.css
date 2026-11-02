@@ -1208,35 +1208,44 @@ h3.sub-label::after {
   background: var(--color-line);
 }
 
-/* Vzorník oblečení — pět nepravidelných kaněk vedle sebe přes celou
-   šířku stránky. Tvar dělá osmihodnotový `border-radius` (každý roh má
+/* Vzorník oblečení — pět nepravidelných kaněk vedle sebe.
+   Tvar dělá osmihodnotový `border-radius` (každý roh má
    zvlášť vodorovný a svislý poloměr), hodnoty se drží blízko 50 %, takže
    výsledek je spíš lehce rozvlněný kruh než amébа. Každá kaňka má svůj
    tvar v proměnné `--r` a barvu v `--c` přímo v HTML. */
 .palette {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: 0 auto;
   display: flex;
-  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  /* Šířka řady má splnit dvě věci najednou: přečnívat vláskovou linku
+     kapitoly (900 px) a nechat po stranách víc místa, než je mezi
+     kaňkami. Na širokém okně platí obojí — řada má 980 px, tedy
+     o 80 px víc než linka, a po stranách zbývá 223 px proti 74px
+     mezerám. Na užších oknech už na obojí šířka není, proto strop
+     88 %: přednost dostane prostor po stranách a kaňky nikdy nelezou
+     ke kraji obrazovky. */
+  box-sizing: border-box;
+  max-width: min(980px, 88%);
+  padding-inline: clamp(14px, 3vw, 24px);
   /* Svislý prostor, do kterého má kaňka kam povyrůst, aniž by se
      dotkla textu nad sebou nebo další sekce pod sebou. */
   padding-block: clamp(var(--space-m), 4vw, var(--space-section));
 }
 
 .palette li {
-  /* Každá kaňka dostane stejně široký díl řádku. */
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  /* POMĚRY JSOU TU KLÍČOVÉ: každá kaňka zabírá 14 % šířky řady, pět
+     jich je 70 % a zbylých 30 % si rovným dílem rozdělí čtyři mezery
+     po 7,5 %. Při najetí kaňka vyroste na 1,22 násobek, tedy na
+     17,1 % — i kdyby byly zvětšené všechny naráz, mezi sousedy pořád
+     zbyde 4,4 % šířky řady. Nikdy se nedotknou. */
+  flex: 0 0 14%;
 }
 
 .kanka {
-  /* ŠÍŘKA JE TU KLÍČOVÁ: kaňka zabírá 70 % svého dílu, při najetí
-     roste na 1,22 násobek, tedy na 85,4 % dílu. Mezi sousedy proto
-     vždy zbyde nejméně 14,6 % šířky dílu — nikdy se nedotknou. */
-  width: 70%;
+  display: block;
+  width: 100%;
   aspect-ratio: 1;
   background: var(--c);
   border-radius: var(--r);
