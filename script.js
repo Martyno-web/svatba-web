@@ -610,28 +610,42 @@ document.addEventListener("DOMContentLoaded", () => {
   // 4d. Rozlitá barva ze vzorníku „Co na sebe"
   //
   //     Klepnutí na kaňku rozlije její barvu po displeji, aby šla
-  //     porovnat s látkou v ruce.
+  //     porovnat s látkou v ruce. Dalším klepnutím se stáhne zpět.
   //
   //     Tvar nedělá `border-radius` ani transformace — ty umí jen
   //     zvětšit jeden a týž ovál. Vrstva je proto vybarvená celá
   //     a viditelný tvar z ní vyřízne `clip-path: polygon(...)`.
   //
-  //     Jak vzniká pohyb okraje:
-  //     Každá barva má předem nakreslený profil — dvanáct řídicích
-  //     směrů po obvodu, v každém dosah okraje (`tvar`) a čas, kdy se
-  //     v tom směru rozjede (`zpozdeni`). Mezi řídicími směry se
-  //     interpoluje Catmull-Romem, takže obrys nemá rohy. Protože má
-  //     každý směr jiné zpoždění i jinak dlouhý zbytek času, postupují
-  //     části okraje s odstupem a různou rychlostí — nahoře dřív, dolů
-  //     nejpozději. Odtud ten dojem rozlévání, ne zvětšování.
+  //     JAK VZNIKÁ OBRYS
+  //     Obrys je změkčené sjednocení laloků — sedmi překrývajících se
+  //     kruhů rozmístěných nad puntíkem. Spodní lalok se dotýká jeho
+  //     spodní hrany a v čase 0 je přesně puntíkem. Z té konstrukce
+  //     plyne trojí:
+  //       · každý bod obrysu leží na některé kružnici, takže temeno
+  //         ani dno nemůže být špička — ani uprostřed růstu, ani těsně
+  //         před návratem do puntíku,
+  //       · dno je oblouk širokého spodního laloku, ne úzká stopka,
+  //       · styky laloků se slévají polynomiálním smooth-maxem, takže
+  //         obrys má široká vyklenutí a jen mělké prohlubně.
+  //     Jednotlivé laloky se rozjíždějí v různý čas, proto se mezitvary
+  //     liší obrysem, ne jen velikostí.
   //
-  //     Průběh: do 16 % času se jen nepatrně rozšíří okraj puntíku,
-  //     pak se rozjedou jednotlivé směry, růst se zpomaluje (mocnina
-  //     2,6) a v cíli se zastaví. Po dokončení se nic nevlní.
+  //     Dvě cesty, které sem nevedou (ať se k nim nikdo nevrací):
+  //     radiální profil kolem volně stěhovaného středu — puntík v něm
+  //     plave a barva z něj zjevně nevytéká; a svislý stoh kotoučů —
+  //     poloměr se po výšce mění rychleji, než se posouvá střed, obálka
+  //     vůbec nevznikne a největší kotouč pohltí tvar do oválu.
   //
-  //     Zavření: klepnutí kamkoli nebo Escape. `reverse()` přehraje
-  //     tytéž snímky pozpátku včetně pozadí, takže přerušení uprostřed
-  //     navazuje na aktuální tvar bez skoku.
+  //     JAK VZNIKÁ POHYB
+  //     Žádné zapečené snímky: každý snímek se počítá ze ŽIVÉ polohy
+  //     puntíku a živých rozměrů vrstvy. Dřív byly mezitvary napečené
+  //     do WAAPI při otevření, takže když mezitím vyjela lišta mobilního
+  //     prohlížeče, procenta v `polygon()` začala znamenat jinou výšku
+  //     a při zavírání se pod paletou objevil zbytkový tvar mimo puntík.
+  //     Teď se obrys dopočítává v `requestAnimationFrame`, takže posun
+  //     stránky i změna viditelné výšky jsou samy od sebe v pořádku.
+  //     Obrácení kdykoli během růstu je jen změna znaménka směru —
+  //     pohyb navazuje na aktuální tvar bez skoku.
   // ------------------------------------------------------------
   const barvaLupa = document.getElementById("barvaLupa");
   const barvaVzorek = barvaLupa && barvaLupa.querySelector(".barva-lupa-vzorek");
@@ -639,254 +653,258 @@ document.addEventListener("DOMContentLoaded", () => {
   const kanky = document.querySelectorAll(".palette .kanka");
 
   if (barvaLupa && barvaVzorek && barvaSklo && kanky.length) {
-    const SMERU = 12;     // řídicí směry profilu (index 0 = vzhůru, po směru hodin)
-    const BODU = 56;      // body výsledného mnohoúhelníku
-    const SNIMKU = 22;    // kolik mezitvarů dostane animace
-    const TRVANI = 1400;
-    const NAFOUKNUTI = 0.55; // o kolik se na začátku rozšíří okraj puntíku
+    const RADKU = 64;     // vodorovných řezů obrysu
+    const TRVANI = 1500;  // ms
 
-    // Předkreslené profily — pro každou barvu jiný, ale stejného rázu:
-    // nahoře nejdál, do stran méně, dolů nejméně, s několika širokými
-    // vyklenutími a mělkými prohlubněmi. `zpozdeni` je podíl celkového
-    // času, než se daný směr rozjede.
-    const PROFILY = [
-      // čokoládová — vyklenutí vlevo nahoře, mělká prohlubeň vpravo
-      { tvar:      [1.10, 1.00, 0.78, 0.63, 0.58, 0.52, 0.48, 0.54, 0.64, 0.80, 0.99, 1.12],
-        zpozdeni:  [0.10, 0.13, 0.19, 0.27, 0.33, 0.37, 0.38, 0.34, 0.26, 0.19, 0.14, 0.11] },
-      // šedobéžová — rameno vpravo nahoře, útlum vlevo dole
-      { tvar:      [1.06, 1.14, 0.98, 0.74, 0.58, 0.50, 0.47, 0.53, 0.60, 0.66, 0.80, 1.00],
-        zpozdeni:  [0.11, 0.10, 0.17, 0.25, 0.32, 0.36, 0.38, 0.33, 0.27, 0.21, 0.15, 0.12] },
-      // lesní zelená — vysoká špička nahoře a druhé vyklenutí vlevo dole
-      { tvar:      [1.16, 1.02, 0.86, 0.70, 0.52, 0.50, 0.49, 0.58, 0.72, 0.78, 0.90, 1.06],
-        zpozdeni:  [0.10, 0.15, 0.20, 0.24, 0.30, 0.36, 0.38, 0.35, 0.28, 0.18, 0.13, 0.11] },
-      // kobaltová — široké rameno vpravo, prohlubeň vlevo dole
-      { tvar:      [1.04, 1.08, 0.96, 0.78, 0.62, 0.52, 0.46, 0.50, 0.56, 0.70, 0.86, 1.00],
-        zpozdeni:  [0.12, 0.14, 0.18, 0.26, 0.34, 0.37, 0.38, 0.32, 0.24, 0.20, 0.16, 0.10] },
-      // modrošedá — plnější levý bok, štíhlejší pravý
-      { tvar:      [1.12, 0.98, 0.80, 0.66, 0.56, 0.50, 0.48, 0.56, 0.70, 0.84, 0.98, 1.08],
-        zpozdeni:  [0.10, 0.14, 0.21, 0.26, 0.31, 0.35, 0.38, 0.34, 0.25, 0.19, 0.14, 0.11] }
+    // Lalok = [posun x, posun y (záporné = vzhůru), poloměr, zpoždění],
+    // první tři v násobcích `sirka`, zpoždění jako podíl délky animace.
+    // Pořadí odpovídá pořadí kaněk v paletě.
+    const LALOKY = [
+      // čokoládová
+      [[ 0.00,  0.00, 0.62, 0.00], [-0.26, -0.48, 0.68, 0.09], [ 0.30, -0.42, 0.58, 0.17],
+       [-0.02, -0.96, 0.70, 0.30], [ 0.34, -1.22, 0.50, 0.46], [-0.38, -1.18, 0.54, 0.55],
+       [ 0.04, -1.50, 0.42, 0.68]],
+      // šedobéžová
+      [[ 0.00,  0.00, 0.64, 0.00], [ 0.28, -0.46, 0.66, 0.08], [-0.30, -0.40, 0.56, 0.18],
+       [ 0.06, -0.92, 0.72, 0.29], [-0.36, -1.20, 0.52, 0.45], [ 0.34, -1.24, 0.50, 0.56],
+       [-0.02, -1.54, 0.40, 0.69]],
+      // lesní zelená
+      [[ 0.00,  0.00, 0.60, 0.00], [-0.22, -0.52, 0.64, 0.10], [ 0.32, -0.40, 0.62, 0.15],
+       [ 0.02, -0.98, 0.68, 0.31], [-0.34, -1.14, 0.56, 0.44], [ 0.30, -1.28, 0.48, 0.57],
+       [-0.06, -1.56, 0.44, 0.70]],
+      // kobaltová
+      [[ 0.00,  0.00, 0.66, 0.00], [ 0.24, -0.50, 0.62, 0.09], [-0.32, -0.44, 0.60, 0.16],
+       [-0.04, -0.94, 0.70, 0.30], [ 0.36, -1.18, 0.52, 0.47], [-0.30, -1.26, 0.50, 0.54],
+       [ 0.06, -1.52, 0.42, 0.68]],
+      // modrošedá
+      [[ 0.00,  0.00, 0.62, 0.00], [-0.28, -0.44, 0.60, 0.08], [ 0.26, -0.52, 0.66, 0.17],
+       [ 0.04, -1.00, 0.68, 0.30], [-0.32, -1.22, 0.54, 0.46], [ 0.32, -1.20, 0.50, 0.55],
+       [-0.04, -1.50, 0.44, 0.69]]
     ];
 
-    // Hladká interpolace po uzavřeném obvodu — bez rohů mezi řídicími směry
-    const catmull = (pole, misto) => {
-      const n = pole.length;
-      const i = Math.floor(misto);
-      const t = misto - i;
-      const p0 = pole[(i - 1 + n) % n], p1 = pole[i % n];
-      const p2 = pole[(i + 1) % n], p3 = pole[(i + 2) % n];
-      return 0.5 * ((2 * p1) + (-p0 + p2) * t +
-        (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t +
-        (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
-    };
-
     const mezi = (v, a, b) => Math.min(Math.max(v, a), b);
-    const hladce = (v) => v * v * (3 - 2 * v); // klidný náběh i dojezd
 
-    // Dosah okraje v daném směru a čase. `uhel` 0 = vzhůru.
-    const polomer = (uhel, cas, profil, dosah, nafoukly) => {
-      let misto = ((uhel + Math.PI / 2) / (Math.PI * 2)) * SMERU;
-      misto = ((misto % SMERU) + SMERU) % SMERU;
-      const cilovy = dosah * catmull(profil.tvar, misto);
-      const zpozdeni = catmull(profil.zpozdeni, misto);
-      const mistni = mezi((cas - zpozdeni) / (1 - zpozdeni), 0, 1);
-      // Dojezd s nulovou rychlostí — tvar se v cíli klidně ustálí
-      const postup = 1 - Math.pow(1 - mistni, 2.6);
-      return nafoukly + (cilovy - nafoukly) * postup;
+    // Polynomiální měkké maximum/minimum — styk dvou laloků se slije
+    // v plynulý oblouk místo ostrého zářezu.
+    const mekkeMax = (a, b, k) => {
+      if (k <= 0) return Math.max(a, b);
+      const h = mezi(0.5 + 0.5 * (a - b) / k, 0, 1);
+      return (b * (1 - h) + a * h) + k * h * (1 - h);
+    };
+    const mekkeMin = (a, b, k) => -mekkeMax(-a, -b, k);
+
+    // Jak daleko lalok postoupil. Spodní se rozjede hned, horní později
+    // — barva tím viditelně stoupá.
+    const postup = (zpozdeni, cas) => {
+      const rozsah = 0.42 + 0.34 * (1 - mezi(zpozdeni / 0.7, 0, 1));
+      const mistni = mezi((cas - zpozdeni) / rozsah, 0, 1);
+      if (mistni <= 0) return 0;
+      return 1 - Math.pow(1 - mistni, 2.4);
     };
 
-    // Jeden snímek obrysu v čase `cas` (0–1) jako `polygon()`
-    const obrys = (cas, profil, zacatek, rPuntiku, cil, dosah) => {
-      const sirka = window.innerWidth;
-      const vyska = window.innerHeight;
+    // Jeden snímek obrysu. `puntik` i `okno` se předávají ze živého
+    // rozvržení, takže změna výšky plochy uprostřed animace nic nerozhodí.
+    const obrys = (cas, laloky, puntik, okno) => {
+      const L = laloky;
+      const dno = puntik.y + puntik.r;   // spodní hrana puntíku — pevná kotva
+      const stred = okno.w / 2;
 
-      // Nepatrné rozšíření okraje hned na začátku, než se rozjedou směry
-      const nafoukly = rPuntiku * (1 + NAFOUKNUTI * hladce(mezi(cas / 0.16, 0, 1)));
-
-      // Nejdřív jen odstupy od středu — absolutní polohu dopočítáme až
-      // z nich, aby šlo kaňku spolehlivě udržet na displeji.
-      const odstupy = [];
-      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-      for (let i = 0; i < BODU; i++) {
-        const uhel = (i / BODU) * Math.PI * 2 - Math.PI / 2; // 0 = vzhůru
-        const r = polomer(uhel, cas, profil, dosah, nafoukly);
-        const dx = Math.cos(uhel) * r;
-        const dy = Math.sin(uhel) * r;
-        odstupy.push([dx, dy]);
-        if (dx < minX) minX = dx;
-        if (dx > maxX) maxX = dx;
-        if (dy < minY) minY = dy;
-        if (dy > maxY) maxY = dy;
+      // Měřítko: tvar se musí vejít do plochy i s krajními laloky
+      let doleva = 0, doprava = 0, nahoru = 0, nejvyssi = 1;
+      for (let m = 0; m < L.length; m++) {
+        doleva = Math.max(doleva, L[m][2] - L[m][0]);
+        doprava = Math.max(doprava, L[m][2] + L[m][0]);
+        nahoru = Math.max(nahoru, L[m][2] - L[m][1]);
+        nejvyssi = Math.max(nejvyssi, -L[m][1]);
       }
-
-      // Střed putuje od puntíku k cíli. Stěhuje se pozvolna a se
-      // zpožděním: kdyby vyrazil hned, ujel by vzhůru rychleji, než
-      // stačí růst spodní okraj, a ten by chvíli couval — vypadalo by
-      // to jako pulzování. Že kaňka u krajního puntíku nevyteče
-      // z displeje, hlídá ořez níž, ne rychlost stěhování.
-      const posun = hladce(mezi((cas - 0.10) / 0.62, 0, 1));
-      let sx = zacatek.x + (cil.x - zacatek.x) * posun;
-      let sy = zacatek.y + (cil.y - zacatek.y) * posun;
-
-      // Dvě podmínky najednou: kaňka se vejde do okna a puntík zůstane
-      // uvnitř ní. Obdélníkový ořez by na druhou nestačil — tvar není
-      // konvexní, takže puntík může ležet uvnitř opsaného obdélníku
-      // a přesto mimo obrys; porovnáváme proto vzdálenost přímo
-      // s dosahem okraje v jeho směru.
-      //
-      // Podmínky se nedají splnit jedním průchodem: ořez na okno
-      // odsune střed od krajního puntíku a přitažení k puntíku ho zas
-      // vrátí ven. Střídáme je proto několikrát — obě množiny poloh
-      // se překrývají, takže se to ustálí. Končíme přitažením, aby
-      // ve sporu vyhrála souvislost kaňky s puntíkem.
-      const vOkne = () => {
-        sx = mezi(sx, 8 - minX, Math.max(8 - minX, sirka - 8 - maxX));
-        sy = mezi(sy, 6 - minY, Math.max(6 - minY, vyska - 6 - maxY));
-      };
-      const kPuntiku = () => {
-        const vx = zacatek.x - sx;
-        const vy = zacatek.y - sy;
-        const vzdalenost = Math.hypot(vx, vy);
-        if (vzdalenost < 1) return;
-        const dovoleno = polomer(Math.atan2(vy, vx), cas, profil, dosah, nafoukly) * 0.86;
-        if (vzdalenost <= dovoleno) return;
-        const krok = (vzdalenost - dovoleno) / vzdalenost;
-        sx += vx * krok;
-        sy += vy * krok;
-      };
-      for (let k = 0; k < 4; k++) { vOkne(); kPuntiku(); }
-
-      const body = [];
-      for (let i = 0; i < BODU; i++) {
-        const x = sx + odstupy[i][0];
-        const y = sy + odstupy[i][1];
-        body.push(((x / sirka) * 100).toFixed(2) + "% " + ((y / vyska) * 100).toFixed(2) + "%");
-      }
-      return "polygon(" + body.join(", ") + ")";
-    };
-
-    let animaceTvar = null;
-    let animaceSklo = null;
-    let aktivniKanka = null;
-    let otevreno = false;
-
-    const snimky = (kanka, poradi) => {
-      const p = kanka.getBoundingClientRect();
-      const zacatek = { x: p.left + p.width / 2, y: p.top + p.height / 2 };
-      const rPuntiku = p.width / 2;
-      const profil = PROFILY[poradi % PROFILY.length];
-
-      const sirka = window.innerWidth;
-      const vyska = window.innerHeight;
-
-      // Největší dosah v jednotlivých směrech podle profilu
-      let nahoru = 0, dolu = 0, doStran = 0;
-      for (let i = 0; i < BODU; i++) {
-        const uhel = (i / BODU) * Math.PI * 2 - Math.PI / 2;
-        const v = catmull(profil.tvar, (i / BODU) * SMERU);
-        nahoru = Math.max(nahoru, -Math.sin(uhel) * v);
-        dolu = Math.max(dolu, Math.sin(uhel) * v);
-        doStran = Math.max(doStran, Math.abs(Math.cos(uhel)) * v);
-      }
-
-      // Dosah volíme tak, aby se celý obrys vešel na displej
-      const dosah = Math.min(
-        (sirka / 2 - 10) / doStran,
-        (vyska - 20) / (nahoru + dolu),
-        vyska * 0.34
+      let sirka = Math.min(
+        (okno.w - 24) / (doleva + doprava),
+        (dno - 8) / (L[0][2] + nahoru)
       );
+      sirka = Math.max(sirka, puntik.r * 1.4);
 
-      // Svislá poloha: barva má postoupit hlavně vzhůru, ale puntík
-      // musí po celou dobu zůstat uvnitř kaňky.
-      const chteny = zacatek.y - dosah * 0.18;
-      const nejvys = dosah * nahoru + 10;
-      const nejniz = vyska - dosah * dolu - 10;
-      let stredY = mezi(chteny, nejvys, Math.max(nejvys, nejniz));
-      stredY = Math.min(stredY, zacatek.y + dosah * nahoru - rPuntiku - 4);
-      stredY = Math.max(stredY, zacatek.y - dosah * dolu * 0.62);
+      // Kaňka u krajního puntíku se naklání do plochy, aby se měla kam
+      // rozlít. Naklonění roste s výškou, ale i spodní lalok musí uhnout —
+      // jinak by nad ním tělo odjelo stranou a mezi nimi by vznikl krk.
+      const naklon = stred - puntik.x;
+      const osa = (i, g) => puntik.x + sirka * L[i][0] * g
+        + naklon * (0.30 + 0.45 * (-L[i][1] / nejvyssi)) * g;
 
-      const cil = { x: sirka / 2, y: stredY };
-
-      const kroky = [];
-      for (let i = 0; i < SNIMKU; i++) {
-        const cas = i / (SNIMKU - 1);
-        kroky.push({ clipPath: obrys(cas, profil, zacatek, rPuntiku, cil, dosah), offset: cas });
+      // Spodní lalok: dno drží u spodní hrany puntíku. Aby mohl uhnout
+      // do strany a puntík v něm přesto zůstal celý, smí o kousek
+      // přesáknout pod něj; z velikosti přesaku plyne dovolený posun
+      // (podmínka, že kružnice obsahuje celý puntík). Poloměr se
+      // dopočítává ve třech krocích, protože omezení plochy a posunu se
+      // navzájem ovlivňují.
+      const g0 = postup(L[0][3], cas);
+      let r0 = Math.max(puntik.r, sirka * L[0][2] * g0);
+      const presak = Math.min(sirka * 0.06 * g0, puntik.r * 0.7);
+      let x0 = puntik.x;
+      for (let k = 0; k < 3; k++) {
+        const zapas = r0 - puntik.r;
+        const posunMax = zapas > 0 ? Math.sqrt(Math.max(0, presak * (2 * zapas - presak))) : 0;
+        x0 = puntik.x + mezi(osa(0, g0) - puntik.x, -posunMax, posunMax);
+        const mozne = Math.max(puntik.r, Math.min(x0 - 12, okno.w - 12 - x0));
+        if (r0 > mozne) r0 = mozne; else break;
       }
-      return kroky;
+      const y0 = dno + presak - r0;
+
+      const kruhy = [{ x: puntik.x, y: puntik.y, r: puntik.r }];  // vždy i puntík sám
+      kruhy.push({ x: x0, y: y0, r: r0 });
+      for (let i = 1; i < L.length; i++) {
+        const g = postup(L[i][3], cas);
+        if (g <= 0) continue;
+        const r = sirka * L[i][2] * g;
+        const y = y0 + sirka * (L[i][1] - L[0][1]) * g;
+        let x = osa(i, g);
+        if (12 + r <= okno.w - 12 - r) x = mezi(x, 12 + r, okno.w - 12 - r);
+        kruhy.push({ x, y, r });
+      }
+
+      let vrch = Infinity, spod = -Infinity;
+      for (let k = 0; k < kruhy.length; k++) {
+        vrch = Math.min(vrch, kruhy[k].y - kruhy[k].r);
+        spod = Math.max(spod, kruhy[k].y + kruhy[k].r);
+      }
+      const slitek = Math.min(sirka * 0.10, (spod - vrch) * 0.07);
+
+      // Vodorovné řezy; kosinové rozložení zahustí vzorky u dna a temene,
+      // kde je obrys vodorovný a rovnoměrné řezy by z něj udělaly schod.
+      const vpravo = [], vlevo = [];
+      for (let j = 0; j <= RADKU; j++) {
+        const y2 = spod - (spod - vrch) * (1 - Math.cos((j / RADKU) * Math.PI)) / 2;
+        let xl = null, xr = null;
+        for (let n = 0; n < kruhy.length; n++) {
+          const d = y2 - kruhy[n].y;
+          let pp = kruhy[n].r * kruhy[n].r - d * d;
+          if (pp <= 0) continue;
+          pp = Math.sqrt(pp);
+          const kk = Math.min(slitek, pp);
+          xr = xr === null ? kruhy[n].x + pp : mekkeMax(xr, kruhy[n].x + pp, kk);
+          xl = xl === null ? kruhy[n].x - pp : mekkeMin(xl, kruhy[n].x - pp, kk);
+        }
+        if (xl === null) { xl = xr = kruhy[0].x; }
+        vpravo.push([xr, y2]);
+        vlevo.push([xl, y2]);
+      }
+
+      const kusy = [];
+      const pridej = (b) => kusy.push(
+        ((b[0] / okno.w) * 100).toFixed(2) + "% " + ((b[1] / okno.h) * 100).toFixed(2) + "%");
+      for (let a = 0; a < vpravo.length; a++) pridej(vpravo[a]);
+      for (let b = vlevo.length - 1; b >= 0; b--) pridej(vlevo[b]);
+      return "polygon(" + kusy.join(", ") + ")";
+    };
+
+    // --- běh animace -------------------------------------------------
+    let aktivniKanka = null;
+    let aktivniLaloky = LALOKY[0];
+    let cas = 0;        // 0 = puntík, 1 = rozlitá kaňka
+    let smer = 0;       // +1 rozlévá, -1 stahuje
+    let bezi = false;
+    let minule = 0;
+
+    // Rozměry se čtou ze živého rozvržení při KAŽDÉM snímku — právě
+    // proto vyjetí lišty prohlížeče ani posun stránky nerozhodí návrat.
+    const rozmery = () => {
+      const r = barvaLupa.getBoundingClientRect();
+      const p = aktivniKanka.getBoundingClientRect();
+      return {
+        okno: { w: r.width, h: r.height },
+        puntik: {
+          x: p.left - r.left + p.width / 2,
+          y: p.top - r.top + p.height / 2,
+          r: p.width / 2
+        }
+      };
+    };
+
+    const vykresli = () => {
+      if (!aktivniKanka) return;
+      const m = rozmery();
+      if (!m.okno.w || !m.okno.h) return;
+      barvaVzorek.style.setProperty("--tvar", obrys(cas, aktivniLaloky, m.puntik, m.okno));
+      barvaSklo.style.opacity = String(mezi(cas / 0.45, 0, 1));
     };
 
     const uklid = () => {
       barvaLupa.hidden = true;
       document.body.style.overflow = "";
+      barvaVzorek.style.removeProperty("--tvar");
+      barvaSklo.style.opacity = "0";
       if (aktivniKanka) { aktivniKanka.focus({ preventScroll: true }); aktivniKanka = null; }
-      if (animaceTvar) { animaceTvar.cancel(); animaceTvar = null; }
-      if (animaceSklo) { animaceSklo.cancel(); animaceSklo = null; }
+    };
+
+    const jed = (novySmer) => {
+      smer = novySmer;
+      if (bezPohybu) {   // systémové omezení animací: rovnou cílový stav
+        cas = smer > 0 ? 1 : 0;
+        vykresli();
+        if (cas === 0) uklid();
+        return;
+      }
+      if (bezi) return;  // směr si běžící smyčka přečte sama
+      bezi = true;
+      minule = performance.now();
+      const tik = (ted) => {
+        cas = mezi(cas + smer * ((ted - minule) / TRVANI), 0, 1);
+        minule = ted;
+        vykresli();
+        if ((smer > 0 && cas < 1) || (smer < 0 && cas > 0)) {
+          requestAnimationFrame(tik);
+        } else {
+          bezi = false;
+          if (cas === 0) uklid();
+        }
+      };
+      requestAnimationFrame(tik);
     };
 
     const otevri = (kanka, poradi) => {
-      // Běží-li zrovna stažení téže kaňky, stačí ho obrátit zpátky
-      if (animaceTvar && aktivniKanka === kanka && animaceTvar.playbackRate < 0) {
-        animaceTvar.reverse();
-        if (animaceSklo) animaceSklo.reverse();
-        otevreno = true;
-        return;
-      }
-      if (animaceTvar) { animaceTvar.onfinish = null; animaceTvar.cancel(); animaceTvar = null; }
-      if (animaceSklo) { animaceSklo.cancel(); animaceSklo = null; }
+      // Totéž klepnutí na už rozlitou kaňku znamená „stáhni zpět"
+      if (aktivniKanka === kanka && !barvaLupa.hidden && smer >= 0) { jed(-1); return; }
 
       const polozka = kanka.closest("li");
+      // Jiná barva během běhu: pohyb pokračuje z aktuálního tvaru,
+      // jen se překreslí nad nový puntík — žádný skok na začátek.
       aktivniKanka = kanka;
-      otevreno = true;
-
+      aktivniLaloky = LALOKY[poradi % LALOKY.length];
       barvaVzorek.style.setProperty("--c", getComputedStyle(polozka).getPropertyValue("--c").trim());
       barvaLupa.setAttribute("aria-label", "Barva: " + kanka.textContent.trim());
-      barvaLupa.hidden = false;
+      if (barvaLupa.hidden) { cas = 0; barvaLupa.hidden = false; }
       document.body.style.overflow = "hidden"; // stránka pod sklem nescrolluje
       // `preventScroll` je tu nutné: vrstva je přes celé okno a fokus
       // bez něj stáhne stránku pod ní jinam — po zavření by uživatel
       // skončil na jiném místě, než odkud klepl.
       barvaLupa.focus({ preventScroll: true });
-
-      const kroky = snimky(kanka, poradi);
-
-      if (bezPohybu) {
-        // Při systémovém omezení animací jen nasadíme konečný tvar
-        barvaVzorek.style.setProperty("--tvar", kroky[kroky.length - 1].clipPath);
-        return;
-      }
-
-      barvaVzorek.style.removeProperty("--tvar");
-      // Časování nese samotná posloupnost snímků, proto mezi nimi
-      // interpolujeme rovnoměrně — jinak by se křivky skládaly.
-      animaceTvar = barvaVzorek.animate(kroky, { duration: TRVANI, easing: "linear", fill: "both" });
-      // Stejně dlouhá osa jako u tvaru, aby `reverse()` vrátil obojí
-      // v souladu; sklo jen náběhne dřív a pak drží.
-      animaceSklo = barvaSklo.animate(
-        [{ opacity: 0, offset: 0 }, { opacity: 1, offset: 0.45 }, { opacity: 1, offset: 1 }],
-        { duration: TRVANI, easing: "linear", fill: "both" });
+      vykresli();
+      jed(1);
     };
 
     const zavri = () => {
-      if (!otevreno) return;
-      otevreno = false;
-
-      if (!animaceTvar) { uklid(); return; }
-
-      // Obrácení běžící i doběhlé osy — v obou případech navazuje
-      // přesně na tvar, ve kterém se pohyb právě nachází.
-      animaceTvar.reverse();
-      if (animaceSklo) animaceSklo.reverse();
-      animaceTvar.onfinish = () => {
-        if (otevreno) return; // mezitím někdo klepl znovu
-        uklid();
-      };
+      if (barvaLupa.hidden) return;
+      jed(-1);
     };
 
     kanky.forEach((kanka, poradi) => {
-      kanka.addEventListener("click", () => otevri(kanka, poradi));
+      kanka.addEventListener("click", (udalost) => {
+        udalost.stopPropagation();
+        otevri(kanka, poradi);
+      });
     });
 
     // Klepnutí kamkoli po vrstvě zavírá — celá plocha je jedno gesto
     barvaLupa.addEventListener("click", zavri);
+
+    // Tah prstem po vrstvě nic neposouvá. Samotné `overflow: hidden`
+    // na <body> na iOS nestačí a stránka pod vrstvou by odjela.
+    barvaLupa.addEventListener("touchmove", (udalost) => udalost.preventDefault(),
+      { passive: false });
+
+    // Změna rozměrů okna (vyjetí lišty, otočení telefonu) jen překreslí
+    // aktuální snímek; poloha puntíku se čte znovu, takže tvar zůstane
+    // na něm i v klidovém stavu mezi dvěma pohyby.
+    window.addEventListener("resize", () => { if (!barvaLupa.hidden) vykresli(); });
 
     document.addEventListener("keydown", (udalost) => {
       if (barvaLupa.hidden) return;
@@ -896,10 +914,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Uvnitř není co ovládat — fokus zůstává na vrstvě, ať se
         // tabulátorem nedá odejít na stránku schovanou pod sklem.
         udalost.preventDefault();
-        // `preventScroll` je tu nutné: vrstva je přes celé okno a fokus
-      // bez něj stáhne stránku pod ní jinam — po zavření by uživatel
-      // skončil na jiném místě, než odkud klepl.
-      barvaLupa.focus({ preventScroll: true });
+        barvaLupa.focus({ preventScroll: true });
       }
     });
   }

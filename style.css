@@ -1348,6 +1348,11 @@ h3.sub-label::after {
   width: 100vw;
   z-index: 120;
   cursor: zoom-out;
+  /* Na dotykových zařízeních `overflow: hidden` na <body> posun
+     stránky nezastaví — tah prstem by stránku pod vrstvou odroloval
+     a po zavření by uživatel skončil jinde, než odkud klepl. */
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .barva-lupa[hidden] {
