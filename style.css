@@ -1351,11 +1351,11 @@ h3.sub-label::after {
   align-items: center;
   justify-content: center;
   /* Mléčné sklo: obsah stránky pod ním se rozmaže a zesvětlí. */
-  /* Jemnější sklo než dřív: méně rozmazání i zesvětlení, ať je pod ním
-     stránka jen potlačená, ne vybělená. */
-  background: rgba(248, 249, 245, .34);
-  -webkit-backdrop-filter: blur(11px) saturate(.9) brightness(1.03);
-  backdrop-filter: blur(11px) saturate(.9) brightness(1.03);
+  /* Sklo je jen náznak — stránka pod ním má zůstat tušená, ne vybělená.
+     Rozmazání i zesvětlení je proto výrazně slabší než dřív. */
+  background: rgba(248, 249, 245, .16);
+  -webkit-backdrop-filter: blur(6px) saturate(.95) brightness(1.01);
+  backdrop-filter: blur(6px) saturate(.95) brightness(1.01);
   opacity: 0;
   cursor: zoom-out;
 }
@@ -1372,26 +1372,20 @@ h3.sub-label::after {
    ať je stránka pod ní potlačená stejně. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .barva-lupa {
-    background: rgba(248, 249, 245, .9);
+    background: rgba(248, 249, 245, .72);
   }
 }
 
-/* Rozlitá barva. Rozměry jsou vědomě takové, aby plocha vyšla zhruba
-   na polovinu displeje: na mobilu 92 vw × 58 vh, což je u běžného
-   telefonu kolem 45 % obrazovky. Zbytek je mléčné sklo, aby bylo vidět,
-   že jde o vrstvu nad stránkou, a aby barva měla kolem sebe neutrální
-   okolí — jinak by se porovnávala špatně. */
+/* Rozlitá barva. Vrstva pokrývá celé okno a je jednolitě vybarvená;
+   viditelný tvar z ní vyřízne `clip-path`, jehož body dopočítává skript.
+   Díky tomu se obrys během růstu skutečně proměňuje — nejde o zvětšování
+   jednoho tvaru, jak to dělal dřívější `border-radius` s transformací. */
 .barva-lupa-vzorek {
-  width: min(92vw, 540px);
-  height: min(58vh, 540px);
-  /* Svislé posazení počítá skript podle toho, kde na displeji leží
-     zvolený puntík: barva se usadí tak, aby z něj rostla zhruba ze
-     dvou třetin nahoru a z jedné dolů. Záporná hodnota posune dolů. */
-  margin-bottom: var(--posun-y, 0px);
+  position: absolute;
+  inset: 0;
   background: var(--c);
-  border-radius: var(--r);
-  transform-origin: center;
-  will-change: transform, border-radius;
+  clip-path: var(--tvar, circle(0 at 50% 50%));
+  will-change: clip-path;
 }
 
 .barva-lupa:focus {
