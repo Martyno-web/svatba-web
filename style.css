@@ -1347,39 +1347,33 @@ h3.sub-label::after {
      které se inset počítá, a vpravo by zůstal nezakrytý pruh. */
   width: 100vw;
   z-index: 120;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Mléčné sklo: obsah stránky pod ním se rozmaže a zesvětlí. */
-  /* Sklo je jen náznak — stránka pod ním má zůstat tušená, ne vybělená.
-     Rozmazání i zesvětlení je proto výrazně slabší než dřív. */
-  background: rgba(248, 249, 245, .16);
-  -webkit-backdrop-filter: blur(6px) saturate(.95) brightness(1.01);
-  backdrop-filter: blur(6px) saturate(.95) brightness(1.01);
-  opacity: 0;
   cursor: zoom-out;
 }
 
 .barva-lupa[hidden] {
-  display: none; /* bez tohoto by flex přebil atribut hidden */
+  display: none;
 }
 
-.barva-lupa.je-videt {
-  opacity: 1;
-}
+/* Závoj je samostatná vrstva POD barvou. Kdyby se průhlednost
+   animovala na celé vrstvě, při zpětné cestě by kaňka vybledla místo
+   toho, aby se stáhla zpátky do puntíku.
 
-/* Bez podpory backdrop-filter nahradí rozmazání hustší mléčná vrstva,
-   ať je stránka pod ní potlačená stejně. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .barva-lupa {
-    background: rgba(248, 249, 245, .72);
-  }
+   Žádné `backdrop-filter`: měnící se ořez barvy nad ním nutí prohlížeč
+   přepočítávat rozmazání každý snímek. Naměřeno na 1440 × 900 —
+   s rozmazáním 14–18 snímků za vteřinu, bez něj 61, a na tom nic
+   nezměnily ani `will-change`, vlastní vrstva, `contain: paint`, ani
+   snížení poloměru na 1,5 px. Plynulý pohyb okraje má přednost, takže
+   okolí stránky jen zesvětlíme — zůstává tím i lépe rozeznatelné. */
+.barva-lupa-sklo {
+  position: absolute;
+  inset: 0;
+  background: rgba(248, 249, 245, .22);
+  opacity: 0;
 }
 
 /* Rozlitá barva. Vrstva pokrývá celé okno a je jednolitě vybarvená;
-   viditelný tvar z ní vyřízne `clip-path`, jehož body dopočítává skript.
-   Díky tomu se obrys během růstu skutečně proměňuje — nejde o zvětšování
-   jednoho tvaru, jak to dělal dřívější `border-radius` s transformací. */
+   viditelný tvar z ní vyřízne `clip-path`, jehož body dopočítává
+   skript. Díky tomu se obrys během růstu skutečně proměňuje. */
 .barva-lupa-vzorek {
   position: absolute;
   inset: 0;
