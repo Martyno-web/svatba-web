@@ -1249,12 +1249,28 @@ h3.sub-label::after {
   aspect-ratio: 1;
   background: var(--c);
   border-radius: var(--r);
+  /* Reset tlačítka — kaňka je klikací, ale nemá vypadat jako tlačítko */
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
   transition: transform .55s cubic-bezier(.22, .8, .3, 1);
   will-change: transform;
 }
 
-.kanka:hover {
-  transform: scale(1.22);
+/* Zvětšení jen tam, kde se opravdu najíždí myší. Na dotykovém
+   displeji `:hover` po klepnutí „uvízne" a kaňka by zůstala velká. */
+@media (hover: hover) {
+  .kanka:hover {
+    transform: scale(1.22);
+  }
+}
+
+.kanka:focus-visible {
+  outline: 1px solid var(--color-olive);
+  outline-offset: 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1264,6 +1280,104 @@ h3.sub-label::after {
 
   .kanka:hover {
     transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   13b. Rozlitá barva ze vzorníku — mléčné sklo přes stránku
+   -------------------------------------------------------------------------- */
+.barva-lupa {
+  position: fixed;
+  inset: 0;
+  /* Stejný důvod jako u .lupa: scrollbar-gutter zužuje plochu, vůči
+     které se inset počítá, a vpravo by zůstal nezakrytý pruh. */
+  width: 100vw;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Mléčné sklo: obsah stránky pod ním se rozmaže a zesvětlí. */
+  background: rgba(248, 249, 245, .52);
+  -webkit-backdrop-filter: blur(20px) saturate(.8) brightness(1.08);
+  backdrop-filter: blur(20px) saturate(.8) brightness(1.08);
+  opacity: 0;
+  transition: opacity .3s ease;
+  cursor: zoom-out;
+}
+
+.barva-lupa[hidden] {
+  display: none; /* bez tohoto by flex přebil atribut hidden */
+}
+
+.barva-lupa.je-videt {
+  opacity: 1;
+}
+
+/* Bez podpory backdrop-filter nahradí rozmazání hustší mléčná vrstva,
+   ať je stránka pod ní potlačená stejně. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .barva-lupa {
+    background: rgba(248, 249, 245, .94);
+  }
+}
+
+/* Rozlitá barva. Rozměry jsou vědomě takové, aby plocha vyšla zhruba
+   na polovinu displeje: na mobilu 92 vw × 58 vh, což je u běžného
+   telefonu kolem 45 % obrazovky. Zbytek je mléčné sklo, aby bylo vidět,
+   že jde o vrstvu nad stránkou, a aby barva měla kolem sebe neutrální
+   okolí — jinak by se porovnávala špatně. */
+.barva-lupa-vzorek {
+  width: min(92vw, 540px);
+  height: min(58vh, 540px);
+  background: var(--c);
+  border-radius: var(--r);
+  transform-origin: center;
+  /* Křivka mírně přestřelí a teprve pak se usadí — barva tím působí
+     jako tekutina, která se rozlije a dovlní, ne jako zvětšenina. */
+  transition: transform .52s cubic-bezier(.34, 1.12, .44, 1),
+              border-radius .52s cubic-bezier(.34, 1.12, .44, 1);
+  will-change: transform, border-radius;
+}
+
+.barva-lupa-zavrit {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + var(--space-s));
+  right: calc(env(safe-area-inset-right, 0px) + var(--space-s));
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .3s ease .12s;
+}
+
+.barva-lupa.je-videt .barva-lupa-zavrit {
+  opacity: .55;
+}
+
+.barva-lupa .barva-lupa-zavrit:hover {
+  opacity: 1;
+}
+
+.barva-lupa-zavrit:focus-visible {
+  outline: 1px solid var(--color-olive);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barva-lupa,
+  .barva-lupa-vzorek,
+  .barva-lupa-zavrit {
+    transition: none;
   }
 }
 

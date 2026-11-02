@@ -330,14 +330,16 @@
       <!-- Samostatná paleta oblečení pro hosty — odstíny jsou odečtené
            z druhé strany pozvánky, ne z barevnosti webu. Každá kaňka má
            vlastní barvu `--c` a vlastní tvar `--r` (osm poloměrů rohů),
-           aby žádné dvě nebyly stejné. Název barvy zůstává jen pro
-           odečítače obrazovky, vizuálně jsou kaňky bez popisků. -->
+           aby žádné dvě nebyly stejné. Kaňka je tlačítko: po kliknutí se
+           barva rozlije přes půlku displeje, aby šla porovnat s látkou
+           v ruce. Název barvy je jen pro odečítače obrazovky, vizuálně
+           jsou kaňky bez popisků. -->
       <ul class="palette" aria-label="Doporučené barvy">
-        <li style="--c:#463025; --r:62% 38% 55% 45% / 48% 58% 42% 52%"><span class="kanka" aria-hidden="true"></span><span class="jen-ctecka">čokoládová</span></li>
-        <li style="--c:#948173; --r:45% 55% 42% 58% / 58% 45% 55% 42%"><span class="kanka" aria-hidden="true"></span><span class="jen-ctecka">šedobéžová</span></li>
-        <li style="--c:#1D4032; --r:57% 43% 48% 52% / 42% 56% 44% 58%"><span class="kanka" aria-hidden="true"></span><span class="jen-ctecka">lesní zelená</span></li>
-        <li style="--c:#035392; --r:52% 48% 58% 42% / 55% 42% 58% 45%"><span class="kanka" aria-hidden="true"></span><span class="jen-ctecka">kobaltová</span></li>
-        <li style="--c:#738BB4; --r:43% 57% 52% 48% / 46% 52% 48% 54%"><span class="kanka" aria-hidden="true"></span><span class="jen-ctecka">modrošedá</span></li>
+        <li style="--c:#463025; --r:62% 38% 55% 45% / 48% 58% 42% 52%"><button type="button" class="kanka"><span class="jen-ctecka">čokoládová</span></button></li>
+        <li style="--c:#948173; --r:45% 55% 42% 58% / 58% 45% 55% 42%"><button type="button" class="kanka"><span class="jen-ctecka">šedobéžová</span></button></li>
+        <li style="--c:#1D4032; --r:57% 43% 48% 52% / 42% 56% 44% 58%"><button type="button" class="kanka"><span class="jen-ctecka">lesní zelená</span></button></li>
+        <li style="--c:#035392; --r:52% 48% 58% 42% / 55% 42% 58% 45%"><button type="button" class="kanka"><span class="jen-ctecka">kobaltová</span></button></li>
+        <li style="--c:#738BB4; --r:43% 57% 52% 48% / 46% 52% 48% 54%"><button type="button" class="kanka"><span class="jen-ctecka">modrošedá</span></button></li>
       </ul>
     </section>
 
@@ -391,6 +393,14 @@
 
   <!-- Zvětšenina fotografie z galerie. Velká verze se do src doplňuje
        až při otevření (script.js), aby se nestahovala zbytečně. -->
+  <!-- Rozlitá barva ze vzorníku. Pozadí je mléčné sklo (rozmazání
+       + zesvětlení stránky pod ním), barva se do něj rozlije z kaňky,
+       na kterou se kliklo. -->
+  <div class="barva-lupa" id="barvaLupa" role="dialog" aria-modal="true" hidden>
+    <button type="button" class="barva-lupa-zavrit" aria-label="Zavřít barvu">&times;</button>
+    <div class="barva-lupa-vzorek"></div>
+  </div>
+
   <div class="lupa" id="lupa" role="dialog" aria-modal="true" aria-label="Zvětšená fotografie" hidden>
     <button type="button" class="lupa-zavrit" aria-label="Zavřít zvětšeninu">&times;</button>
     <img class="lupa-foto" src="" alt="">

@@ -607,6 +607,121 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------------------------------------
+  // 4d. Rozlitá barva ze vzorníku „Co na sebe"
+  //
+  //     Klepnutí na kaňku rozlije její barvu zhruba přes polovinu
+  //     displeje, aby šla porovnat s látkou v ruce. Zbytek stránky se
+  //     schová za mléčné sklo (rozmazání + zesvětlení), takže barvu
+  //     nic neruší.
+  //
+  //     Animace je udělaná technikou FLIP: cílový tvar je v CSS už
+  //     na svém místě a ve své velikosti, JS mu jen na jednu snímkovou
+  //     dávku nasadí transformaci zpátky do kaňky, ze které se kliklo,
+  //     a hned ji sundá. Prohlížeč tak animuje jen `transform`, což
+  //     zvládne na grafické kartě — žádné přepočítávání rozvržení.
+  //     Zavření: křížek, klik mimo barvu, Escape.
+  // ------------------------------------------------------------
+  const barvaLupa = document.getElementById("barvaLupa");
+  const barvaVzorek = barvaLupa && barvaLupa.querySelector(".barva-lupa-vzorek");
+  const barvaZavrit = barvaLupa && barvaLupa.querySelector(".barva-lupa-zavrit");
+  const kanky = document.querySelectorAll(".palette .kanka");
+
+  if (barvaLupa && barvaVzorek && barvaZavrit && kanky.length) {
+    // Tvar, do kterého se barva po rozlití usadí — o něco klidnější
+    // než samotná kaňka, ať to působí jako loužička, ne jako zvětšenina.
+    const TVAR_ROZLITY = "46% 54% 52% 48% / 54% 48% 52% 46%";
+    const TRVANI = 520; // musí sedět s přechodem v CSS
+
+    let puvodniFokus = null;
+    let zaviraciCas = null;
+
+    // Transformace, která cílový vzorek posadí přesně na kaňku —
+    // odtud se pak rozlije.
+    const doKanky = (kanka) => {
+      const z = kanka.getBoundingClientRect();
+      const na = barvaVzorek.getBoundingClientRect();
+      const posunX = (z.left + z.width / 2) - (na.left + na.width / 2);
+      const posunY = (z.top + z.height / 2) - (na.top + na.height / 2);
+      const pomer = z.width / na.width;
+      return `translate(${posunX}px, ${posunY}px) scale(${pomer})`;
+    };
+
+    const otevri = (kanka) => {
+      clearTimeout(zaviraciCas);
+      const polozka = kanka.closest("li");
+      puvodniFokus = kanka;
+
+      // Barvu i výchozí tvar si vzorek převezme z kaňky, na kterou se kleplo
+      const styl = getComputedStyle(polozka);
+      barvaVzorek.style.setProperty("--c", styl.getPropertyValue("--c").trim());
+      barvaVzorek.style.borderRadius = styl.getPropertyValue("--r").trim();
+      barvaLupa.setAttribute("aria-label", "Barva: " + kanka.textContent.trim());
+
+      barvaLupa.hidden = false;
+      document.body.style.overflow = "hidden"; // stránka pod sklem nescrolluje
+
+      // Výchozí poloha = kaňka. Bez přechodu, ať to nikdo nezahlédne.
+      barvaVzorek.style.transition = "none";
+      barvaVzorek.style.transform = doKanky(kanka);
+      void barvaVzorek.offsetWidth; // vynutí přepočet, jinak se oba stavy slijí
+      barvaVzorek.style.transition = "";
+
+      // A teď samotné rozlití
+      barvaLupa.classList.add("je-videt");
+      barvaVzorek.style.transform = "";
+      barvaVzorek.style.borderRadius = TVAR_ROZLITY;
+      barvaZavrit.focus();
+    };
+
+    const zavri = () => {
+      if (barvaLupa.hidden) return;
+      const kanka = puvodniFokus;
+
+      // Barva se stáhne zpátky do své kaňky, sklo se rozplyne
+      if (kanka) {
+        const polozka = kanka.closest("li");
+        barvaVzorek.style.transform = doKanky(kanka);
+        barvaVzorek.style.borderRadius = getComputedStyle(polozka).getPropertyValue("--r").trim();
+      }
+      barvaLupa.classList.remove("je-videt");
+
+      zaviraciCas = setTimeout(() => {
+        barvaLupa.hidden = true;
+        barvaVzorek.style.transition = "none";
+        barvaVzorek.style.transform = "";
+        void barvaVzorek.offsetWidth;
+        barvaVzorek.style.transition = "";
+        document.body.style.overflow = "";
+        if (kanka) kanka.focus(); // návrat přesně tam, odkud se otevíralo
+        puvodniFokus = null;
+      }, TRVANI);
+    };
+
+    kanky.forEach((kanka) => {
+      kanka.addEventListener("click", () => otevri(kanka));
+    });
+
+    barvaZavrit.addEventListener("click", zavri);
+
+    // Klik na sklo i na samotnou barvu zavírá — celá vrstva je jedno gesto
+    barvaLupa.addEventListener("click", (udalost) => {
+      if (udalost.target !== barvaZavrit) zavri();
+    });
+
+    document.addEventListener("keydown", (udalost) => {
+      if (barvaLupa.hidden) return;
+      if (udalost.key === "Escape") {
+        zavri();
+      } else if (udalost.key === "Tab") {
+        // Uvnitř je jediný ovladatelný prvek — křížek. Držíme u něj fokus,
+        // ať se tabulátorem nedá odejít na stránku schovanou pod sklem.
+        udalost.preventDefault();
+        barvaZavrit.focus();
+      }
+    });
+  }
+
+  // ------------------------------------------------------------
   // 5. Mobilní menu (hamburger)
   // ------------------------------------------------------------
   const burger = document.querySelector(".nav-burger");
