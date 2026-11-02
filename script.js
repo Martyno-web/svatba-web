@@ -969,6 +969,306 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------------------------------------
+  // 5b. Barva hamburgeru podle pozadí pod ním
+  //
+  //     Hamburger stojí napevno v rohu okna a pod ním se při scrollu
+  //     střídá hero fotografie, papírové sekce, šalvějové pásy i fotky
+  //     předělu a závěru. Jedna barva čárek proto nestačí: světlé mizí
+  //     na papíru, tmavé na fotkách. Čárky se tedy převlékají podle
+  //     toho, nad čím zrovna leží.
+  //
+  //     Měří se skutečné pozadí, ne seznam sekcí — ten by se rozešel
+  //     s obsahem při první úpravě stránky. `elementsFromPoint` vrátí
+  //     všechny vrstvy pod středem ikony; projdou se odspodu nahoru
+  //     a složí se jako při vykreslování: barva pozadí, přechody,
+  //     u obrázku jeho pixel (fotky jsou ze stejného původu, takže
+  //     plátno nezčerná) a nakonec překryvy v `::before` / `::after`.
+  //
+  //     Právě ty překryvy jsou tu podstatné. Hero fotka se odspodu
+  //     prolíná do šalvějové barvy další sekce, takže od poloviny výšky
+  //     je pod ikonou světlo, i když samotná fotka je tam tmavá. Vzorek
+  //     z obrázku by řekl „tmavé pozadí" a čárky by zůstaly světlé —
+  //     tedy neviditelné. Proto se přechody dopočítávají.
+  //
+  //     Z výsledné barvy se spočítá kontrast obou variant čárek podle
+  //     WCAG a vybere se ta lepší. Není tu tedy žádná kouzelná mez —
+  //     vyhrává prostě čitelnější barva. Přepíná se jen tehdy, když je
+  //     druhá varianta o desetinu lepší, aby čárky na rozhraní sekcí
+  //     neblikaly sem a tam.
+  //
+  //     Co skript neumí: radiální a kuželové přechody, `background-blend`
+  //     a filtry. Žádné na webu nejsou; kdyby přibyly, vrstva se přeskočí
+  //     a rozhodne se podle zbytku, takže to nejhorší je mírně horší
+  //     kontrast, ne rozbité tlačítko.
+  // ------------------------------------------------------------
+  const hamburger = document.querySelector(".nav-burger");
+
+  if (hamburger && document.elementsFromPoint) {
+    const JAS_SVETLE = 0.938;   // --color-on-dark #F8F9F5
+    const JAS_TMAVE = 0.0242;   // --color-text    #292C27
+
+    const kanal = (c) => {
+      c /= 255;
+      return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const jasRGB = (b) =>
+      0.2126 * kanal(b[0]) + 0.7152 * kanal(b[1]) + 0.0722 * kanal(b[2]);
+    const kontrast = (a, b) =>
+      (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+    // Složení vrstvy přes to, co je pod ní (source-over). Průhlednost se
+    // nese dál: vrstva bez podkladu musí zůstat poloprůhledná, jinak by
+    // se z jemného přechodu stala krycí barva.
+    const slozit = (pod, vrch) => {
+      if (!vrch || vrch[3] <= 0) return pod;
+      if (!pod) return [vrch[0], vrch[1], vrch[2], vrch[3]];
+      const a = vrch[3];
+      const b = pod[3] * (1 - a);
+      const soucet = a + b;
+      if (soucet <= 0) return pod;
+      return [
+        (vrch[0] * a + pod[0] * b) / soucet,
+        (vrch[1] * a + pod[1] * b) / soucet,
+        (vrch[2] * a + pod[2] * b) / soucet,
+        soucet
+      ];
+    };
+
+    const naRGBA = (zapis) => {
+      const c = zapis.match(/[\d.]+/g);
+      if (!c || c.length < 3) return null;
+      return [+c[0], +c[1], +c[2], c.length > 3 ? +c[3] : 1];
+    };
+
+    // Rozdělí seznam oddělený čárkami, ale jen na nejvyšší úrovni —
+    // čárky uvnitř `rgba(...)` zůstanou v klidu.
+    const rozdel = (text) => {
+      const kusy = [];
+      let hloubka = 0, od = 0;
+      for (let i = 0; i < text.length; i++) {
+        const z = text[i];
+        if (z === "(") hloubka++;
+        else if (z === ")") hloubka--;
+        else if (z === "," && hloubka === 0) { kusy.push(text.slice(od, i)); od = i + 1; }
+      }
+      kusy.push(text.slice(od));
+      return kusy;
+    };
+
+    const STRANY = { "to top": 0, "to right": 90, "to bottom": 180, "to left": 270 };
+
+    // Barva lineárního přechodu v bodě (dx, dy) od středu krabice
+    const vPrechodu = (zapis, sirka, vyska, dx, dy) => {
+      const m = zapis.match(/^(?:repeating-)?linear-gradient\((.*)\)$/);
+      if (!m) return null;
+      const casti = rozdel(m[1]).map((c) => c.trim());
+      let uhel = 180, od = 0;
+      if (/^-?[\d.]+deg$/.test(casti[0])) { uhel = parseFloat(casti[0]); od = 1; }
+      else if (casti[0] in STRANY) { uhel = STRANY[casti[0]]; od = 1; }
+      else if (/^to /.test(casti[0])) return null; // rohové varianty neřešíme
+
+      const stopky = [];
+      for (let i = od; i < casti.length; i++) {
+        const b = casti[i].match(/^(rgba?\([^)]*\)|#[0-9a-fA-F]{3,8})/);
+        if (!b) return null;
+        const barva = naRGBA(b[0]);
+        if (!barva) return null;
+        const misto = casti[i].slice(b[0].length).trim();
+        stopky.push({ barva, misto });
+      }
+      if (stopky.length < 2) return null;
+
+      const rad = (uhel * Math.PI) / 180;
+      const sin = Math.sin(rad), cos = Math.cos(rad);
+      const delka = Math.abs(sirka * sin) + Math.abs(vyska * cos);
+      if (!delka) return null;
+      const podil = 0.5 + (dx * sin - dy * cos) / delka;
+
+      // Doplnění chybějících poloh podle pravidel CSS
+      const poloha = stopky.map((s) => {
+        if (!s.misto) return null;
+        const c = parseFloat(s.misto);
+        if (isNaN(c)) return null;
+        return s.misto.indexOf("%") > -1 ? c / 100 : c / delka;
+      });
+      if (poloha[0] === null) poloha[0] = 0;
+      if (poloha[poloha.length - 1] === null) poloha[poloha.length - 1] = 1;
+      for (let i = 1; i < poloha.length - 1; i++) {
+        if (poloha[i] !== null) continue;
+        let j = i;
+        while (poloha[j] === null) j++;
+        for (let k = i; k < j; k++) {
+          poloha[k] = poloha[i - 1] + ((poloha[j] - poloha[i - 1]) * (k - i + 1)) / (j - i + 1);
+        }
+      }
+
+      if (podil <= poloha[0]) return stopky[0].barva;
+      for (let i = 1; i < poloha.length; i++) {
+        if (podil > poloha[i]) continue;
+        const rozpeti = poloha[i] - poloha[i - 1];
+        const t = rozpeti > 0 ? (podil - poloha[i - 1]) / rozpeti : 1;
+        const a = stopky[i - 1].barva, b = stopky[i].barva;
+        return [
+          a[0] + (b[0] - a[0]) * t,
+          a[1] + (b[1] - a[1]) * t,
+          a[2] + (b[2] - a[2]) * t,
+          a[3] + (b[3] - a[3]) * t
+        ];
+      }
+      return stopky[stopky.length - 1].barva;
+    };
+
+    // Barva pozadí (výplň + přechody) daného stylu v bodě okna
+    const pozadiStylu = (styl, krabice, x, y) => {
+      let vysledek = slozit(null, naRGBA(styl.backgroundColor));
+      const obrazky = styl.backgroundImage;
+      if (!obrazky || obrazky === "none") return vysledek;
+      const vrstvy = rozdel(obrazky).map((v) => v.trim());
+      // První zapsaná vrstva leží nahoře, skládá se tedy od konce
+      for (let i = vrstvy.length - 1; i >= 0; i--) {
+        vysledek = slozit(vysledek, vPrechodu(
+          vrstvy[i], krabice.width, krabice.height,
+          x - (krabice.left + krabice.width / 2),
+          y - (krabice.top + krabice.height / 2)
+        ));
+      }
+      return vysledek;
+    };
+
+    // Malé plátno na vzorek fotky. Kreslí se do něj jen výřez velikosti
+    // ikony zmenšený na 8 × 8, takže je to pár desítek mikrosekund.
+    let platno = null, kresba = null;
+    const vzorekObrazku = (obr, x, y) => {
+      if (!obr.complete || !obr.naturalWidth) return null;
+      const r = obr.getBoundingClientRect();
+      if (!r.width || !r.height) return null;
+      const styl = getComputedStyle(obr);
+      const pomerBox = r.width / r.height;
+      const pomerObr = obr.naturalWidth / obr.naturalHeight;
+      const uvnitr = styl.objectFit === "contain";
+      let sirka, vyska;
+      if (styl.objectFit === "fill") {
+        sirka = obr.naturalWidth; vyska = obr.naturalHeight;
+      } else if (uvnitr ? pomerObr < pomerBox : pomerObr > pomerBox) {
+        vyska = obr.naturalHeight; sirka = vyska * pomerBox;
+      } else {
+        sirka = obr.naturalWidth; vyska = sirka / pomerBox;
+      }
+      const poz = styl.objectPosition.split(" ");
+      const podil = (v) => {
+        const c = parseFloat(v);
+        return isNaN(c) || v.indexOf("%") === -1 ? 0.5 : c / 100;
+      };
+      const x0 = (obr.naturalWidth - sirka) * podil(poz[0] || "50%");
+      const y0 = (obr.naturalHeight - vyska) * podil(poz[1] || "50%");
+      const u = (x - r.left) / r.width;
+      const v = (y - r.top) / r.height;
+      // Vzorkuje se jen ploška pod samotnými čárkami (28 × 16 px), ne
+      // celé tlačítko. Širší výřez by na fotkách přimíchal okolí —
+      // u galerie mlýna třeba tmavé koruny stromů nad světlou oblohou,
+      // na které čárky doopravdy leží.
+      const du = 28 / r.width, dv = 16 / r.height;
+      const sx = Math.max(0, Math.min(obr.naturalWidth - 1, x0 + (u - du / 2) * sirka));
+      const sy = Math.max(0, Math.min(obr.naturalHeight - 1, y0 + (v - dv / 2) * vyska));
+      const sw = Math.max(1, Math.min(obr.naturalWidth - sx, du * sirka));
+      const sh = Math.max(1, Math.min(obr.naturalHeight - sy, dv * vyska));
+      try {
+        if (!platno) {
+          platno = document.createElement("canvas");
+          platno.width = platno.height = 8;
+          kresba = platno.getContext("2d", { willReadFrequently: true });
+        }
+        kresba.clearRect(0, 0, 8, 8);
+        kresba.drawImage(obr, sx, sy, sw, sh, 0, 0, 8, 8);
+        const data = kresba.getImageData(0, 0, 8, 8).data;
+        let r0 = 0, g0 = 0, b0 = 0, pocet = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          r0 += data[i]; g0 += data[i + 1]; b0 += data[i + 2]; pocet++;
+        }
+        return pocet ? [r0 / pocet, g0 / pocet, b0 / pocet, 1] : null;
+      } catch (chyba) {
+        return null; // cizí původ by plátno „obarvil" a čtení zakázal
+      }
+    };
+
+    // Překryv v ::before / ::after. Pseudoprvky nejsou v elementsFromPoint,
+    // ale na webu to jsou vždy vrstvy přes celý prvek (`inset: 0`), takže
+    // se počítají s jeho krabicí.
+    const pseudoPrekryv = (prvek, typ, krabice, x, y) => {
+      const styl = getComputedStyle(prvek, typ);
+      if (!styl || styl.content === "none" || styl.display === "none") return null;
+      return pozadiStylu(styl, krabice, x, y);
+    };
+
+    const barvaPozadi = () => {
+      const r = hamburger.getBoundingClientRect();
+      if (!r.width) return null; // na desktopu je tlačítko skryté
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      // Prohlížeč vrátí prvek dvakrát, když se trefíme i do jeho
+      // pseudoprvku. Necháváme první (vrchní) výskyt, aby se překryv
+      // složil až nad obsahem a nepřičetl se dvakrát.
+      const videne = [];
+      const vrstvy = [];
+      document.elementsFromPoint(x, y).forEach((e) => {
+        if (e === hamburger || hamburger.contains(e)) return;
+        if (videne.indexOf(e) > -1) return;
+        videne.push(e);
+        vrstvy.push(e);
+      });
+      let barva = null;
+      for (let i = vrstvy.length - 1; i >= 0; i--) {   // odspodu nahoru
+        const prvek = vrstvy[i];
+        const krabice = prvek.getBoundingClientRect();
+        barva = slozit(barva, pozadiStylu(getComputedStyle(prvek), krabice, x, y));
+        if (prvek.tagName === "IMG") barva = slozit(barva, vzorekObrazku(prvek, x, y));
+        barva = slozit(barva, pseudoPrekryv(prvek, "::before", krabice, x, y));
+        barva = slozit(barva, pseudoPrekryv(prvek, "::after", krabice, x, y));
+      }
+      return barva;
+    };
+
+    let naSvetlem = false;
+    const prebarvi = () => {
+      const barva = barvaPozadi();
+      if (!barva) return; // nezměřeno — necháme poslední stav
+      const jas = jasRGB(barva);
+      // Naměřená hodnota je vidět v devtools, ať jde rozhodnutí ověřit.
+      // Zapisuje se jen při změně, ať se zbytečně nepřepočítávají styly.
+      const zapis = jas.toFixed(3);
+      if (hamburger.dataset.jas !== zapis) hamburger.dataset.jas = zapis;
+      const proTmave = kontrast(jas, JAS_TMAVE);
+      const proSvetle = kontrast(jas, JAS_SVETLE);
+      // Hranice s vůlí: přepne se, až když je druhá varianta o desetinu
+      // lepší. Bez toho by čárky na rozhraní sekcí blikaly.
+      const chce = naSvetlem
+        ? proTmave * 1.1 > proSvetle
+        : proTmave > proSvetle * 1.1;
+      if (chce === naSvetlem) return;
+      naSvetlem = chce;
+      hamburger.classList.toggle("na-svetlem", chce);
+    };
+
+    let ceka = false;
+    const naplanuj = () => {
+      if (ceka) return;
+      ceka = true;
+      requestAnimationFrame(() => { ceka = false; prebarvi(); });
+    };
+
+    window.addEventListener("scroll", naplanuj, { passive: true });
+    window.addEventListener("resize", naplanuj);
+    window.addEventListener("orientationchange", naplanuj);
+    window.addEventListener("load", naplanuj);
+    // Fotky se načítají líně; po doběhnutí se změří znovu
+    document.querySelectorAll("img").forEach((obr) => {
+      if (!obr.complete) obr.addEventListener("load", naplanuj, { once: true });
+    });
+    hamburger.addEventListener("click", () => setTimeout(naplanuj, 420));
+    prebarvi();
+  }
+
+  // ------------------------------------------------------------
   // 6. Zvýraznění aktivní kapitoly v desktopové navigaci
   // ------------------------------------------------------------
   if ("IntersectionObserver" in window) {
