@@ -13,12 +13,12 @@
      má kontrast jen 2,45 : 1, takže nikdy nenese text ani ovládací
      prvek — ty jsou v olivové (6,07 : 1). */
   --color-paper: #F8F9F5;       /* dominantní pozadí */
-  --color-sage: #E8ECDF;        /* odlišené pásy sekcí */
-  --color-line: #CFD6C3;        /* zelenošedé vlásové linky; na fotkách světlý tón */
-  --color-green: #9AA587;       /* akcent pozvánky — jen grafika, & a linky */
-  --color-olive: #566348;       /* odkazy, tlačítka, drobné nadpisy */
+  --color-sage: #E7E8DD;        /* odlišené pásy sekcí — šalvějová */
+  --color-line: #D1D3C5;        /* šalvějové vlásové linky; na fotkách světlý tón */
+  --color-green: #9CA48B;       /* akcent pozvánky — jen grafika a linky */
+  --color-olive: #57614A;       /* odkazy, tlačítka, drobné nadpisy */
   --color-text: #292C27;        /* hlavní text */
-  --color-text-soft: #5F6A55;   /* vedlejší text (5,4 : 1 na papíru) */
+  --color-text-soft: #606857;   /* vedlejší text */
   --color-on-dark: #F8F9F5;     /* text na tmavém podkladu a fotkách */
   --color-deep: #20231E;        /* nejtmavší tón — overlay finále a lupy */
 
@@ -58,6 +58,15 @@ html {
      Fallback pro prohlížeče bez podpory řeší script.js (padding-right
      na body, jen pokud tato vlastnost není podporovaná). */
   scrollbar-gutter: stable;
+}
+
+/* Šedý obdélník, kterým mobilní prohlížeče blikají při klepnutí, do
+   klidného webu nepatří — zpětnou vazbu nesou vlastní stavy prvků. */
+a,
+button,
+summary,
+.zvetsit {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -310,7 +319,7 @@ body.intro-running .scroll-cue {
   background: rgba(248, 249, 245, .88);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(207, 214, 195, .7);
+  border: 1px solid rgba(209, 211, 197, .7);
   opacity: 0;
   transform: translateY(10px) scale(.985);
   pointer-events: none;
@@ -391,7 +400,10 @@ body.intro-running .scroll-cue {
   }
 }
 
-@media (min-width: 700px) {
+/* Odkazy se ukážou přesně tam, kde mizí hamburger — níž se o navigaci
+   stará rozbalovací menu. Všech pět kapitol se do řádku vejde se
+   značnou rezervou, takže se nikde nemačkají ani nezmenšují. */
+@media (min-width: 1000px) {
   .nav-links {
     display: flex;
     gap: var(--space-m);
@@ -432,6 +444,13 @@ body.intro-running .scroll-cue {
   }
 }
 
+
+/* Pozn.: svislé ohnisko mobilní fotky nemá na žádném telefonu vliv —
+   snímek má poměr 0,645, kdežto displeje 0,46–0,56, takže `cover`
+   škáluje podle výšky a ořezává vodorovně. Posouvat `object-position`
+   na ose Y by tu byl mrtvý kód. Na nízkých displejích proto dává
+   obličejům místo samotná sestava textu (viz padding .hero-text). */
+
 /* Mobil: nahoře tenký pruh pod navigací; dolní polovina se plynule
    rozpouští do béžové — text je tmavý na světlém a hero přeteče
    přímo do béžového prologu (jeden souvislý tón, žádná černá) */
@@ -440,12 +459,17 @@ body.intro-running .scroll-cue {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(41, 44, 39, .25) 0, rgba(41, 44, 39, 0) 110px),
+    /* Rozpouštění do další sekce je první v pořadí, tedy úplně nahoře:
+       na spodní hraně tak skutečně končí přesně barvou prologu a nic
+       pod ním ji už nepřebarvuje. */
     linear-gradient(180deg,
-      rgba(232, 236, 223, 0) 44%,
-      rgba(232, 236, 223, .55) 62%,
-      rgba(232, 236, 223, .88) 80%,
-      var(--color-sage) 100%);
+      rgba(231, 232, 221, 0) 42%,
+      rgba(231, 232, 221, .28) 56%,
+      rgba(231, 232, 221, .58) 68%,
+      rgba(231, 232, 221, .84) 80%,
+      rgba(231, 232, 221, .96) 92%,
+      var(--color-sage) 100%),
+    linear-gradient(180deg, rgba(41, 44, 39, .25) 0, rgba(41, 44, 39, 0) 110px);
 }
 
 .hero-text {
@@ -458,7 +482,10 @@ body.intro-running .scroll-cue {
   justify-content: flex-end; /* mobil: text kotvený dole nad gradientem */
   align-items: flex-start;
   text-align: left;
-  padding: 0 var(--space-m) 12vh;
+  /* Spodní odsazení drží slogan blízko dolní hrany, ale pořád nad
+     rozpouštěním do prologu. `min()` ho na nízkých displejích utne na
+     pevných 40 px, aby se sestava nenatlačila do další sekce. */
+  padding: 0 var(--space-m) min(7vh, 52px);
 }
 
 /* Mobil: text tmavý na světlém rozpuštění do béžové */
@@ -467,8 +494,9 @@ body.intro-running .scroll-cue {
   color: var(--color-text);
 }
 
+/* Mobil: `&` má shodný odstín s místem konání pod jmény. */
 .hero-text .amp {
-  color: var(--color-green);
+  color: var(--color-text-soft);
 }
 
 .hero-text .place {
@@ -507,7 +535,9 @@ h1 {
   font-size: clamp(19px, 5.1vw, 22px);
   line-height: 1.35;
   color: var(--color-text-soft);
-  margin: calc(var(--space-m) + var(--space-xs)) 0 0;
+  /* Odstup roste s výškou displeje — na vysokém telefonu slogan
+     zřetelně odsedne od data a místa, na nízkém se sestava nenatlačí. */
+  margin: clamp(var(--space-m), 6vh, 72px) 0 0;
   max-width: 22ch; /* mobil: smí se zalomit do dvou řádků */
 }
 
@@ -546,17 +576,27 @@ h1 {
      3. spodních ~180 px se rozpouští do krémové další sekce. */
   .hero-photo::after {
     background:
+      /* POŘADÍ JE TU PODSTATNÉ: rozpouštění do další sekce musí být
+         první, tedy úplně nahoře. Když bylo poslední, přebarvoval mu
+         stín vlevo i spodní hranu a vlevo tak vznikal mléčný pruh
+         zakončený tvrdou vodorovnou hranou — vpravo, kam stín
+         nedosáhl, přechod vypadal správně. Nahoře naopak rozpouštění
+         ničemu nevadí, protože v horních dvou třetinách je průhledné.
+         Přechod je zároveň delší (230 px) a má víc mezistupňů, aby byl
+         měkký po celé šířce; dole končí přesně barvou prologu. */
+      linear-gradient(180deg,
+        rgba(231, 232, 221, 0) calc(100% - 230px),
+        rgba(231, 232, 221, .16) calc(100% - 175px),
+        rgba(231, 232, 221, .42) calc(100% - 120px),
+        rgba(231, 232, 221, .72) calc(100% - 65px),
+        rgba(231, 232, 221, .92) calc(100% - 22px),
+        var(--color-sage) 100%),
       linear-gradient(180deg, rgba(41, 44, 39, .30) 0, rgba(41, 44, 39, 0) 140px),
       linear-gradient(90deg,
         rgba(41, 44, 39, .46) 0%,
         rgba(41, 44, 39, .34) 20%,
         rgba(41, 44, 39, .16) 38%,
-        rgba(41, 44, 39, 0) 56%),
-      linear-gradient(180deg,
-        rgba(232, 236, 223, 0) calc(100% - 150px),
-        rgba(232, 236, 223, .25) calc(100% - 60px),
-        rgba(232, 236, 223, .78) calc(100% - 12px),
-        var(--color-sage) 100%);
+        rgba(41, 44, 39, 0) 56%);
   }
 
   /* Desktop: stejný caps popisek jako mobil, jen o chlup větší —
@@ -595,12 +635,9 @@ h1 {
     color: var(--color-on-dark);
   }
 
-  /* `&` si i na desktopu drží zelený akcent pozvánky — je to velký
-     grafický prvek na ztmavené fotce, ne text nesoucí informaci. */
-  .hero-text .amp {
-    color: var(--color-green);
-  }
-
+  /* `&` i místo konání drží shodný odstín — na fotce tvoří jeden
+     tichý doplněk pod jmény. */
+  .hero-text .amp,
   .hero-text .place {
     color: var(--color-line);
   }
@@ -633,7 +670,24 @@ h1 {
   color: var(--color-text-soft);
 }
 
-/* Světle zelený pás přes celou šířku — rytmus stránky.
+/* Na šalvějovém pásu by papírově světlá linka zanikla — o stupeň
+   ztmavíme, aby kapitoly držely stejný tah jako na bílé. */
+.band h2.chapter-label::after,
+.band .chapter-label.na-stred::before,
+.band h3.sub-label::after,
+.band .faq-item,
+.band .galerie-hint,
+.band .radek {
+  border-color: var(--color-green);
+}
+
+.band h2.chapter-label::after,
+.band .chapter-label.na-stred::before,
+.band h3.sub-label::after {
+  background: var(--color-green);
+}
+
+/* Světle šalvějový pás přes celou šířku — rytmus stránky.
    Nosí ho prolog („Bereme se…") a kapitola Místo; Dary, Co na sebe
    a Dobré vědět zůstávají na papírovém podkladu a odlišuje je
    prostor a vlásové linky kapitol. */
@@ -1297,11 +1351,12 @@ h3.sub-label::after {
   align-items: center;
   justify-content: center;
   /* Mléčné sklo: obsah stránky pod ním se rozmaže a zesvětlí. */
-  background: rgba(248, 249, 245, .52);
-  -webkit-backdrop-filter: blur(20px) saturate(.8) brightness(1.08);
-  backdrop-filter: blur(20px) saturate(.8) brightness(1.08);
+  /* Jemnější sklo než dřív: méně rozmazání i zesvětlení, ať je pod ním
+     stránka jen potlačená, ne vybělená. */
+  background: rgba(248, 249, 245, .34);
+  -webkit-backdrop-filter: blur(11px) saturate(.9) brightness(1.03);
+  backdrop-filter: blur(11px) saturate(.9) brightness(1.03);
   opacity: 0;
-  transition: opacity .3s ease;
   cursor: zoom-out;
 }
 
@@ -1317,7 +1372,7 @@ h3.sub-label::after {
    ať je stránka pod ní potlačená stejně. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .barva-lupa {
-    background: rgba(248, 249, 245, .94);
+    background: rgba(248, 249, 245, .9);
   }
 }
 
@@ -1329,56 +1384,18 @@ h3.sub-label::after {
 .barva-lupa-vzorek {
   width: min(92vw, 540px);
   height: min(58vh, 540px);
+  /* Svislé posazení počítá skript podle toho, kde na displeji leží
+     zvolený puntík: barva se usadí tak, aby z něj rostla zhruba ze
+     dvou třetin nahoru a z jedné dolů. Záporná hodnota posune dolů. */
+  margin-bottom: var(--posun-y, 0px);
   background: var(--c);
   border-radius: var(--r);
   transform-origin: center;
-  /* Křivka mírně přestřelí a teprve pak se usadí — barva tím působí
-     jako tekutina, která se rozlije a dovlní, ne jako zvětšenina. */
-  transition: transform .52s cubic-bezier(.34, 1.12, .44, 1),
-              border-radius .52s cubic-bezier(.34, 1.12, .44, 1);
   will-change: transform, border-radius;
 }
 
-.barva-lupa-zavrit {
-  position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + var(--space-s));
-  right: calc(env(safe-area-inset-right, 0px) + var(--space-s));
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-body);
-  font-size: 30px;
-  line-height: 1;
-  color: var(--color-text);
-  background: none;
-  border: none;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity .3s ease .12s;
-}
-
-.barva-lupa.je-videt .barva-lupa-zavrit {
-  opacity: .55;
-}
-
-.barva-lupa .barva-lupa-zavrit:hover {
-  opacity: 1;
-}
-
-.barva-lupa-zavrit:focus-visible {
-  outline: 1px solid var(--color-olive);
-  outline-offset: 2px;
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .barva-lupa,
-  .barva-lupa-vzorek,
-  .barva-lupa-zavrit {
-    transition: none;
-  }
+.barva-lupa:focus {
+  outline: none;
 }
 
 /* Název barvy zůstává jen pro odečítače obrazovky — vizuálně jsou
@@ -1419,6 +1436,9 @@ h3.sub-label::after {
 
 .faq-item summary {
   cursor: pointer;
+  /* Bez tohoto blikne při klepnutí přes celou otázku šedý obdélník —
+     to je ten „rámeček", co se na mobilu objevoval. */
+  -webkit-tap-highlight-color: transparent;
   font-family: var(--font-heading); /* otázky serifem — hlas hosta */
   font-size: 20px;
   font-weight: 400;
@@ -1432,6 +1452,17 @@ h3.sub-label::after {
 
 .faq-item summary::-webkit-details-marker {
   display: none;
+}
+
+/* Obrys patří klávesnici, ne prstu — `:focus-visible` ho při klepnutí
+   nevyvolá, zatímco `:focus` by v Safari blikl přes celou otázku. */
+.faq-item summary:focus {
+  outline: none;
+}
+
+.faq-item summary:focus-visible {
+  outline: 1px solid var(--color-olive);
+  outline-offset: 3px;
 }
 
 .faq-item summary::after {
@@ -1458,8 +1489,12 @@ body.faq-animovane .faq-item.je-otevrena summary::after {
   transform: rotate(45deg);
 }
 
-.faq-item summary:hover {
-  color: var(--color-olive);
+/* Zvýraznění při najetí patří jen myši. Na dotyku `:hover` po klepnutí
+   uvízne a otázka by zůstala olivová. */
+@media (hover: hover) {
+  .faq-item summary:hover {
+    color: var(--color-olive);
+  }
 }
 
 .faq-item p {
