@@ -917,13 +917,6 @@ h2.chapter-label::after {
   white-space: nowrap;
 }
 
-/* Předpona „od" — drobnější, aby nekonkurovala času, ale v tmavším
-   odstínu akcentu kvůli kontrastu v menším stupni. */
-.menu-dne .time-predpona {
-  font-size: .64em;
-  color: var(--color-olive);
-}
-
 .menu-dne .event {
   font-size: 14px;
   font-weight: 400;
