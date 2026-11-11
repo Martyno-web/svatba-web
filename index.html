@@ -319,15 +319,18 @@
 
     <!-- Druhý předěl: stejný princip jako ten u vody. Fotka je ve zdroji
          vyšší, než kolik se do pásu vejde, a script.js při průchodu sekce
-         posouvá výřez odspodu nahoru. Soubor je oříznutý tak, že jeho
-         horní hrana je kousek nad temeny hlav — odkryje se tedy přesně
-         rozsah od spodní hrany fotky po hlavy a nic nad nimi. -->
+         posouvá výřez odspodu nahoru — odkryje se postupně strniště,
+         pak my dva a nakonec kopce s oblohou. -->
     <div class="predel">
       <picture>
-        <!-- Mobil dostane menší soubor, desktop plný — prohlížeč stáhne
-             vždy jen jeden z nich (stejně jako u hero a prvního předělu) -->
-        <source media="(max-width: 999px)" srcset="images/predel-karikatura-mobil.webp">
-        <img src="images/predel-karikatura.webp" alt="Martin a Michaela s kresbou obou na papírovém tácku" loading="lazy">
+        <!-- Mobil dostane užší výřez okolo nás dvou, a to z důvodu, který
+             není na první pohled vidět: `object-fit: cover` škáluje podle
+             toho rozměru, který se nevejde. Širokoúhlá fotka je v úzkém
+             pásu telefonu širší než vyšší, takže by se přizpůsobila výšce,
+             byla by vidět celá a nebylo by co posouvat — efekt by zmizel.
+             Výřez užší, než je poměr pásu, tu rezervu na výšku vrací. -->
+        <source media="(max-width: 999px)" srcset="images/predel-na-louce-mobil.webp">
+        <img src="images/predel-na-louce.webp" alt="Martin a Michaela na posečené louce nad údolím" loading="lazy">
       </picture>
     </div>
 
