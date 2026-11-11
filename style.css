@@ -561,16 +561,48 @@ h1 {
     height: 100svh; /* fotka přes celou obrazovku */
   }
 
-  /* Jen rozdíly proti mobilu: užší blok, svislé centrování, levý okraj.
-     Levé odsazení je jediný zdroj pravdy — stejnou hodnotu používá
-     i odkotvená věta dole, takže obě osy sedí přesně na sobě. */
+  /* Jen rozdíly proti mobilu: užší blok, levý okraj a rozvržení výšky.
+     Levé odsazení je jediný zdroj pravdy — stejnou hodnotu má i věta
+     dole, takže obě osy sedí přesně na sobě.
+
+     Výšku řeší tok, ne absolutní souřadnice. Věta je pořád posledním
+     prvkem sestavy a dolů ji tlačí pružná mezera (`margin-top: auto`
+     níž); druhá taková mezera je nad jmény. Volné místo se mezi ně
+     rozdělí napůl, takže:
+       · na vysokém okně sedí sestava i věta tam, kde seděly dosud,
+       · při zkracování okna se obě mezery plynule smrskávají,
+       · když volné místo dojde, zůstane mezi místem konání a větou
+         jen `padding-top` věty — tedy pevný estetický odstup.
+     Věta se proto nemůže na jména natlačit, ať je okno jakkoli nízké
+     nebo se věta zalomí do víc řádků.
+
+     `--hero-pas` je pruh nad spodní hranou, do kterého věta nesmí: tam
+     se fotka rozpouští do další sekce a světlý text by na ní zmizel.
+     Spodní odsazení ho rezervuje, takže věta končí přesně nad ním. */
   .hero-text {
+    --hero-pas: clamp(180px, 22vh, 240px);
+    /* Hrubá výška sestavy pod horní mezerou (jména + mezera + věta).
+       Slouží jen k tomu, aby horní mezera začala ustupovat včas; kdyby
+       se typografie posunula, posune se jen ten okamžik — překrýt se
+       texty nemůžou tak jako tak, o to se stará tok. */
+    --hero-sestava: 389px;
     max-width: 640px;
-    justify-content: center;
-    /* Spodní odsazení rezervuje pás pro odkotvenou větu, takže se
-       informační blok středuje nad ní. Bez toho by se u nízkých oken
-       (1366 × 768) obojí k sobě přitisklo. */
-    padding: var(--space-m) var(--space-m) 15vh var(--hero-odsazeni);
+    justify-content: flex-start;
+    padding:
+      clamp(var(--space-m), calc(100vh - var(--hero-pas) - var(--hero-sestava)), 176px)
+      var(--space-m)
+      var(--hero-pas)
+      var(--hero-odsazeni);
+    /* Stejná jednotka jako výška .hero o řádek výš — na iPadu na šířku
+       se `vh` a `svh` liší a sestava by seděla o kus výš. Prohlížeče
+       bez `svh` tenhle řádek přeskočí a zůstane jim varianta nad ním. */
+    padding-top: clamp(var(--space-m), calc(100svh - var(--hero-pas) - var(--hero-sestava)), 176px);
+  }
+
+  /* Pružná mezera nad jmény. Spolu s mezerou nad větou drží sestavu
+     v té výšce, kde byla, dokud je na ni místo. */
+  .hero-text h1 {
+    margin-top: auto;
   }
 
   .hero-photo img {
@@ -619,21 +651,26 @@ h1 {
     font-size: 16px;
   }
 
-  /* Desktop: věta se odkotví z toku a položí se ke spodnímu okraji
-     fotografie vlevo — samostatná poznámka ke snímku, jasně oddělená
-     od jmen i od informačního bloku uprostřed.
-     `left` je shodné s levým odsazením .hero-text, takže věta začíná
-     přesně pod levým okrajem jmen (obě hodnoty jsou v jedné jednotce
-     od stejného počátku — levé hrany hero).
-     `bottom` drží větu nad světlým rozpouštěním do další sekce, které
-     začíná 150 px nad spodním okrajem; dole proto zůstává jen tmavší
-     plocha zdi. Vodorovně končí hluboko před postavami i před
-     středovým indikátorem scrollování. */
+  /* Desktop: věta leží u spodního okraje fotografie vlevo — samostatná
+     poznámka ke snímku, jasně oddělená od jmen i od informačního bloku.
+     Zůstává ale v toku: dolů ji tlačí pružná mezera, takže ji sestava
+     nad ní odsune, místo aby se přes ni položila.
+
+     Dřív tu bylo `position: absolute` s pevným `bottom`. Věta tím o
+     zbytku sestavy nevěděla: při zkracování okna se informační blok
+     snášel dolů, zatímco věta držela odstup od spodní hrany, a mezera
+     mezi nimi se tenčila — 255 px při výšce okna 1200, 66 px při 768
+     a od zhruba 660 px už se texty překrývaly. Totéž se stávalo, když
+     se věta zalomila do dalšího řádku: rostla vzhůru do data a místa.
+
+     Levý okraj drží stejné odsazení jako celá sestava, takže věta
+     začíná přesně pod levým okrajem jmen.
+
+     `padding-top` je nejmenší přípustný odstup od místa konání; na
+     prostorném okně se k němu přičte polovina volného místa. */
   .hero-veta {
-    position: absolute;
-    left: var(--hero-odsazeni);
-    bottom: clamp(180px, 22vh, 240px);
-    margin: 0;
+    margin: auto 0 0;
+    padding-top: clamp(28px, 5vh, 48px);
     font-size: 24px;
     max-width: 30ch;
     color: var(--color-line);
