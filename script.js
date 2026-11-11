@@ -359,15 +359,21 @@ document.addEventListener("DOMContentLoaded", () => {
   //     nevypadly z rámu — viz rozměry ořezů v images/.
   // ------------------------------------------------------------
   if (!bezPohybu) {
-    const predel = document.querySelector(".predel");
-    const predelFoto = predel && predel.querySelector("img");
-    if (predelFoto) {
+    // Předělů je na stránce víc (u vody mezi Programem a Místem,
+    // s táckem mezi Dary a Co na sebe) a každý si drží vlastní výřez,
+    // proto se prochází všechny, ne jen první.
+    const predely = [];
+    document.querySelectorAll(".predel").forEach((pas) => {
+      const foto = pas.querySelector("img");
+      if (foto) predely.push({ pas: pas, foto: foto });
+    });
+
+    if (predely.length) {
       let cekaPredel = false;
 
-      const prekresliPredel = () => {
-        cekaPredel = false;
+      const prekresliJeden = (polozka) => {
         const vyskaOkna = window.innerHeight;
-        const r = predel.getBoundingClientRect();
+        const r = polozka.pas.getBoundingClientRect();
 
         // Celý rozsah se rozkládá do CELÉHO průchodu sekce obrazovkou:
         //   r.top =  vyskaOkna  → pás se právě objevuje u spodního okraje
@@ -383,8 +389,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // aby na hranicích viditelnosti nevznikl skok z výchozí hodnoty.
         const prusvit = Math.max(1, vyskaOkna + r.height);
         const prubeh = Math.min(1, Math.max(0, (vyskaOkna - r.top) / prusvit));
-        predelFoto.style.objectPosition =
+        polozka.foto.style.objectPosition =
           "50% " + ((1 - prubeh) * 100).toFixed(2) + "%";
+      };
+
+      const prekresliPredel = () => {
+        cekaPredel = false;
+        predely.forEach(prekresliJeden);
       };
 
       window.addEventListener("scroll", () => {
