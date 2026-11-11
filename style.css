@@ -518,6 +518,39 @@ h1 {
   font-size: clamp(48px, 15vw, 93px);
 }
 
+/* Telefon otočený na šířku. Okno je nízké (320–430 px) a jména se do něj
+   při šířce pod 760 px nevejdou: zalomí se na dva řádky po 93 px a první
+   řádek odřízne horní hrana okna — naměřeno −69 px na iPhonu SE,
+   −50 px na Androidu 360 × 740 a −36 px na iPhonu SE 2/3 a 8.
+
+   Druhá mez proto drží jména na jednom řádku, což je na široké ploše
+   stejně přirozenější sazba. Text „Martin & Michaela" je 7,43 em široký;
+   dělitel 7,6 nechává rezervu na odchylky vykreslení písma a 48 px je
+   vodorovné odsazení .hero-text (2 × --space-m). Od šířky 760 px vychází
+   mez nad strop 93 px, takže se nemění vůbec nic — iPhone 12 až 15 Pro
+   Max i Pixel na šířku zůstávají přesně jak byly.
+
+   Třetí mez je pojistka pro okna nižší než 302 px, kam se nevejde ani
+   jeden řádek. Na výšku se nic z toho neuplatní, tam se jména mají
+   zalomit na dva řádky — proto `orientation: landscape`.
+
+   Všechny tři meze jsou spojité funkce rozměru okna, takže se velikost
+   při otáčení i změně okna mění plynule, bez skoku. */
+@media (orientation: landscape) {
+  h1 {
+    font-size: min(
+      clamp(48px, 15vw, 93px),
+      calc((100vw - 48px) / 7.6),
+      calc((100vh - 190px) / 1.2));
+    /* Stejná jednotka jako výška .hero; prohlížeče bez `svh` zůstanou
+       u řádku nad tímto. */
+    font-size: min(
+      clamp(48px, 15vw, 93px),
+      calc((100vw - 48px) / 7.6),
+      calc((100svh - 190px) / 1.2));
+  }
+}
+
 .date {
   /* Mobil: datum jako caps popisek systému (na fotce) */
   font-size: 13px;
