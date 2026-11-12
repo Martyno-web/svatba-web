@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Svatební web — Martin & Michaela
+   Svatební web — Michaela & Martin
    Světlý béžový směr, hero varianta B, mobile-first
    ========================================================================== */
 
@@ -524,7 +524,8 @@ h1 {
    −50 px na Androidu 360 × 740 a −36 px na iPhonu SE 2/3 a 8.
 
    Druhá mez proto drží jména na jednom řádku, což je na široké ploše
-   stejně přirozenější sazba. Text „Martin & Michaela" je 7,43 em široký;
+   stejně přirozenější sazba. Text „Michaela & Martin" je 7,49 em široký
+   (stejně jako dřívější pořadí „Martin & Michaela" — jde o tytéž znaky);
    dělitel 7,6 nechává rezervu na odchylky vykreslení písma a 48 px je
    vodorovné odsazení .hero-text (2 × --space-m). Od šířky 760 px vychází
    mez nad strop 93 px, takže se nemění vůbec nic — iPhone 12 až 15 Pro
