@@ -41,7 +41,7 @@ Pokud existuje více řešení, zvol to, které je nejvhodnější pro výuku za
 
 ## Základní informace
 
-- Jména: Martin & Michaela
+- Jména: Michaela & Martin
 - Datum svatby: 24. 4. 2027
 - Místo svatby: Jitkovský mlýn, Chotěboř
 - Čas obřadu: 13:00
