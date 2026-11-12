@@ -676,26 +676,26 @@ document.addEventListener("DOMContentLoaded", () => {
     // první tři v násobcích `sirka`, zpoždění jako podíl délky animace.
     // Pořadí odpovídá pořadí kaněk v paletě.
     const LALOKY = [
-      // čokoládová
-      [[ 0.00,  0.00, 0.62, 0.00], [-0.26, -0.48, 0.68, 0.09], [ 0.30, -0.42, 0.58, 0.17],
-       [-0.02, -0.96, 0.70, 0.30], [ 0.34, -1.22, 0.50, 0.46], [-0.38, -1.18, 0.54, 0.55],
-       [ 0.04, -1.50, 0.42, 0.68]],
-      // šedobéžová
-      [[ 0.00,  0.00, 0.64, 0.00], [ 0.28, -0.46, 0.66, 0.08], [-0.30, -0.40, 0.56, 0.18],
-       [ 0.06, -0.92, 0.72, 0.29], [-0.36, -1.20, 0.52, 0.45], [ 0.34, -1.24, 0.50, 0.56],
-       [-0.02, -1.54, 0.40, 0.69]],
-      // lesní zelená
-      [[ 0.00,  0.00, 0.60, 0.00], [-0.22, -0.52, 0.64, 0.10], [ 0.32, -0.40, 0.62, 0.15],
-       [ 0.02, -0.98, 0.68, 0.31], [-0.34, -1.14, 0.56, 0.44], [ 0.30, -1.28, 0.48, 0.57],
-       [-0.06, -1.56, 0.44, 0.70]],
-      // kobaltová
-      [[ 0.00,  0.00, 0.66, 0.00], [ 0.24, -0.50, 0.62, 0.09], [-0.32, -0.44, 0.60, 0.16],
-       [-0.04, -0.94, 0.70, 0.30], [ 0.36, -1.18, 0.52, 0.47], [-0.30, -1.26, 0.50, 0.54],
-       [ 0.06, -1.52, 0.42, 0.68]],
+      // čokoládová — pravý bok níž, levý výš
+      [[ 0.00,  0.00, 0.68, 0.00], [ 0.20, -0.42, 0.70, 0.05], [-0.22, -0.26, 0.64, 0.12],
+       [ 0.02, -0.84, 0.78, 0.19], [ 0.20, -1.10, 0.62, 0.28], [-0.18, -1.30, 0.60, 0.38],
+       [ 0.02, -1.54, 0.54, 0.46]],
+      // šedobéžová — levý bok níž
+      [[ 0.00,  0.00, 0.66, 0.00], [-0.20, -0.34, 0.68, 0.06], [ 0.22, -0.50, 0.66, 0.12],
+       [-0.02, -0.90, 0.78, 0.20], [ 0.22, -1.16, 0.62, 0.29], [-0.18, -1.34, 0.58, 0.37],
+       [ 0.00, -1.58, 0.52, 0.45]],
+      // lesní zelená — boky o 0,16 výškově posunuté proti sobě
+      [[ 0.00,  0.00, 0.66, 0.00], [-0.18, -0.46, 0.70, 0.05], [ 0.22, -0.30, 0.66, 0.11],
+       [ 0.00, -0.86, 0.78, 0.19], [-0.20, -1.14, 0.64, 0.29], [ 0.18, -1.32, 0.60, 0.37],
+       [ 0.00, -1.56, 0.54, 0.46]],
+      // kobaltová — zrcadlově proti zelené
+      [[ 0.00,  0.00, 0.68, 0.00], [ 0.18, -0.36, 0.68, 0.05], [-0.22, -0.52, 0.66, 0.12],
+       [ 0.00, -0.92, 0.78, 0.20], [-0.20, -1.18, 0.62, 0.29], [ 0.18, -1.30, 0.60, 0.38],
+       [-0.02, -1.54, 0.54, 0.46]],
       // modrošedá
-      [[ 0.00,  0.00, 0.62, 0.00], [-0.28, -0.44, 0.60, 0.08], [ 0.26, -0.52, 0.66, 0.17],
-       [ 0.04, -1.00, 0.68, 0.30], [-0.32, -1.22, 0.54, 0.46], [ 0.32, -1.20, 0.50, 0.55],
-       [-0.04, -1.50, 0.44, 0.69]]
+      [[ 0.00,  0.00, 0.66, 0.00], [-0.22, -0.44, 0.70, 0.06], [ 0.20, -0.28, 0.64, 0.11],
+       [ 0.02, -0.88, 0.78, 0.19], [ 0.20, -1.12, 0.62, 0.28], [-0.18, -1.32, 0.60, 0.37],
+       [ 0.00, -1.56, 0.54, 0.45]]
     ];
 
     const mezi = (v, a, b) => Math.min(Math.max(v, a), b);
@@ -711,8 +711,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Jak daleko lalok postoupil. Spodní se rozjede hned, horní později
     // — barva tím viditelně stoupá.
+    //
+    // Každý lalok ale doroste nejpozději v DOKONCENO, tedy ještě před
+    // koncem animace. Dřív se rozsah odvozoval od zpoždění a nejhořejším
+    // lalokům vycházel konec na 1,04 a 1,11: v posledních snímcích se
+    // tak nad už hotovou plochou ještě nafukoval další hrb. Teď se
+    // zbytek času rozdělí tak, že pozdní laloky mají kratší, ale stále
+    // dost dlouhou dráhu, a všechny se díky mocnině 2,4 doklouzávají
+    // do klidu s nulovou rychlostí.
+    const DOKONCENO = 0.97;
     const postup = (zpozdeni, cas) => {
-      const rozsah = 0.42 + 0.34 * (1 - mezi(zpozdeni / 0.7, 0, 1));
+      const rozsah = Math.max(0.3, DOKONCENO - zpozdeni);
       const mistni = mezi((cas - zpozdeni) / rozsah, 0, 1);
       if (mistni <= 0) return 0;
       return 1 - Math.pow(1 - mistni, 2.4);
@@ -733,8 +742,14 @@ document.addEventListener("DOMContentLoaded", () => {
         nahoru = Math.max(nahoru, L[m][2] - L[m][1]);
         nejvyssi = Math.max(nejvyssi, -L[m][1]);
       }
+      // Vodorovný odstup od hran okna. Laloky se k hranám nepřiblíží víc
+      // než na OKRAJ; slévání styků pak obrys o kousek (nanejvýš čtvrtinu
+      // slitku) vytlačí ven, takže volného místa zbyde kolem 20 px.
+      // Rezerva 2×OKRAJ navíc ubírá na celkové šířce, aby kaňka na mobilu
+      // méně překrývala text.
+      const OKRAJ = 28;
       let sirka = Math.min(
-        (okno.w - 24) / (doleva + doprava),
+        (okno.w - 2 * OKRAJ - 32) / (doleva + doprava),
         (dno - 8) / (L[0][2] + nahoru)
       );
       sirka = Math.max(sirka, puntik.r * 1.4);
@@ -754,18 +769,31 @@ document.addEventListener("DOMContentLoaded", () => {
       // navzájem ovlivňují.
       const g0 = postup(L[0][3], cas);
       let r0 = Math.max(puntik.r, sirka * L[0][2] * g0);
-      const presak = Math.min(sirka * 0.06 * g0, puntik.r * 0.7);
+      let presak = Math.min(sirka * 0.06 * g0, puntik.r * 0.7);
       let x0 = puntik.x;
       for (let k = 0; k < 3; k++) {
         const zapas = r0 - puntik.r;
         const posunMax = zapas > 0 ? Math.sqrt(Math.max(0, presak * (2 * zapas - presak))) : 0;
         x0 = puntik.x + mezi(osa(0, g0) - puntik.x, -posunMax, posunMax);
-        const mozne = Math.max(puntik.r, Math.min(x0 - 12, okno.w - 12 - x0));
+        const mozne = Math.max(puntik.r, Math.min(x0 - OKRAJ, okno.w - OKRAJ - x0));
         if (r0 > mozne) r0 = mozne; else break;
       }
+      // Dopočet po zúžení poloměru: přesah nesmí být větší než vůle mezi
+      // lalokem a puntíkem, jinak by puntík vyčníval.
+      presak = Math.min(presak, Math.max(0, r0 - puntik.r));
+      const zapas0 = r0 - puntik.r;
+      const posun0 = zapas0 > 0 ? Math.sqrt(Math.max(0, presak * (2 * zapas0 - presak))) : 0;
+      x0 = puntik.x + mezi(x0 - puntik.x, -posun0, posun0);
       const y0 = dno + presak - r0;
 
-      const kruhy = [{ x: puntik.x, y: puntik.y, r: puntik.r }];  // vždy i puntík sám
+      // Puntík se do sjednocení přidává jen tehdy, když ho spodní lalok
+      // celý nepokrývá. Na začátku a na konci animace lalok puntíku přesně
+      // odpovídá a dvě totožné kružnice by se slily do o čtvrtinu slitku
+      // většího kruhu — kaňka by v puntíku nedosedla, ale lehce odskočila.
+      const kruhy = [];
+      if (Math.hypot(x0 - puntik.x, y0 - puntik.y) + puntik.r > r0 + 0.01) {
+        kruhy.push({ x: puntik.x, y: puntik.y, r: puntik.r });
+      }
       kruhy.push({ x: x0, y: y0, r: r0 });
       for (let i = 1; i < L.length; i++) {
         const g = postup(L[i][3], cas);
@@ -773,7 +801,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const r = sirka * L[i][2] * g;
         const y = y0 + sirka * (L[i][1] - L[0][1]) * g;
         let x = osa(i, g);
-        if (12 + r <= okno.w - 12 - r) x = mezi(x, 12 + r, okno.w - 12 - r);
+        if (OKRAJ + r <= okno.w - OKRAJ - r) x = mezi(x, OKRAJ + r, okno.w - OKRAJ - r);
         kruhy.push({ x, y, r });
       }
 
@@ -782,13 +810,23 @@ document.addEventListener("DOMContentLoaded", () => {
         vrch = Math.min(vrch, kruhy[k].y - kruhy[k].r);
         spod = Math.max(spod, kruhy[k].y + kruhy[k].r);
       }
-      const slitek = Math.min(sirka * 0.10, (spod - vrch) * 0.07);
+      // Poloměr slévání styků. Čím větší, tím širší a mělčí prohlubně
+      // mezi laloky — kaňka pak působí jako souvislá plocha, ne jako
+      // řetěz koulí. Strop podle výšky brání tomu, aby se u malé kaňky
+      // na začátku animace slilo všechno do kruhu.
+      const slitek = Math.min(sirka * 0.21, (spod - vrch) * 0.14);
 
       // Vodorovné řezy; kosinové rozložení zahustí vzorky u dna a temene,
       // kde je obrys vodorovný a rovnoměrné řezy by z něj udělaly schod.
+      //
+      // Krajní řezy jsou posunuté o vlásek dovnitř: přesně na tečně vyjde
+      // půlšířka nula, řada by zůstala bez určující kružnice a spadla by
+      // na nouzovou větev — temeno pak odskočilo stranou jako tenký jazyk.
+      const vlasek = Math.min(0.05, (spod - vrch) * 0.002);
+      const dno2 = spod - vlasek, strop2 = vrch + vlasek;
       const vpravo = [], vlevo = [];
       for (let j = 0; j <= RADKU; j++) {
-        const y2 = spod - (spod - vrch) * (1 - Math.cos((j / RADKU) * Math.PI)) / 2;
+        const y2 = dno2 - (dno2 - strop2) * (1 - Math.cos((j / RADKU) * Math.PI)) / 2;
         let xl = null, xr = null;
         for (let n = 0; n < kruhy.length; n++) {
           const d = y2 - kruhy[n].y;
@@ -799,7 +837,15 @@ document.addEventListener("DOMContentLoaded", () => {
           xr = xr === null ? kruhy[n].x + pp : mekkeMax(xr, kruhy[n].x + pp, kk);
           xl = xl === null ? kruhy[n].x - pp : mekkeMin(xl, kruhy[n].x - pp, kk);
         }
-        if (xl === null) { xl = xr = kruhy[0].x; }
+        if (xl === null) {
+          // Pojistka pro řez mimo všechny kružnice: nejbližší z nich.
+          let nej = kruhy[0], nejd = Infinity;
+          for (let n = 0; n < kruhy.length; n++) {
+            const dd = Math.abs(y2 - kruhy[n].y) - kruhy[n].r;
+            if (dd < nejd) { nejd = dd; nej = kruhy[n]; }
+          }
+          xl = xr = nej.x;
+        }
         vpravo.push([xr, y2]);
         vlevo.push([xl, y2]);
       }
